@@ -3,7 +3,12 @@ package com.music.aura.ui.components
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,10 +21,11 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeChild
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
+import androidx.compose.foundation.layout.Column
 
 /**
  * Barra superior con efecto frosted-glass (blur translúcido).
- * Usa Haze para difuminar el contenido que pasa por debajo al hacer scroll.
+ * Incluye un botón de configuración a la derecha.
  */
 @OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable
@@ -27,7 +33,8 @@ fun FrostedTopBar(
     title: String,
     subtitle: String? = null,
     hazeState: HazeState,
-    modifier: Modifier = Modifier
+    onSettingsClick: () -> Unit = {},
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier
@@ -52,6 +59,15 @@ fun FrostedTopBar(
                     modifier = Modifier.padding(top = 2.dp),
                 )
             }
+        }
+
+        IconButton(onClick = onSettingsClick) {
+            Icon(
+                imageVector = Icons.Filled.Settings,
+                contentDescription = "Configuración",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(22.dp),
+            )
         }
     }
 }
