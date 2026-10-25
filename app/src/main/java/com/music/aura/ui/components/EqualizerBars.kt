@@ -7,6 +7,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box // <-- IMPORT AÑADIDO
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
@@ -20,12 +21,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
-/**
- * Tres barras verticales animadas que simulan un ecualizador.
- * Se usa como indicador de "reproduciendo" en lugar de un icono estático.
- *
- * Cada barra oscila con un desfase diferente para dar sensación orgánica.
- */
 @Composable
 fun EqualizerBars(
     isPlaying: Boolean,
