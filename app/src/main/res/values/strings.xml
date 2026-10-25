@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Aura Music</string>
+    <string name="notification_channel_name">Reproducción de música</string>
+    <string name="notification_channel_description">Controles de reproducción en segundo plano</string>
+</resources>
