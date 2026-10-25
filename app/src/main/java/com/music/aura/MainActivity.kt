@@ -20,11 +20,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.music.aura.data.AudioPermission
+import com.music.aura.data.SettingsRepository
 import com.music.aura.playback.PlaybackViewModel
 import com.music.aura.ui.components.BottomFadeScrim
 import com.music.aura.ui.components.MiniPlayer
 import com.music.aura.ui.screens.LibraryScreen
 import com.music.aura.ui.screens.NowPlayingScreen
+import com.music.aura.ui.screens.SettingsScreen
 import com.music.aura.ui.theme.AuraTheme
 import dev.chrisbanes.haze.HazeState
 
@@ -38,12 +40,15 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        // Inicializar preferencias
+        SettingsRepository.init(this)
+
         if (!AudioPermission.isGranted(this)) {
             permissionLauncher.launch(AudioPermission.requiredPermission())
         }
 
         setContent {
-            AuraTheme(darkTheme = true) {
+            AuraTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background,
@@ -60,6 +65,7 @@ private fun AuraApp() {
     val playbackViewModel: PlaybackViewModel = viewModel()
     var showNowPlaying by remember { mutableStateOf(false) }
     var showQueue by remember { mutableStateOf(false) }
+    var showSettings by remember { mutableStateOf(false) }
 
     androidx.compose.runtime.LaunchedEffect(Unit) {
         playbackViewModel.connect()
@@ -69,18 +75,22 @@ private fun AuraApp() {
     val miniPlayerHazeState = remember { HazeState() }
 
     Box(modifier = Modifier.fillMaxSize()) {
+        // Biblioteca
         LibraryScreen(
             playbackViewModel = playbackViewModel,
+            onSettingsClick = { showSettings = true },
         )
 
-        if (playbackState.currentSong != null && !showNowPlaying && !showQueue) {
+        // Degradado inferior
+        if (playbackState.currentSong != null && !showNowPlaying && !showQueue && !showSettings) {
             BottomFadeScrim(
                 modifier = Modifier.align(Alignment.BottomCenter),
                 height = 100,
             )
         }
 
-        if (!showNowPlaying && !showQueue) {
+        // Mini player
+        if (!showNowPlaying && !showQueue && !showSettings) {
             MiniPlayer(
                 state = playbackState,
                 hazeState = miniPlayerHazeState,
@@ -94,6 +104,7 @@ private fun AuraApp() {
             )
         }
 
+        // Now Playing
         NowPlayingScreen(
             playbackViewModel = playbackViewModel,
             isVisible = showNowPlaying,
@@ -104,10 +115,17 @@ private fun AuraApp() {
             },
         )
 
+        // Cola
         QueueScreen(
             playbackViewModel = playbackViewModel,
             isVisible = showQueue,
             onDismiss = { showQueue = false },
+        )
+
+        // Configuración
+        SettingsScreen(
+            isVisible = showSettings,
+            onDismiss = { showSettings = false },
         )
     }
 }
