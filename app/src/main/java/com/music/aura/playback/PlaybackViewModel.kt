@@ -4,10 +4,11 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
-import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.common.Timeline
 import androidx.media3.session.MediaController
+import com.music.aura.data.lyrics.Lyrics
+import com.music.aura.data.lyrics.LyricsRepository
 import com.music.aura.data.model.LocalSong
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -15,7 +16,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
@@ -31,16 +31,22 @@ data class PlaybackState(
     val queue: List<LocalSong> = emptyList(),
     val currentIndex: Int = -1,
     val isConnected: Boolean = false,
+    val lyrics: Lyrics? = null,
 )
 
 /**
  * ViewModel que gestiona la conexión con AuraPlaybackService
  * a través de MediaController y expone el estado de reproducción.
+ *
+ * Carga las letras locales del MediaStore de forma reactiva cada vez
+ * que cambia la canción actual.
  */
 class PlaybackViewModel(application: Application) : AndroidViewModel(application) {
 
     private var controller: MediaController? = null
     private var positionJob: Job? = null
+    private var lyricsJob: Job? = null
+    private var lastLyricsSongId: String? = null
 
     private val _state = MutableStateFlow(PlaybackState())
     val state: StateFlow<PlaybackState> = _state.asStateFlow()
@@ -70,10 +76,6 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    /**
-     * Conecta al servicio de reproducción.
-     * Debe llamarse una vez al iniciar la app.
-     */
     fun connect() {
         viewModelScope.launch {
             try {
@@ -89,9 +91,6 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    /**
-     * Reproduce una lista de canciones desde [startIndex].
-     */
     fun playSongs(songs: List<LocalSong>, startIndex: Int = 0) {
         viewModelScope.launch {
             val ctrl = controller ?: return@launch
@@ -107,94 +106,57 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    /** Alterna entre reproducir y pausar. */
     fun togglePlayPause() {
         val ctrl = controller ?: return
-        if (ctrl.isPlaying) {
-            ctrl.pause()
-        } else {
-            ctrl.play()
-        }
+        if (ctrl.isPlaying) ctrl.pause() else ctrl.play()
     }
 
-    /** Salta a la siguiente canción. */
     fun next() {
         controller?.seekToNextMediaItem()
     }
 
-    /** Vuelve a la canción anterior. */
     fun previous() {
         controller?.seekToPreviousMediaItem()
     }
 
-    /** Salta a una posición en milisegundos. */
     fun seekTo(positionMs: Long) {
         controller?.seekTo(positionMs)
         _state.update { it.copy(positionMs = positionMs) }
     }
 
-    /**
-     * Salta directamente a un índice de la cola.
-     */
     fun seekToIndex(index: Int) {
         val ctrl = controller ?: return
         if (index < 0 || index >= ctrl.mediaItemCount) return
         ctrl.seekToDefaultPosition(index)
         ctrl.play()
         _state.update {
-            it.copy(
-                currentIndex = index,
-                currentSong = it.queue.getOrNull(index),
-            )
+            it.copy(currentIndex = index, currentSong = it.queue.getOrNull(index))
         }
     }
 
-    /**
-     * Elimina una canción de la cola por índice.
-     * No permite eliminar la canción actualmente en reproducción.
-     */
     fun removeFromQueue(index: Int) {
         val ctrl = controller ?: return
         val currentIdx = ctrl.currentMediaItemIndex
-
-        // No eliminar la canción que está sonando
         if (index == currentIdx) return
-        // No eliminar si solo queda una canción
         if (ctrl.mediaItemCount <= 1) return
-
         ctrl.removeMediaItem(index)
-
-        // Actualizar estado local
         _state.update { currentState ->
             val newQueue = currentState.queue.toMutableList()
-            if (index < newQueue.size) {
-                newQueue.removeAt(index)
-            }
+            if (index < newQueue.size) newQueue.removeAt(index)
             val newCurrentIndex = if (index < currentIdx) currentIdx - 1 else currentIdx
-            currentState.copy(
-                queue = newQueue,
-                currentIndex = newCurrentIndex,
-            )
+            currentState.copy(queue = newQueue, currentIndex = newCurrentIndex)
         }
     }
 
-    /**
-     * Sincroniza el estado completo desde el MediaController.
-     */
     private fun syncState() {
         val ctrl = controller ?: return
         val currentIndex = ctrl.currentMediaItemIndex
         val mediaItem = ctrl.currentMediaItem
+        val song = mediaItem?.let { mediaItemToLocalSong(it) }
 
-        val song = if (mediaItem != null) {
-            mediaItemToLocalSong(mediaItem)
-        } else null
-
-        // Reconstruir la cola completa desde el timeline
         val queueSongs = mutableListOf<LocalSong>()
         for (i in 0 until ctrl.mediaItemCount) {
-            val item = ctrl.getMediaItemAt(i)
-            queueSongs.add(mediaItemToLocalSong(item))
+            queueSongs.add(mediaItemToLocalSong(ctrl.getMediaItemAt(i)))
         }
 
         _state.update {
@@ -208,18 +170,36 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
                 queue = queueSongs,
             )
         }
+
+        // Cargar letras si cambió la canción
+        if (song != null && song.id != lastLyricsSongId) {
+            loadLyrics(song)
+        } else if (song == null) {
+            lastLyricsSongId = null
+            _state.update { it.copy(lyrics = null) }
+        }
     }
 
-    /** Actualiza solo la duración (cuando el estado pasa a READY). */
     private fun syncDuration() {
         val ctrl = controller ?: return
         _state.update { it.copy(durationMs = ctrl.duration.coerceAtLeast(0L)) }
     }
 
-    /**
-     * Convierte un MediaItem de vuelta a LocalSong.
-     * Los datos viajan en los extras del MediaMetadata.
-     */
+    /** Carga las letras embebidas/sidecar de [song] de forma asíncrona. */
+    private fun loadLyrics(song: LocalSong) {
+        lastLyricsSongId = song.id
+        lyricsJob?.cancel()
+        _state.update { it.copy(lyrics = null) }
+        lyricsJob = viewModelScope.launch {
+            val context = getApplication<Application>()
+            val parsed = LyricsRepository.load(context, song)
+            // Solo aplicar si seguimos en la misma canción
+            if (lastLyricsSongId == song.id) {
+                _state.update { it.copy(lyrics = parsed) }
+            }
+        }
+    }
+
     private fun mediaItemToLocalSong(item: MediaItem): LocalSong {
         val metadata = item.mediaMetadata
         val extras = metadata.extras
@@ -234,10 +214,10 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
             filePath = extras?.getString("filePath"),
             trackNumber = extras?.getInt("trackNumber", -1)?.takeIf { it > 0 },
             year = extras?.getInt("year", -1)?.takeIf { it > 0 },
+            dateAddedMs = extras?.getLong("dateAddedMs", 0L) ?: 0L,
         )
     }
 
-    /** Inicia el sondeo periódico de posición mientras reproduce. */
     private fun startPositionPolling() {
         positionJob?.cancel()
         positionJob = viewModelScope.launch {
@@ -254,7 +234,6 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    /** Detiene el sondeo de posición. */
     private fun stopPositionPolling() {
         positionJob?.cancel()
         positionJob = null
@@ -262,6 +241,7 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
 
     override fun onCleared() {
         positionJob?.cancel()
+        lyricsJob?.cancel()
         controller?.let { ctrl ->
             ctrl.removeListener(playerListener)
             MediaController.releaseFuture(
