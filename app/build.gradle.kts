@@ -18,7 +18,7 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false // Desactivado temporalmente para evitar errores
+            isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -73,6 +73,9 @@ dependencies {
 
     // ---- Palette (colores dominantes del artwork) ----
     implementation("androidx.palette:palette-ktx:1.0.0")
+
+    // ---- Corrutinas para Guava (Media3 Controller) ----
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.9.0")
 
     // ---- Tests ----
     testImplementation("junit:junit:4.13.2")
