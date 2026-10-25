@@ -2,7 +2,7 @@
  * Adapted from Convx's IosOverscroll.kt (GPL-3.0):
  * https://github.com/cosmictaserdev-creator/Convx
  */
-package com.music.bitchord.ui.utils
+package com.music.aura.ui.utils
 
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animate
