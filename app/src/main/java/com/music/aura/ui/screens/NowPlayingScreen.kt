@@ -1,6 +1,8 @@
 package com.music.aura.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -17,7 +19,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowDown
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
@@ -31,24 +32,26 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import coil3.compose.AsyncImage
 import com.music.aura.playback.PlaybackViewModel
+import com.music.aura.ui.components.AnimatedArtwork
 import com.music.aura.ui.components.PlayerControls
 import com.music.aura.ui.components.PlayerSlider
 import com.music.aura.ui.theme.DynamicAuraTheme
 import com.music.aura.ui.theme.DynamicThemeViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 /**
  * Pantalla de reproducción a pantalla completa con tema dinámico.
- * Incluye botón para abrir la cola de reproducción.
+ *
+ * Incluye:
+ * - Artwork con crossfade y escala sutil vinculada al progreso.
+ * - Botón de cola de reproducción.
+ * - Slider y controles de transporte.
+ * - Tema dinámico extraído del artwork con Palette.
  */
 @Composable
 fun NowPlayingScreen(
@@ -60,10 +63,8 @@ fun NowPlayingScreen(
     val state by playbackViewModel.state.collectAsState()
     val song = state.currentSong
 
-    // ViewModel para colores dinámicos
     val themeViewModel: DynamicThemeViewModel = viewModel()
 
-    // Extraer colores cuando cambia la canción
     LaunchedEffect(song?.artworkUri) {
         themeViewModel.extractForArtwork(song?.artworkUri)
     }
@@ -72,19 +73,23 @@ fun NowPlayingScreen(
 
     AnimatedVisibility(
         visible = isVisible && song != null,
-        enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
-        exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+        enter = slideInVertically(
+            animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing),
+            initialOffsetY = { it },
+        ) + fadeIn(animationSpec = tween(250)),
+        exit = slideOutVertically(
+            animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+            targetOffsetY = { it },
+        ) + fadeOut(animationSpec = tween(200)),
     ) {
         if (song == null) return@AnimatedVisibility
 
-        // Envolver todo en el tema dinámico
         DynamicAuraTheme(colors = artworkColors) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.background),
             ) {
-                // Fondo con degradado sutil basado en los colores extraídos
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -93,9 +98,9 @@ fun NowPlayingScreen(
                                 colors = listOf(
                                     MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
                                     MaterialTheme.colorScheme.background,
-                                )
-                            )
-                        )
+                                ),
+                            ),
+                        ),
                 )
 
                 Column(
@@ -105,7 +110,7 @@ fun NowPlayingScreen(
                         .padding(horizontal = 24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    // Header: botón cerrar + botón cola
+                    // Header: cerrar + cola
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -133,31 +138,18 @@ fun NowPlayingScreen(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Artwork grande
-                    Box(
-                        modifier = Modifier
-                            .size(300.dp)
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        if (song.artworkUri != null) {
-                            AsyncImage(
-                                model = song.artworkUri,
-                                contentDescription = "Artwork de ${song.title}",
-                                modifier = Modifier
-                                    .size(300.dp)
-                                    .clip(RoundedCornerShape(20.dp)),
-                                contentScale = ContentScale.Crop,
-                            )
-                        } else {
-                            Text(
-                                text = "♪",
-                                fontSize = 64.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
+                    // Artwork animado con crossfade y escala
+                    val progressFraction = if (state.durationMs > 0) {
+                        (state.positionMs.toFloat() / state.durationMs.toFloat()).coerceIn(0f, 1f)
+                    } else 0f
+
+                    AnimatedArtwork(
+                        songKey = song.id,
+                        artworkUri = song.artworkUri,
+                        title = song.title,
+                        size = 300.dp,
+                        progressFraction = progressFraction,
+                    )
 
                     Spacer(modifier = Modifier.height(32.dp))
 
@@ -185,7 +177,7 @@ fun NowPlayingScreen(
                         modifier = Modifier.fillMaxWidth(),
                     )
 
-                    // Álbum (si existe)
+                    // Álbum
                     if (!song.album.isNullOrBlank()) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
@@ -201,7 +193,7 @@ fun NowPlayingScreen(
 
                     Spacer(modifier = Modifier.height(32.dp))
 
-                    // Slider de progreso
+                    // Slider
                     PlayerSlider(
                         positionMs = state.positionMs,
                         durationMs = state.durationMs,
@@ -210,7 +202,7 @@ fun NowPlayingScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Controles de transporte
+                    // Controles
                     PlayerControls(
                         isPlaying = state.isPlaying,
                         isLoading = state.isLoading,
