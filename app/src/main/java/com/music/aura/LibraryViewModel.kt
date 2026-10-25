@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.music.aura.data.AudioPermission
 import com.music.aura.data.LibraryState
 import com.music.aura.data.LocalMediaRepository
+import com.music.aura.data.model.LocalAlbum
+import com.music.aura.data.model.LocalArtist
 import com.music.aura.data.model.LocalSong
 import com.music.aura.data.model.SortOption
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,15 +39,27 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     private var allSongs: List<LocalSong> = emptyList()
 
     /**
-     * Inicia el escaneo de MediaStore.
+     * Guard contra doble escaneo. Como MainActivity comparte esta instancia
+     * entre HomeScreen y LibraryScreen, ambos pueden llamar a [loadLibrary]
+     * en su LaunchedEffect inicial; sin este flag, se escanearía dos veces.
      */
-    fun loadLibrary() {
+    private var scanned: Boolean = false
+
+    /**
+     * Inicia el escaneo de MediaStore.
+     * Si ya se escaneó, no hace nada salvo que [force] sea true.
+     */
+    fun loadLibrary(force: Boolean = false) {
+        if (scanned && !force) return
+        scanned = true
+
         viewModelScope.launch {
             _uiState.update { it.copy(libraryState = LibraryState.Loading) }
 
             val context = getApplication<Application>()
 
             if (!AudioPermission.isGranted(context)) {
+                scanned = false
                 _uiState.update {
                     it.copy(
                         libraryState = LibraryState.Error(
@@ -60,11 +74,20 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
             try {
                 val result = LocalMediaRepository.getAllSongs(context)
                 allSongs = result
+                val (albums, artists, recent) = deriveGroupings(result)
                 _uiState.update {
-                    it.copy(libraryState = LibraryState.Success(result))
+                    it.copy(
+                        libraryState = LibraryState.Success(
+                            songs = result,
+                            albums = albums,
+                            artists = artists,
+                            recentlyAdded = recent,
+                        )
+                    )
                 }
                 applyFilterAndSort()
             } catch (e: Exception) {
+                scanned = false
                 _uiState.update {
                     it.copy(
                         libraryState = LibraryState.Error(
@@ -90,6 +113,51 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     fun onSortOptionChanged(option: SortOption) {
         _uiState.update { it.copy(sortOption = option) }
         applyFilterAndSort()
+    }
+
+    /**
+     * Deriva álbumes, artistas y la lista de "añadidos recientemente" desde
+     * las canciones crudas. Se ejecuta una sola vez por escaneo.
+     */
+    private fun deriveGroupings(
+        songs: List<LocalSong>
+    ): Triple<List<LocalAlbum>, List<LocalArtist>, List<LocalSong>> {
+        // Álbumes: agrupamos por (album + artist) para evitar colisiones
+        val albums = songs
+            .filter { !it.album.isNullOrBlank() }
+            .groupBy { (it.album ?: "") to it.artist }
+            .map { (key, list) ->
+                LocalAlbum(
+                    name = key.first,
+                    artist = key.second,
+                    artworkUri = list.firstNotNullOfOrNull { it.artworkUri },
+                    songCount = list.size,
+                    songs = list.sortedBy { it.trackNumber ?: Int.MAX_VALUE },
+                )
+            }
+            .sortedBy { it.name.lowercase(Locale.getDefault()) }
+
+        // Artistas
+        val artists = songs
+            .groupBy { it.artist }
+            .map { (name, list) ->
+                LocalArtist(
+                    name = name,
+                    artworkUri = list.firstNotNullOfOrNull { it.artworkUri },
+                    songCount = list.size,
+                    albumCount = list.mapNotNull { it.album }.distinct().size,
+                    songs = list,
+                )
+            }
+            .sortedBy { it.name.lowercase(Locale.getDefault()) }
+
+        // Recientes: 20 más recientes por dateAddedMs (excluye 0).
+        val recent = songs
+            .filter { it.dateAddedMs > 0L }
+            .sortedByDescending { it.dateAddedMs }
+            .take(20)
+
+        return Triple(albums, artists, recent)
     }
 
     /**
