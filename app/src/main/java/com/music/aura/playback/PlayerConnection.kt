@@ -2,27 +2,21 @@ package com.music.aura.playback
 
 import android.content.ComponentName
 import android.content.Context
+import android.os.Bundle
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
-import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.music.aura.data.model.LocalSong
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.guava.await
-import kotlinx.coroutines.withContext
 
 /**
  * Conexión al AuraPlaybackService desde la UI.
- *
- * Crea un MediaController que se comunica con el MediaSessionService
- * en el proceso de reproducción.
  */
 object PlayerConnection {
 
     /**
      * Crea un MediaController conectado al servicio de Aura.
-     * Debe llamarse desde una coroutine (suspend).
      */
     suspend fun connect(context: Context): MediaController {
         val sessionToken = SessionToken(
@@ -50,8 +44,17 @@ object PlayerConnection {
 
     /**
      * Convierte un LocalSong a MediaItem para Media3.
+     * Almacena metadatos extra en el Bundle para poder reconstruir
+     * el LocalSong desde el MediaItem (ver PlaybackViewModel).
      */
     private fun LocalSong.toMediaItem(): MediaItem {
+        val extras = Bundle().apply {
+            putLong("durationMs", durationMs)
+            putString("filePath", filePath)
+            trackNumber?.let { putInt("trackNumber", it) }
+            year?.let { putInt("year", it) }
+        }
+
         return MediaItem.Builder()
             .setMediaId(id)
             .setUri(contentUri)
@@ -63,6 +66,7 @@ object PlayerConnection {
                     .setArtworkUri(artworkUri?.let { android.net.Uri.parse(it) })
                     .setIsPlayable(true)
                     .setIsBrowsable(false)
+                    .setExtras(extras)
                     .build()
             )
             .build()
