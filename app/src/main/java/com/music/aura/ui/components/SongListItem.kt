@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -18,7 +17,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -27,14 +25,15 @@ import com.music.aura.data.model.LocalSong
 
 /**
  * Fila individual de una canción en la lista de la biblioteca.
- * Muestra artwork, título, artista y duración.
+ * Muestra artwork, título, artista, duración y barras de ecualizador
+ * cuando la canción está sonando.
  */
 @Composable
 fun SongListItem(
     song: LocalSong,
     isPlaying: Boolean = false,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier
@@ -61,7 +60,6 @@ fun SongListItem(
                     contentScale = ContentScale.Crop,
                 )
             } else {
-                // Placeholder: nota musical simple
                 Text(
                     text = "♪",
                     style = MaterialTheme.typography.titleMedium,
@@ -73,9 +71,7 @@ fun SongListItem(
         Spacer(modifier = Modifier.width(14.dp))
 
         // Título y artista
-        Column(
-            modifier = Modifier.weight(1f),
-        ) {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = song.title,
                 style = MaterialTheme.typography.bodyLarge,
@@ -99,7 +95,12 @@ fun SongListItem(
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        // Duración
+        // Indicador de reproducción o duración
+        if (isPlaying) {
+            EqualizerBars(isPlaying = true)
+            Spacer(modifier = Modifier.width(8.dp))
+        }
+
         Text(
             text = song.durationText,
             style = MaterialTheme.typography.bodySmall,
