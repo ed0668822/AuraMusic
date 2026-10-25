@@ -13,6 +13,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -21,9 +24,9 @@ import com.music.aura.playback.PlaybackViewModel
 import com.music.aura.ui.components.BottomFadeScrim
 import com.music.aura.ui.components.MiniPlayer
 import com.music.aura.ui.screens.LibraryScreen
+import com.music.aura.ui.screens.NowPlayingScreen
 import com.music.aura.ui.theme.AuraTheme
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeSource
 
 class MainActivity : ComponentActivity() {
 
@@ -55,6 +58,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun AuraApp() {
     val playbackViewModel: PlaybackViewModel = viewModel()
+    var showNowPlaying by remember { mutableStateOf(false) }
 
     // Conectar al servicio de reproducción una sola vez
     androidx.compose.runtime.LaunchedEffect(Unit) {
@@ -62,6 +66,7 @@ private fun AuraApp() {
     }
 
     val playbackState by playbackViewModel.state.collectAsState()
+    val miniPlayerHazeState = remember { HazeState() }
 
     Box(modifier = Modifier.fillMaxSize()) {
         // Contenido principal: la biblioteca
@@ -70,26 +75,33 @@ private fun AuraApp() {
         )
 
         // Degradado inferior detrás del mini player
-        if (playbackState.currentSong != null) {
+        if (playbackState.currentSong != null && !showNowPlaying) {
             BottomFadeScrim(
                 modifier = Modifier.align(Alignment.BottomCenter),
                 height = 100,
             )
         }
 
-        // Mini player en la parte inferior
-        MiniPlayer(
-            state = playbackState,
-            hazeState = HazeState(),
-            onPlayPause = { playbackViewModel.togglePlayPause() },
-            onNext = { playbackViewModel.next() },
-            onPrevious = { playbackViewModel.previous() },
-            onExpand = {
-                // Se implementará en el Módulo 6 (pantalla Now Playing)
-            },
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .navigationBarsPadding(),
+        // Mini player en la parte inferior (oculto cuando NowPlaying está abierto)
+        if (!showNowPlaying) {
+            MiniPlayer(
+                state = playbackState,
+                hazeState = miniPlayerHazeState,
+                onPlayPause = { playbackViewModel.togglePlayPause() },
+                onNext = { playbackViewModel.next() },
+                onPrevious = { playbackViewModel.previous() },
+                onExpand = { showNowPlaying = true },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding(),
+            )
+        }
+
+        // Pantalla Now Playing a pantalla completa
+        NowPlayingScreen(
+            playbackViewModel = playbackViewModel,
+            isVisible = showNowPlaying,
+            onDismiss = { showNowPlaying = false },
         )
     }
 }
