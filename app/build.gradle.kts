@@ -68,8 +68,8 @@ dependencies {
     implementation("io.coil-kt.coil3:coil-compose:3.0.4")
 
     // ---- Frosted glass / blur (Haze) ----
-    implementation("dev.chrisbanes.haze:haze:1.1.1")
-    implementation("dev.chrisbanes.haze:haze-materials:1.1.1")
+    implementation("dev.chrisbanes.haze:haze:1.2.2")
+    implementation("dev.chrisbanes.haze:haze-materials:1.2.2")
 
     // ---- Palette (colores dominantes del artwork) ----
     implementation("androidx.palette:palette-ktx:1.0.0")
