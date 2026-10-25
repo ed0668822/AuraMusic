@@ -7,56 +7,134 @@ import com.music.aura.data.AudioPermission
 import com.music.aura.data.LibraryState
 import com.music.aura.data.LocalMediaRepository
 import com.music.aura.data.model.LocalSong
+import com.music.aura.data.model.SortOption
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 /**
- * ViewModel que gestiona el estado de la biblioteca musical.
- *
- * Expone un [LibraryState] que la UI observa para mostrar
- * la lista de canciones, un loader o un error.
+ * Estado de la UI de biblioteca incluyendo búsqueda y ordenamiento.
+ */
+data class LibraryUiState(
+    val libraryState: LibraryState = LibraryState.Loading,
+    val searchQuery: String = "",
+    val sortOption: SortOption = SortOption.TITLE_ASC,
+    val filteredSongs: List<LocalSong> = emptyList(),
+)
+
+/**
+ * ViewModel que gestiona la biblioteca musical con búsqueda y ordenamiento.
  */
 class LibraryViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val _state = MutableStateFlow<LibraryState>(LibraryState.Loading)
-    val state: StateFlow<LibraryState> = _state.asStateFlow()
+    private val _uiState = MutableStateFlow(LibraryUiState())
+    val uiState: StateFlow<LibraryUiState> = _uiState.asStateFlow()
 
-    /** Lista plana de canciones (acceso rápido una vez cargado). */
-    val songs: List<LocalSong>
-        get() = (_state.value as? LibraryState.Success)?.songs ?: emptyList()
+    /** Todas las canciones cargadas (sin filtro). */
+    private var allSongs: List<LocalSong> = emptyList()
 
     /**
      * Inicia el escaneo de MediaStore.
-     * Verifica permiso antes de consultar.
      */
     fun loadLibrary() {
         viewModelScope.launch {
-            _state.value = LibraryState.Loading
+            _uiState.update { it.copy(libraryState = LibraryState.Loading) }
 
             val context = getApplication<Application>()
 
             if (!AudioPermission.isGranted(context)) {
-                _state.value = LibraryState.Error(
-                    "Permiso de acceso a música no concedido. " +
-                    "Ve a Ajustes y permite el acceso a archivos de audio."
-                )
+                _uiState.update {
+                    it.copy(
+                        libraryState = LibraryState.Error(
+                            "Permiso de acceso a música no concedido. " +
+                            "Ve a Ajustes y permite el acceso a archivos de audio."
+                        )
+                    )
+                }
                 return@launch
             }
 
             try {
                 val result = LocalMediaRepository.getAllSongs(context)
-                if (result.isEmpty()) {
-                    _state.value = LibraryState.Success(emptyList())
-                } else {
-                    _state.value = LibraryState.Success(result)
+                allSongs = result
+                _uiState.update {
+                    it.copy(libraryState = LibraryState.Success(result))
                 }
+                applyFilterAndSort()
             } catch (e: Exception) {
-                _state.value = LibraryState.Error(
-                    e.message ?: "Error desconocido al escanear la biblioteca."
-                )
+                _uiState.update {
+                    it.copy(
+                        libraryState = LibraryState.Error(
+                            e.message ?: "Error desconocido al escanear la biblioteca."
+                        )
+                    )
+                }
             }
         }
+    }
+
+    /**
+     * Actualiza la consulta de búsqueda y re-filtra.
+     */
+    fun onSearchQueryChanged(query: String) {
+        _uiState.update { it.copy(searchQuery = query) }
+        applyFilterAndSort()
+    }
+
+    /**
+     * Cambia la opción de ordenamiento y re-ordena.
+     */
+    fun onSortOptionChanged(option: SortOption) {
+        _uiState.update { it.copy(sortOption = option) }
+        applyFilterAndSort()
+    }
+
+    /**
+     * Aplica filtro de búsqueda + ordenamiento sobre [allSongs].
+     */
+    private fun applyFilterAndSort() {
+        val state = _uiState.value
+        val query = state.searchQuery.trim().lowercase(Locale.getDefault())
+        val sort = state.sortOption
+
+        var result = allSongs
+
+        // Filtrar por búsqueda
+        if (query.isNotBlank()) {
+            result = result.filter { song ->
+                song.title.lowercase(Locale.getDefault()).contains(query) ||
+                song.artist.lowercase(Locale.getDefault()).contains(query) ||
+                (song.album?.lowercase(Locale.getDefault())?.contains(query) == true)
+            }
+        }
+
+        // Ordenar
+        result = when (sort) {
+            SortOption.TITLE_ASC -> result.sortedBy {
+                it.title.lowercase(Locale.getDefault())
+            }
+            SortOption.TITLE_DESC -> result.sortedByDescending {
+                it.title.lowercase(Locale.getDefault())
+            }
+            SortOption.ARTIST_ASC -> result.sortedBy {
+                it.artist.lowercase(Locale.getDefault())
+            }
+            SortOption.ARTIST_DESC -> result.sortedByDescending {
+                it.artist.lowercase(Locale.getDefault())
+            }
+            SortOption.ALBUM_ASC -> result.sortedBy {
+                (it.album ?: "").lowercase(Locale.getDefault())
+            }
+            SortOption.ALBUM_DESC -> result.sortedByDescending {
+                (it.album ?: "").lowercase(Locale.getDefault())
+            }
+            SortOption.DURATION_ASC -> result.sortedBy { it.durationMs }
+            SortOption.DURATION_DESC -> result.sortedByDescending { it.durationMs }
+        }
+
+        _uiState.update { it.copy(filteredSongs = result) }
     }
 }
