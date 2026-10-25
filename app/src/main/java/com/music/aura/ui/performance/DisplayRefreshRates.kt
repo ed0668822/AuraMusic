@@ -1,4 +1,4 @@
-package com.music.bitchord.ui.performance
+package com.music.aura.ui.performance
 
 import android.view.Display
 import kotlin.math.abs
