@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowDown // <-- CORREGIDO
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -27,18 +27,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.music.aura.data.SettingsRepository
 
-/**
- * Pantalla de configuración.
- *
- * Minimalista y coherente con la filosofía de la app:
- * - Selección de tema (Oscuro / Claro / Sistema).
- * - Información de la app.
- *
- * No hay cuentas, no hay red, no hay sincronización.
- */
 @Composable
 fun SettingsScreen(
     isVisible: Boolean,
@@ -57,14 +47,13 @@ fun SettingsScreen(
                 .statusBarsPadding()
                 .padding(horizontal = 20.dp),
         ) {
-            // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(onClick = onDismiss) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowDown,
+                        imageVector = Icons.Filled.KeyboardArrowDown, // <-- CORREGIDO
                         contentDescription = "Cerrar configuración",
                         tint = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.size(28.dp),
@@ -83,7 +72,6 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Sección: Tema
             Text(
                 text = "Tema",
                 style = MaterialTheme.typography.titleMedium,
@@ -113,7 +101,6 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Sección: Acerca de
             Text(
                 text = "Acerca de",
                 style = MaterialTheme.typography.titleMedium,
