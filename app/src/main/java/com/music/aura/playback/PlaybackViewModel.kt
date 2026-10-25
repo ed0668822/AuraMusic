@@ -6,9 +6,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
+import androidx.media3.common.Timeline
 import androidx.media3.session.MediaController
 import com.music.aura.data.model.LocalSong
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +18,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 /**
  * Estado completo de la reproducción para la UI.
@@ -66,10 +65,7 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
             }
         }
 
-        override fun onTimelineChanged(
-            timeline: androidx.media3.common.Timeline,
-            reason: Int
-        ) {
+        override fun onTimelineChanged(timeline: Timeline, reason: Int) {
             syncState()
         }
     }
@@ -138,6 +134,51 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
     }
 
     /**
+     * Salta directamente a un índice de la cola.
+     */
+    fun seekToIndex(index: Int) {
+        val ctrl = controller ?: return
+        if (index < 0 || index >= ctrl.mediaItemCount) return
+        ctrl.seekToDefaultPosition(index)
+        ctrl.play()
+        _state.update {
+            it.copy(
+                currentIndex = index,
+                currentSong = it.queue.getOrNull(index),
+            )
+        }
+    }
+
+    /**
+     * Elimina una canción de la cola por índice.
+     * No permite eliminar la canción actualmente en reproducción.
+     */
+    fun removeFromQueue(index: Int) {
+        val ctrl = controller ?: return
+        val currentIdx = ctrl.currentMediaItemIndex
+
+        // No eliminar la canción que está sonando
+        if (index == currentIdx) return
+        // No eliminar si solo queda una canción
+        if (ctrl.mediaItemCount <= 1) return
+
+        ctrl.removeMediaItem(index)
+
+        // Actualizar estado local
+        _state.update { currentState ->
+            val newQueue = currentState.queue.toMutableList()
+            if (index < newQueue.size) {
+                newQueue.removeAt(index)
+            }
+            val newCurrentIndex = if (index < currentIdx) currentIdx - 1 else currentIdx
+            currentState.copy(
+                queue = newQueue,
+                currentIndex = newCurrentIndex,
+            )
+        }
+    }
+
+    /**
      * Sincroniza el estado completo desde el MediaController.
      */
     private fun syncState() {
@@ -149,6 +190,13 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
             mediaItemToLocalSong(mediaItem)
         } else null
 
+        // Reconstruir la cola completa desde el timeline
+        val queueSongs = mutableListOf<LocalSong>()
+        for (i in 0 until ctrl.mediaItemCount) {
+            val item = ctrl.getMediaItemAt(i)
+            queueSongs.add(mediaItemToLocalSong(item))
+        }
+
         _state.update {
             it.copy(
                 currentSong = song,
@@ -157,6 +205,7 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
                 isLoading = ctrl.playbackState == Player.STATE_BUFFERING,
                 positionMs = ctrl.currentPosition.coerceAtLeast(0L),
                 durationMs = ctrl.duration.coerceAtLeast(0L),
+                queue = queueSongs,
             )
         }
     }
