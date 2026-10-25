@@ -97,7 +97,7 @@ private fun AuraApp() {
             )
         }
 
-        // Pantalla Now Playing a pantalla completa
+        // Pantalla Now Playing a pantalla completa con tema dinámico
         NowPlayingScreen(
             playbackViewModel = playbackViewModel,
             isVisible = showNowPlaying,
