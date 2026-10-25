@@ -18,13 +18,6 @@
     <!-- WakeLock para mantener reproducción activa -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
-    <!--
-      PROHIBIDO Y NO PRESENTE:
-      android.permission.INTERNET
-      android.permission.ACCESS_NETWORK_STATE
-      Esta app es 100% offline.
-    -->
-
     <application
         android:name=".AuraApplication"
         android:allowBackup="true"
@@ -45,12 +38,33 @@
                 <category android:name="android.intent.category.LAUNCHER" />
                 <category android:name="android.intent.category.APP_MUSIC" />
             </intent-filter>
+
+            <!-- Búsqueda por voz / assistant -->
+            <intent-filter>
+                <action android:name="android.media.action.MEDIA_PLAY_FROM_SEARCH" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </activity>
 
-        <!--
-          El servicio de reproducción se declarará en el Módulo 2
-          junto con PlaybackService (Media3 MediaSessionService).
-        -->
+        <!-- Servicio de reproducción Media3 -->
+        <service
+            android:name=".playback.AuraPlaybackService"
+            android:exported="true"
+            android:foregroundServiceType="mediaPlayback">
+            <intent-filter>
+                <action android:name="androidx.media3.session.MediaSessionService" />
+                <action android:name="androidx.media3.session.MediaLibraryService" />
+            </intent-filter>
+        </service>
+
+        <!-- Receiver para controles desde auriculares / Bluetooth -->
+        <receiver
+            android:name="androidx.media3.session.MediaButtonReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </receiver>
 
     </application>
 
