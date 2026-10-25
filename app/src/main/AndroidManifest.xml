@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Lectura de archivos de audio locales -->
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
+    <!-- Servicio en primer plano para reproducción en segundo plano -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+
+    <!-- Vibración para feedback háptico -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- WakeLock para mantener reproducción activa -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <!--
+      PROHIBIDO Y NO PRESENTE:
+      android.permission.INTERNET
+      android.permission.ACCESS_NETWORK_STATE
+      Esta app es 100% offline.
+    -->
+
+    <application
+        android:name=".AuraApplication"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="Aura Music"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.AuraMusic"
+        tools:targetApi="34">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden"
+            android:theme="@style/Theme.AuraMusic">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.APP_MUSIC" />
+            </intent-filter>
+        </activity>
+
+        <!--
+          El servicio de reproducción se declarará en el Módulo 2
+          junto con PlaybackService (Media3 MediaSessionService).
+        -->
+
+    </application>
+
+</manifest>
