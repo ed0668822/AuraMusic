@@ -22,7 +22,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowDown // <-- CORREGIDO
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Equalizer
 import androidx.compose.material3.Icon
@@ -40,14 +40,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.music.aura.data.model.LocalSong
-import com.music.aura.playback.PlaybackState
 import com.music.aura.playback.PlaybackViewModel
 
-/**
- * Pantalla de cola de reproducción.
- * Muestra todas las canciones en la cola, resalta la actual,
- * permite saltar a cualquier canción y eliminar de la cola.
- */
 @Composable
 fun QueueScreen(
     playbackViewModel: PlaybackViewModel,
@@ -72,14 +66,13 @@ fun QueueScreen(
                     .statusBarsPadding()
                     .padding(horizontal = 20.dp),
             ) {
-                // Header
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     IconButton(onClick = onDismiss) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowDown,
+                            imageVector = Icons.Filled.KeyboardArrowDown, // <-- CORREGIDO
                             contentDescription = "Cerrar cola",
                             tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(28.dp),
@@ -104,7 +97,6 @@ fun QueueScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Lista de la cola
                 if (state.queue.isEmpty()) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -147,9 +139,6 @@ fun QueueScreen(
     }
 }
 
-/**
- * Elemento individual de la cola.
- */
 @Composable
 private fun QueueListItem(
     song: LocalSong,
@@ -175,7 +164,6 @@ private fun QueueListItem(
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Indicador de posición / ecualizador animado
         Box(
             modifier = Modifier.size(24.dp),
             contentAlignment = Alignment.Center,
@@ -202,7 +190,6 @@ private fun QueueListItem(
 
         Spacer(modifier = Modifier.width(12.dp))
 
-        // Artwork pequeño
         Box(
             modifier = Modifier
                 .size(40.dp)
@@ -230,7 +217,6 @@ private fun QueueListItem(
 
         Spacer(modifier = Modifier.width(12.dp))
 
-        // Título y artista
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = song.title,
@@ -255,7 +241,6 @@ private fun QueueListItem(
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        // Duración
         Text(
             text = song.durationText,
             style = MaterialTheme.typography.bodySmall,
@@ -264,7 +249,6 @@ private fun QueueListItem(
 
         Spacer(modifier = Modifier.width(4.dp))
 
-        // Botón eliminar
         IconButton(
             onClick = onRemove,
             modifier = Modifier.size(32.dp),
