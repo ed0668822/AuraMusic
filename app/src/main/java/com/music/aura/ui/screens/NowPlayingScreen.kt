@@ -8,6 +8,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,9 +16,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowDown
+import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -45,13 +48,14 @@ import com.music.aura.ui.theme.DynamicThemeViewModel
 
 /**
  * Pantalla de reproducción a pantalla completa con tema dinámico.
- * El fondo y los colores se extraen del artwork de la canción actual.
+ * Incluye botón para abrir la cola de reproducción.
  */
 @Composable
 fun NowPlayingScreen(
     playbackViewModel: PlaybackViewModel,
     isVisible: Boolean,
     onDismiss: () -> Unit,
+    onOpenQueue: () -> Unit,
 ) {
     val state by playbackViewModel.state.collectAsState()
     val song = state.currentSong
@@ -101,10 +105,10 @@ fun NowPlayingScreen(
                         .padding(horizontal = 24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    // Botón de cerrar (flecha abajo)
-                    Box(
+                    // Header: botón cerrar + botón cola
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.CenterStart,
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         IconButton(onClick = onDismiss) {
                             Icon(
@@ -114,9 +118,20 @@ fun NowPlayingScreen(
                                 modifier = Modifier.size(32.dp),
                             )
                         }
+
+                        Spacer(modifier = Modifier.weight(1f))
+
+                        IconButton(onClick = onOpenQueue) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.QueueMusic,
+                                contentDescription = "Abrir cola de reproducción",
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.size(28.dp),
+                            )
+                        }
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     // Artwork grande
                     Box(
