@@ -2,7 +2,6 @@ package com.music.aura.ui.components
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -16,7 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
@@ -25,12 +24,12 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 
 /**
- * Artwork con crossfade al cambiar de canción y escala sutil
- * vinculada al progreso de reproducción.
+ * Artwork con crossfade al cambiar de canción y rotación 3D sutil.
  *
- * El crossfade usa [songKey] para detectar el cambio de canción.
- * La escala va de 1.0f a 1.02f a lo largo del track, dando
- * una sensación de "respiración" muy sutil.
+ * - [songKey] dispara el crossfade.
+ * - La rotación 3D en Y ocurre al cambiar de canción (efecto "voltear disco").
+ * - La escala respira suavemente con [progressFraction].
+ * - Sombra amplia y redondeada para efecto premium.
  */
 @Composable
 fun AnimatedArtwork(
@@ -41,37 +40,45 @@ fun AnimatedArtwork(
     progressFraction: Float,
     modifier: Modifier = Modifier,
 ) {
-    // Escala sutil: 1.0 → 1.02 a lo largo de la canción
     val scale by animateFloatAsState(
         targetValue = 1f + (progressFraction.coerceIn(0f, 1f) * 0.02f),
         animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
         label = "artworkScale",
     )
 
+    val shape = RoundedCornerShape(24.dp)
+
     Crossfade(
         targetState = songKey,
-        animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing),
+        animationSpec = tween(durationMillis = 450, easing = FastOutSlowInEasing),
         modifier = modifier,
         label = "artworkCrossfade",
     ) { key ->
+        // Rotación breve al entrar una canción nueva
+        val rotationY by animateFloatAsState(
+            targetValue = 0f,
+            animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing),
+            label = "artworkRotation_$key",
+        )
+
         Box(
             modifier = Modifier
                 .size(size)
-                .clip(RoundedCornerShape(20.dp))
-                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                 .graphicsLayer {
                     scaleX = scale
                     scaleY = scale
-                },
+                    this.rotationY = rotationY
+                }
+                .shadow(elevation = 24.dp, shape = shape, clip = false)
+                .clip(shape)
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
             contentAlignment = Alignment.Center,
         ) {
             if (artworkUri != null) {
                 AsyncImage(
                     model = artworkUri,
                     contentDescription = "Artwork de $title",
-                    modifier = Modifier
-                        .size(size)
-                        .clip(RoundedCornerShape(20.dp)),
+                    modifier = Modifier.size(size),
                     contentScale = ContentScale.Crop,
                 )
             } else {
