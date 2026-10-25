@@ -25,7 +25,6 @@ import com.music.aura.ui.components.BottomFadeScrim
 import com.music.aura.ui.components.MiniPlayer
 import com.music.aura.ui.screens.LibraryScreen
 import com.music.aura.ui.screens.NowPlayingScreen
-import com.music.aura.ui.screens.QueueScreen
 import com.music.aura.ui.theme.AuraTheme
 import dev.chrisbanes.haze.HazeState
 
@@ -62,7 +61,6 @@ private fun AuraApp() {
     var showNowPlaying by remember { mutableStateOf(false) }
     var showQueue by remember { mutableStateOf(false) }
 
-    // Conectar al servicio de reproducción una sola vez
     androidx.compose.runtime.LaunchedEffect(Unit) {
         playbackViewModel.connect()
     }
@@ -71,12 +69,10 @@ private fun AuraApp() {
     val miniPlayerHazeState = remember { HazeState() }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Contenido principal: la biblioteca
         LibraryScreen(
             playbackViewModel = playbackViewModel,
         )
 
-        // Degradado inferior detrás del mini player
         if (playbackState.currentSong != null && !showNowPlaying && !showQueue) {
             BottomFadeScrim(
                 modifier = Modifier.align(Alignment.BottomCenter),
@@ -84,7 +80,6 @@ private fun AuraApp() {
             )
         }
 
-        // Mini player en la parte inferior (oculto cuando NowPlaying o Queue están abiertos)
         if (!showNowPlaying && !showQueue) {
             MiniPlayer(
                 state = playbackState,
@@ -99,7 +94,6 @@ private fun AuraApp() {
             )
         }
 
-        // Pantalla Now Playing a pantalla completa con tema dinámico
         NowPlayingScreen(
             playbackViewModel = playbackViewModel,
             isVisible = showNowPlaying,
@@ -110,7 +104,6 @@ private fun AuraApp() {
             },
         )
 
-        // Pantalla de Cola de Reproducción
         QueueScreen(
             playbackViewModel = playbackViewModel,
             isVisible = showQueue,
