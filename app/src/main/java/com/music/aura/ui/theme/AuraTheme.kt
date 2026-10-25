@@ -1,6 +1,5 @@
 package com.music.aura.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
@@ -8,8 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 /**
- * Paleta oscura de Aura Music.
- * Tonos profundos con acento violeta-azulado.
+ * Paleta oscura de Aura Music (fallback cuando no hay artwork).
  */
 private val DarkColorScheme = darkColorScheme(
     primary = Color(0xFFB4A7F5),
@@ -46,7 +44,7 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 /**
- * Paleta clara de Aura Music (para quienes prefieran modo claro).
+ * Paleta clara de Aura Music.
  */
 private val LightColorScheme = lightColorScheme(
     primary = Color(0xFF5B4A9E),
@@ -83,8 +81,9 @@ private val LightColorScheme = lightColorScheme(
 )
 
 /**
- * Tema principal de Aura Music.
- * Por defecto oscuro (estética de reproductor musical).
+ * Tema base de Aura Music.
+ * Se usa para la biblioteca y como fallback.
+ * El NowPlayingScreen usa DynamicAuraTheme para colores del artwork.
  */
 @Composable
 fun AuraTheme(
