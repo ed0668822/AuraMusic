@@ -20,7 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowDown // <-- CORREGIDO
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -44,15 +44,6 @@ import com.music.aura.ui.theme.DynamicAuraTheme
 import com.music.aura.ui.theme.DynamicThemeViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 
-/**
- * Pantalla de reproducción a pantalla completa con tema dinámico.
- *
- * Incluye:
- * - Artwork con crossfade y escala sutil vinculada al progreso.
- * - Botón de cola de reproducción.
- * - Slider y controles de transporte.
- * - Tema dinámico extraído del artwork con Palette.
- */
 @Composable
 fun NowPlayingScreen(
     playbackViewModel: PlaybackViewModel,
@@ -117,7 +108,7 @@ fun NowPlayingScreen(
                     ) {
                         IconButton(onClick = onDismiss) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowDown,
+                                imageVector = Icons.Filled.KeyboardArrowDown, // <-- CORREGIDO
                                 contentDescription = "Cerrar reproductor",
                                 tint = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.size(32.dp),
@@ -138,7 +129,6 @@ fun NowPlayingScreen(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Artwork animado con crossfade y escala
                     val progressFraction = if (state.durationMs > 0) {
                         (state.positionMs.toFloat() / state.durationMs.toFloat()).coerceIn(0f, 1f)
                     } else 0f
@@ -153,7 +143,6 @@ fun NowPlayingScreen(
 
                     Spacer(modifier = Modifier.height(32.dp))
 
-                    // Título
                     Text(
                         text = song.title,
                         style = MaterialTheme.typography.headlineSmall,
@@ -166,7 +155,6 @@ fun NowPlayingScreen(
 
                     Spacer(modifier = Modifier.height(6.dp))
 
-                    // Artista
                     Text(
                         text = song.artist,
                         style = MaterialTheme.typography.bodyLarge,
@@ -177,7 +165,6 @@ fun NowPlayingScreen(
                         modifier = Modifier.fillMaxWidth(),
                     )
 
-                    // Álbum
                     if (!song.album.isNullOrBlank()) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
@@ -193,7 +180,6 @@ fun NowPlayingScreen(
 
                     Spacer(modifier = Modifier.height(32.dp))
 
-                    // Slider
                     PlayerSlider(
                         positionMs = state.positionMs,
                         durationMs = state.durationMs,
@@ -202,7 +188,6 @@ fun NowPlayingScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Controles
                     PlayerControls(
                         isPlaying = state.isPlaying,
                         isLoading = state.isLoading,
