@@ -26,6 +26,7 @@ import com.music.aura.ui.components.BottomFadeScrim
 import com.music.aura.ui.components.MiniPlayer
 import com.music.aura.ui.screens.LibraryScreen
 import com.music.aura.ui.screens.NowPlayingScreen
+import com.music.aura.ui.screens.QueueScreen // <-- IMPORT AÑADIDO
 import com.music.aura.ui.screens.SettingsScreen
 import com.music.aura.ui.theme.AuraTheme
 import dev.chrisbanes.haze.HazeState
