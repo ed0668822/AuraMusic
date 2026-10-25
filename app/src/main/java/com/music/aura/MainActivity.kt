@@ -12,6 +12,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Explore
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.LibraryMusic
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -34,17 +39,13 @@ import com.music.aura.playback.PlaybackViewModel
 import com.music.aura.ui.components.BottomTab
 import com.music.aura.ui.components.GlassNavBar
 import com.music.aura.ui.components.MiniPlayer
+import com.music.aura.ui.screens.HomeScreen
 import com.music.aura.ui.screens.LibraryScreen
 import com.music.aura.ui.screens.NowPlayingScreen
 import com.music.aura.ui.screens.QueueScreen
 import com.music.aura.ui.screens.SettingsScreen
 import com.music.aura.ui.theme.AuraTheme
 import dev.chrisbanes.haze.HazeState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.LibraryMusic
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Explore
 
 class MainActivity : ComponentActivity() {
 
@@ -90,37 +91,37 @@ private fun AuraApp() {
     val playbackState by playbackViewModel.state.collectAsState()
     val hazeState = remember { HazeState() }
 
-    // Definimos las pestañas y sus iconos
     val tabs = listOf(
         BottomTab("Home", Icons.Filled.Home),
         BottomTab("Explore", Icons.Filled.Explore),
         BottomTab("Library", Icons.Filled.LibraryMusic),
-        BottomTab("Search", Icons.Filled.Search)
+        BottomTab("Search", Icons.Filled.Search),
     )
 
-    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        
-        // Contenido principal de la pestaña seleccionada
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+    ) {
+
         when (selectedTab) {
-            0 -> Text("Home (Módulo 2)", modifier = Modifier.align(Alignment.Center))
+            0 -> HomeScreen(playbackViewModel = playbackViewModel)
             1 -> Text("Explore (Módulo 2)", modifier = Modifier.align(Alignment.Center))
             2 -> LibraryScreen(
                 playbackViewModel = playbackViewModel,
-                onSettingsClick = { showSettings = true }
+                onSettingsClick = { showSettings = true },
             )
             3 -> Text("Search (Módulo 2)", modifier = Modifier.align(Alignment.Center))
         }
 
-        // Controles flotantes en la parte inferior
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .navigationBarsPadding()
                 .padding(bottom = 16.dp, start = 12.dp, end = 12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            // Mini Player
             if (playbackState.currentSong != null && !showNowPlaying && !showQueue && !showSettings) {
                 MiniPlayer(
                     state = playbackState,
@@ -129,23 +130,21 @@ private fun AuraApp() {
                     onNext = { playbackViewModel.next() },
                     onPrevious = { playbackViewModel.previous() },
                     onExpand = { showNowPlaying = true },
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                 )
             }
 
-            // Barra de navegación de cristal
             if (!showNowPlaying && !showQueue && !showSettings) {
                 GlassNavBar(
                     tabs = tabs,
                     selectedIndex = selectedTab,
                     onTabSelected = { selectedTab = it },
                     hazeState = hazeState,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         }
 
-        // Pantallas modales
         NowPlayingScreen(
             playbackViewModel = playbackViewModel,
             isVisible = showNowPlaying,
