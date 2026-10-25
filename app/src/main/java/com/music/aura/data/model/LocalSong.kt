@@ -24,7 +24,9 @@ data class LocalSong(
     /** Número de pista en el álbum */
     val trackNumber: Int?,
     /** Año de la pista */
-    val year: Int?
+    val year: Int?,
+    /** Fecha de adición al MediaStore, en milisegundos (0 si no disponible). */
+    val dateAddedMs: Long = 0L,
 ) {
     /** Duración formateada como "M:SS" */
     val durationText: String
