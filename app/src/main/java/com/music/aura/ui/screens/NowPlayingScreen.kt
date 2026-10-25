@@ -8,6 +8,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,10 +19,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown // <-- CORREGIDO
-import androidx.compose.material.icons.automirrored.filled.QueueMusic
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.QueueMusic
+import androidx.compose.material.icons.rounded.Subject
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -30,20 +31,31 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.music.aura.playback.PlaybackViewModel
 import com.music.aura.ui.components.AnimatedArtwork
+import com.music.aura.ui.components.LyricsSheet
 import com.music.aura.ui.components.PlayerControls
 import com.music.aura.ui.components.PlayerSlider
+import com.music.aura.ui.theme.ArtworkColors
 import com.music.aura.ui.theme.DynamicAuraTheme
 import com.music.aura.ui.theme.DynamicThemeViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.music.aura.ui.theme.MeshGradient
 
+/**
+ * Pantalla completa del reproductor con fondo MeshGradient animado,
+ * artwork grande, controles premium y bottom sheet de letras.
+ */
 @Composable
 fun NowPlayingScreen(
     playbackViewModel: PlaybackViewModel,
@@ -53,25 +65,25 @@ fun NowPlayingScreen(
 ) {
     val state by playbackViewModel.state.collectAsState()
     val song = state.currentSong
-
     val themeViewModel: DynamicThemeViewModel = viewModel()
 
     LaunchedEffect(song?.artworkUri) {
         themeViewModel.extractForArtwork(song?.artworkUri)
     }
-
     val artworkColors by themeViewModel.artworkColors.collectAsState()
+
+    var showLyrics by remember { mutableStateOf(false) }
 
     AnimatedVisibility(
         visible = isVisible && song != null,
         enter = slideInVertically(
-            animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing),
+            animationSpec = tween(durationMillis = 380, easing = FastOutSlowInEasing),
             initialOffsetY = { it },
-        ) + fadeIn(animationSpec = tween(250)),
+        ) + fadeIn(animationSpec = tween(280)),
         exit = slideOutVertically(
-            animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+            animationSpec = tween(durationMillis = 320, easing = FastOutSlowInEasing),
             targetOffsetY = { it },
-        ) + fadeOut(animationSpec = tween(200)),
+        ) + fadeOut(animationSpec = tween(220)),
     ) {
         if (song == null) return@AnimatedVisibility
 
@@ -81,14 +93,23 @@ fun NowPlayingScreen(
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.background),
             ) {
+                // Fondo: MeshGradient animado con colores del artwork
+                MeshGradient(
+                    colors = artworkColors ?: ArtworkColors(),
+                    isPlaying = state.isPlaying,
+                    modifier = Modifier.fillMaxSize(),
+                )
+
+                // Scrim vertical para legibilidad de controles
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(
-                            brush = Brush.verticalGradient(
+                            Brush.verticalGradient(
                                 colors = listOf(
-                                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-                                    MaterialTheme.colorScheme.background,
+                                    Color.Black.copy(alpha = 0.20f),
+                                    Color.Transparent,
+                                    Color.Black.copy(alpha = 0.35f),
                                 ),
                             ),
                         ),
@@ -101,14 +122,14 @@ fun NowPlayingScreen(
                         .padding(horizontal = 24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    // Header: cerrar + cola
+                    // Header: colapsar + cola
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         IconButton(onClick = onDismiss) {
                             Icon(
-                                imageVector = Icons.Filled.KeyboardArrowDown, // <-- CORREGIDO
+                                imageVector = Icons.Rounded.KeyboardArrowDown,
                                 contentDescription = "Cerrar reproductor",
                                 tint = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.size(32.dp),
@@ -117,17 +138,29 @@ fun NowPlayingScreen(
 
                         Spacer(modifier = Modifier.weight(1f))
 
+                        // Botón letras (deshabilitado si no hay)
+                        IconButton(
+                            onClick = { showLyrics = true },
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Subject,
+                                contentDescription = "Ver letras",
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.size(26.dp),
+                            )
+                        }
+
                         IconButton(onClick = onOpenQueue) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.QueueMusic,
-                                contentDescription = "Abrir cola de reproducción",
+                                imageVector = Icons.Rounded.QueueMusic,
+                                contentDescription = "Abrir cola",
                                 tint = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.size(28.dp),
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
 
                     val progressFraction = if (state.durationMs > 0) {
                         (state.positionMs.toFloat() / state.durationMs.toFloat()).coerceIn(0f, 1f)
@@ -141,7 +174,7 @@ fun NowPlayingScreen(
                         progressFraction = progressFraction,
                     )
 
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(40.dp))
 
                     Text(
                         text = song.title,
@@ -186,7 +219,7 @@ fun NowPlayingScreen(
                         onSeek = { playbackViewModel.seekTo(it) },
                     )
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     PlayerControls(
                         isPlaying = state.isPlaying,
@@ -196,7 +229,17 @@ fun NowPlayingScreen(
                         onPrevious = { playbackViewModel.previous() },
                     )
 
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.weight(1f))
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+
+                // Bottom sheet de letras
+                if (showLyrics) {
+                    LyricsSheet(
+                        lyrics = state.lyrics,
+                        positionMs = state.positionMs,
+                        onDismiss = { showLyrics = false },
+                    )
                 }
             }
         }
