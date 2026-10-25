@@ -35,18 +35,19 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 
 /**
- * Pantalla principal de la biblioteca con búsqueda y ordenamiento.
+ * Pantalla principal de la biblioteca con búsqueda, ordenamiento
+ * y acceso a configuración.
  */
 @Composable
 fun LibraryScreen(
     libraryViewModel: LibraryViewModel = viewModel(),
     playbackViewModel: PlaybackViewModel,
+    onSettingsClick: () -> Unit = {},
 ) {
     val uiState by libraryViewModel.uiState.collectAsState()
     val playbackState by playbackViewModel.state.collectAsState()
     val hazeState = remember { HazeState() }
 
-    // Cargar biblioteca al entrar
     LaunchedEffect(Unit) {
         if (AudioPermission.isGranted(libraryViewModel.getApplication())) {
             libraryViewModel.loadLibrary()
@@ -102,7 +103,6 @@ fun LibraryScreen(
                     }
                 } else {
                     Column(modifier = Modifier.fillMaxSize()) {
-                        // Zona de búsqueda + orden (encima de la lista, debajo de la top bar)
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -126,7 +126,6 @@ fun LibraryScreen(
                             }
                         }
 
-                        // Lista de canciones (hazeSource para el blur de la top bar)
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -217,7 +216,7 @@ fun LibraryScreen(
             }
         }
 
-        // Top bar con blur
+        // Top bar con blur y botón de configuración
         if (uiState.libraryState is LibraryState.Success) {
             val songCount = (uiState.libraryState as LibraryState.Success).songs.size
             val displayCount = uiState.filteredSongs.size
@@ -230,6 +229,7 @@ fun LibraryScreen(
                 title = "Aura Music",
                 subtitle = subtitle,
                 hazeState = hazeState,
+                onSettingsClick = onSettingsClick,
                 modifier = Modifier.align(Alignment.TopCenter),
             )
         }
