@@ -25,6 +25,7 @@ import com.music.aura.ui.components.BottomFadeScrim
 import com.music.aura.ui.components.MiniPlayer
 import com.music.aura.ui.screens.LibraryScreen
 import com.music.aura.ui.screens.NowPlayingScreen
+import com.music.aura.ui.screens.QueueScreen
 import com.music.aura.ui.theme.AuraTheme
 import dev.chrisbanes.haze.HazeState
 
@@ -59,6 +60,7 @@ class MainActivity : ComponentActivity() {
 private fun AuraApp() {
     val playbackViewModel: PlaybackViewModel = viewModel()
     var showNowPlaying by remember { mutableStateOf(false) }
+    var showQueue by remember { mutableStateOf(false) }
 
     // Conectar al servicio de reproducción una sola vez
     androidx.compose.runtime.LaunchedEffect(Unit) {
@@ -75,15 +77,15 @@ private fun AuraApp() {
         )
 
         // Degradado inferior detrás del mini player
-        if (playbackState.currentSong != null && !showNowPlaying) {
+        if (playbackState.currentSong != null && !showNowPlaying && !showQueue) {
             BottomFadeScrim(
                 modifier = Modifier.align(Alignment.BottomCenter),
                 height = 100,
             )
         }
 
-        // Mini player en la parte inferior (oculto cuando NowPlaying está abierto)
-        if (!showNowPlaying) {
+        // Mini player en la parte inferior (oculto cuando NowPlaying o Queue están abiertos)
+        if (!showNowPlaying && !showQueue) {
             MiniPlayer(
                 state = playbackState,
                 hazeState = miniPlayerHazeState,
@@ -102,6 +104,17 @@ private fun AuraApp() {
             playbackViewModel = playbackViewModel,
             isVisible = showNowPlaying,
             onDismiss = { showNowPlaying = false },
+            onOpenQueue = {
+                showNowPlaying = false
+                showQueue = true
+            },
+        )
+
+        // Pantalla de Cola de Reproducción
+        QueueScreen(
+            playbackViewModel = playbackViewModel,
+            isVisible = showQueue,
+            onDismiss = { showQueue = false },
         )
     }
 }
