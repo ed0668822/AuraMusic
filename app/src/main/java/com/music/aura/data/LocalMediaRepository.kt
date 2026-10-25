@@ -3,7 +3,6 @@ package com.music.aura.data
 import android.content.ContentUris
 import android.content.Context
 import android.net.Uri
-import android.os.Build
 import android.provider.MediaStore
 import com.music.aura.data.model.LocalSong
 import kotlinx.coroutines.Dispatchers
@@ -38,6 +37,7 @@ object LocalMediaRepository {
             MediaStore.Audio.Media.DATA,
             MediaStore.Audio.Media.TRACK,
             MediaStore.Audio.Media.YEAR,
+            MediaStore.Audio.Media.DATE_ADDED,
         )
 
         val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0 AND " +
@@ -66,6 +66,7 @@ object LocalMediaRepository {
             val dataCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
             val trackCol = cursor.getColumnIndex(MediaStore.Audio.Media.TRACK)
             val yearCol = cursor.getColumnIndex(MediaStore.Audio.Media.YEAR)
+            val dateAddedCol = cursor.getColumnIndex(MediaStore.Audio.Media.DATE_ADDED)
 
             while (cursor.moveToNext()) {
                 val id = cursor.getLong(idCol)
@@ -81,6 +82,10 @@ object LocalMediaRepository {
                 val year = if (yearCol >= 0 && !cursor.isNull(yearCol)) {
                     cursor.getInt(yearCol).takeIf { it > 0 }
                 } else null
+                // DATE_ADDED viene en segundos; lo convertimos a ms.
+                val dateAddedMs = if (dateAddedCol >= 0 && !cursor.isNull(dateAddedCol)) {
+                    cursor.getLong(dateAddedCol) * 1000L
+                } else 0L
 
                 val songContentUri = ContentUris.withAppendedId(contentUri, id).toString()
                 val artworkUri = if (albumId > 0) {
@@ -98,7 +103,8 @@ object LocalMediaRepository {
                         durationMs = durationMs,
                         filePath = filePath,
                         trackNumber = trackNumber,
-                        year = year
+                        year = year,
+                        dateAddedMs = dateAddedMs,
                     )
                 )
             }
