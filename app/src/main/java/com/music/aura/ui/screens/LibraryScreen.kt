@@ -2,8 +2,12 @@ package com.music.aura.ui.screens
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Button
@@ -24,20 +28,21 @@ import com.music.aura.data.AudioPermission
 import com.music.aura.data.LibraryState
 import com.music.aura.playback.PlaybackViewModel
 import com.music.aura.ui.components.FrostedTopBar
+import com.music.aura.ui.components.SearchBar
 import com.music.aura.ui.components.SongListItem
+import com.music.aura.ui.components.SortMenu
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 
 /**
- * Pantalla principal de la biblioteca.
- * Recibe el PlaybackViewModel para lanzar reproducción al hacer clic.
+ * Pantalla principal de la biblioteca con búsqueda y ordenamiento.
  */
 @Composable
 fun LibraryScreen(
     libraryViewModel: LibraryViewModel = viewModel(),
     playbackViewModel: PlaybackViewModel,
 ) {
-    val state by libraryViewModel.state.collectAsState()
+    val uiState by libraryViewModel.uiState.collectAsState()
     val playbackState by playbackViewModel.state.collectAsState()
     val hazeState = remember { HazeState() }
 
@@ -49,7 +54,7 @@ fun LibraryScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        when (val current = state) {
+        when (val current = uiState.libraryState) {
             is LibraryState.Loading -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -97,27 +102,78 @@ fun LibraryScreen(
                     }
                 } else {
                     Column(modifier = Modifier.fillMaxSize()) {
+                        // Zona de búsqueda + orden (encima de la lista, debajo de la top bar)
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                                .padding(top = 80.dp, bottom = 8.dp),
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                SearchBar(
+                                    query = uiState.searchQuery,
+                                    onQueryChanged = { libraryViewModel.onSearchQueryChanged(it) },
+                                    modifier = Modifier.weight(1f),
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                SortMenu(
+                                    currentSort = uiState.sortOption,
+                                    onSortSelected = { libraryViewModel.onSortOptionChanged(it) },
+                                )
+                            }
+                        }
+
+                        // Lista de canciones (hazeSource para el blur de la top bar)
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .hazeSource(hazeState),
                             contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                                top = 80.dp,
                                 bottom = 120.dp,
                             ),
                         ) {
-                            itemsIndexed(
-                                items = current.songs,
-                                key = { _, song -> song.id }
-                            ) { index, song ->
-                                val isCurrentSong = playbackState.currentSong?.id == song.id
-                                SongListItem(
-                                    song = song,
-                                    isPlaying = isCurrentSong && playbackState.isPlaying,
-                                    onClick = {
-                                        playbackViewModel.playSongs(current.songs, index)
-                                    },
-                                )
+                            val displaySongs = uiState.filteredSongs
+
+                            if (displaySongs.isEmpty() && uiState.searchQuery.isNotBlank()) {
+                                item {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(32.dp),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Text(
+                                                text = "Sin resultados",
+                                                style = MaterialTheme.typography.titleMedium,
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                            )
+                                            Text(
+                                                text = "No se encontró nada para \"${uiState.searchQuery}\"",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.padding(top = 4.dp),
+                                            )
+                                        }
+                                    }
+                                }
+                            } else {
+                                itemsIndexed(
+                                    items = displaySongs,
+                                    key = { _, song -> song.id }
+                                ) { index, song ->
+                                    val isCurrentSong = playbackState.currentSong?.id == song.id
+                                    SongListItem(
+                                        song = song,
+                                        isPlaying = isCurrentSong && playbackState.isPlaying,
+                                        onClick = {
+                                            playbackViewModel.playSongs(displaySongs, index)
+                                        },
+                                    )
+                                }
                             }
                         }
                     }
@@ -161,12 +217,18 @@ fun LibraryScreen(
             }
         }
 
-        // Top bar con blur (siempre visible encima del contenido)
-        if (state is LibraryState.Success) {
-            val songCount = (state as LibraryState.Success).songs.size
+        // Top bar con blur
+        if (uiState.libraryState is LibraryState.Success) {
+            val songCount = (uiState.libraryState as LibraryState.Success).songs.size
+            val displayCount = uiState.filteredSongs.size
+            val subtitle = if (uiState.searchQuery.isNotBlank()) {
+                "$displayCount de $songCount canciones"
+            } else {
+                "$songCount canciones"
+            }
             FrostedTopBar(
                 title = "Aura Music",
-                subtitle = "$songCount canciones",
+                subtitle = subtitle,
                 hazeState = hazeState,
                 modifier = Modifier.align(Alignment.TopCenter),
             )
