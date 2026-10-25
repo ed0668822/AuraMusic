@@ -34,10 +34,6 @@ import com.music.aura.ui.components.SortMenu
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 
-/**
- * Pantalla principal de la biblioteca con búsqueda, ordenamiento
- * y acceso a configuración.
- */
 @Composable
 fun LibraryScreen(
     libraryViewModel: LibraryViewModel = viewModel(),
@@ -216,7 +212,6 @@ fun LibraryScreen(
             }
         }
 
-        // Top bar con blur y botón de configuración
         if (uiState.libraryState is LibraryState.Success) {
             val songCount = (uiState.libraryState as LibraryState.Success).songs.size
             val displayCount = uiState.filteredSongs.size
