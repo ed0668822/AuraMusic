@@ -8,16 +8,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.QueueMusic
@@ -26,13 +17,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -45,7 +30,7 @@ import com.music.aura.playback.PlaybackViewModel
 import com.music.aura.ui.components.AnimatedArtwork
 import com.music.aura.ui.components.LyricsSheet
 import com.music.aura.ui.components.PlayerControls
-import com.music.aura.ui.components.PlayerSlider
+import com.music.aura.ui.components.ThinSlider
 import com.music.aura.ui.theme.ArtworkColors
 import com.music.aura.ui.theme.DynamicAuraTheme
 import com.music.aura.ui.theme.DynamicThemeViewModel
@@ -88,14 +73,14 @@ fun NowPlayingScreen(
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.background),
             ) {
-                // Fondo animado
+                // Fondo: MeshGradient animado con colores del artwork
                 MeshGradient(
                     colors = artworkColors ?: ArtworkColors(),
                     isPlaying = state.isPlaying,
                     modifier = Modifier.fillMaxSize(),
                 )
 
-                // Scrim suave (capa oscura para legibilidad)
+                // Scrim vertical MUY suave
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -162,7 +147,7 @@ fun NowPlayingScreen(
                         songKey = song.id,
                         artworkUri = song.artworkUri,
                         title = song.title,
-                        size = 300.dp,
+                        size = 320.dp,
                         progressFraction = progressFraction,
                     )
 
@@ -203,15 +188,18 @@ fun NowPlayingScreen(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.weight(1f))
 
-                    PlayerSlider(
-                        positionMs = state.positionMs,
-                        durationMs = state.durationMs,
-                        onSeek = { playbackViewModel.seekTo(it) },
+                    // Usamos el nuevo ThinSlider de BitChord
+                    ThinSlider(
+                        value = progressFraction,
+                        onValueChange = { fraction ->
+                            val newPos = (fraction * state.durationMs).toLong()
+                            playbackViewModel.seekTo(newPos)
+                        },
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(32.dp))
 
                     PlayerControls(
                         isPlaying = state.isPlaying,
@@ -221,11 +209,9 @@ fun NowPlayingScreen(
                         onPrevious = { playbackViewModel.previous() },
                     )
 
-                    Spacer(modifier = Modifier.weight(1f))
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(48.dp))
                 }
 
-                // Bottom sheet de letras
                 if (showLyrics) {
                     LyricsSheet(
                         lyrics = state.lyrics,
