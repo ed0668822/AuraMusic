@@ -26,9 +26,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.music.aura.data.SettingsRepository
 import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
-import kotlinx.coroutines.launch
 
 internal val PILL_INSET = 6.dp
 internal val TAB_VERTICAL_PADDING = 9.dp
@@ -66,7 +66,7 @@ fun FloatingBottomBar(
                 if (reduceDynamicBlur) {
                     Modifier.background(container)
                 } else {
-                    Modifier.optimizedHazeEffect(
+                    Modifier.hazeEffect(
                         state = hazeState,
                         style = HazeMaterials.regular(container),
                     )
