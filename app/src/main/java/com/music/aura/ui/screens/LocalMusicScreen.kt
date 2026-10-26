@@ -1,12 +1,14 @@
 package com.music.aura.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,6 +25,8 @@ import com.music.aura.ui.components.SegmentedControl
 import com.music.aura.ui.components.SongListItem
 import com.music.aura.ui.components.home.AlbumCarousel
 import com.music.aura.ui.components.home.ArtistCarousel
+
+// ... el resto del archivo LocalMusicScreen.kt queda exactamente igual ...
 
 @Composable
 fun LocalMusicScreen(
