@@ -22,14 +22,10 @@ android {
         buildConfigField("String", "UPDATE_APK_PREFIX", "\"app-\"")
     }
 
-    // FIRMA PARA ACTUALIZACIONES
     signingConfigs {
         create("release") {
             val keystorePath = System.getenv("KEYSTORE_PATH") ?: "aura-release.jks"
-            // 🔥 CORREGIDO AQUÍ: usar rootProject.file() en lugar de file()
-            // El workflow crea la keystore en la raíz del proyecto, no en app/
             val storeFile = rootProject.file(keystorePath)
-            
             if (storeFile.exists()) {
                 this.storeFile = storeFile
                 this.storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "aura12345"
@@ -54,7 +50,7 @@ android {
             signingConfig = signingConfigs.findByName("release")
         }
     }
-    
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -90,6 +86,7 @@ dependencies {
     implementation("io.github.anilbeesetti:nextlib-media3ext:1.11.1-0.16.0")
 
     implementation("io.coil-kt.coil3:coil-compose:3.0.4")
+    // Haze 1.3.1 - versión estable compatible con el código de TopFadeBlur
     implementation("dev.chrisbanes.haze:haze:1.3.1")
     implementation("dev.chrisbanes.haze:haze-materials:1.3.1")
     implementation("androidx.palette:palette-ktx:1.0.0")
