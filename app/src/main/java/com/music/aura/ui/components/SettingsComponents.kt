@@ -3,6 +3,7 @@ package com.music.aura.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -74,7 +75,6 @@ fun SettingsRow(
             )
             Spacer(Modifier.width(16.dp))
         }
-        
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
@@ -89,7 +89,6 @@ fun SettingsRow(
                 )
             }
         }
-
         if (value != null) {
             Text(
                 text = value,
@@ -98,10 +97,7 @@ fun SettingsRow(
                 modifier = Modifier.padding(end = 8.dp)
             )
         }
-
-        if (trailing != null) {
-            trailing()
-        }
+        trailing?.invoke()
     }
 }
 
@@ -149,5 +145,22 @@ fun SegmentedControl(
                 )
             }
         }
+    }
+}
+
+@Composable
+fun DestructiveRow(label: String, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.error
+        )
     }
 }
