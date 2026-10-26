@@ -8,8 +8,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.DefaultCameraDistance
 import androidx.compose.ui.graphics.DefaultShadowColor
 import androidx.compose.ui.graphics.GraphicsLayerScope
@@ -32,7 +30,7 @@ internal class InverseLayerScope : GraphicsLayerScope {
 
     override var scaleX: Float = 1f
     override var scaleY: Float = 1f
-    override var alpha: Float = 0f
+    override var alpha: Float = 1f // Corregido: era 0f, debe ser 1f por defecto
     override var translationX: Float = 0f
     override var translationY: Float = 0f
     override var shadowElevation: Float = 0f
@@ -46,9 +44,10 @@ internal class InverseLayerScope : GraphicsLayerScope {
     override var shape: Shape = RectangleShape
     override var clip: Boolean = false
     override var renderEffect: RenderEffect? = null
-    override var blendMode: BlendMode = BlendMode.SrcOver
-    override var colorFilter: ColorFilter? = null
-    override var compositingStrategy: CompositingStrategy = CompositingStrategy.Auto
+    // ✅ CORREGIDO: blendMode y colorFilter ya no existen en GraphicsLayerScope
+    // override var blendMode: BlendMode = BlendMode.SrcOver
+    // override var colorFilter: ColorFilter? = null
+    override var compositingStrategy: Int = 0 // CompositingStrategy.Auto ordinal
 
     private var matrix: Matrix? = null
 
@@ -90,9 +89,7 @@ internal class InverseLayerScope : GraphicsLayerScope {
         shape = RectangleShape
         clip = false
         renderEffect = null
-        blendMode = BlendMode.SrcOver
-        colorFilter = null
-        compositingStrategy = CompositingStrategy.Auto
+        compositingStrategy = 0
 
         matrix = null
     }
