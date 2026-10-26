@@ -6,7 +6,10 @@ import androidx.annotation.OptIn
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.audio.AudioSink
+import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import com.music.aura.MainActivity
@@ -19,7 +22,16 @@ class AuraPlaybackService : MediaSessionService() {
     override fun onCreate() {
         super.onCreate()
 
-        val player = ExoPlayer.Builder(this)
+        // 1. Configurar FFmpeg (Dolby Atmos, AC-4, DTS, ALAC)
+        val renderersFactory = DefaultRenderersFactory(this)
+            .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
+
+        // 2. Configurar AudioSink (Permite Float PCM para máxima calidad)
+        val audioSink = DefaultAudioSink.Builder(this)
+            .setEnableFloatOutput(true)
+            .build()
+
+        val player = ExoPlayer.Builder(this, renderersFactory)
             .setAudioAttributes(
                 AudioAttributes.Builder()
                     .setUsage(C.USAGE_MEDIA)
@@ -35,9 +47,7 @@ class AuraPlaybackService : MediaSessionService() {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
         val sessionActivity = PendingIntent.getActivity(
-            this,
-            0,
-            sessionActivityIntent,
+            this, 0, sessionActivityIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
