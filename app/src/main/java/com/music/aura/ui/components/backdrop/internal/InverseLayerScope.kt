@@ -1,13 +1,9 @@
-/*
- * Vendored from Kyant0/backdrop v2.0.0 (io.github.kyant0:backdrop)
- * https://github.com/Kyant0/backdrop — Copyright 2025 Kyant0, Apache License 2.0
- */
 package com.music.aura.ui.components.backdrop.internal
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.DefaultCameraDistance
 import androidx.compose.ui.graphics.DefaultShadowColor
 import androidx.compose.ui.graphics.GraphicsLayerScope
@@ -30,7 +26,7 @@ internal class InverseLayerScope : GraphicsLayerScope {
 
     override var scaleX: Float = 1f
     override var scaleY: Float = 1f
-    override var alpha: Float = 1f // Corregido: era 0f, debe ser 1f por defecto
+    override var alpha: Float = 1f
     override var translationX: Float = 0f
     override var translationY: Float = 0f
     override var shadowElevation: Float = 0f
@@ -44,10 +40,8 @@ internal class InverseLayerScope : GraphicsLayerScope {
     override var shape: Shape = RectangleShape
     override var clip: Boolean = false
     override var renderEffect: RenderEffect? = null
-    // ✅ CORREGIDO: blendMode y colorFilter ya no existen en GraphicsLayerScope
-    // override var blendMode: BlendMode = BlendMode.SrcOver
-    // override var colorFilter: ColorFilter? = null
-    override var compositingStrategy: Int = 0 // CompositingStrategy.Auto ordinal
+    // ✅ CORREGIDO: Usar CompositingStrategy en lugar de Int
+    override var compositingStrategy: CompositingStrategy = CompositingStrategy.Auto
 
     private var matrix: Matrix? = null
 
@@ -89,7 +83,7 @@ internal class InverseLayerScope : GraphicsLayerScope {
         shape = RectangleShape
         clip = false
         renderEffect = null
-        compositingStrategy = 0
+        compositingStrategy = CompositingStrategy.Auto
 
         matrix = null
     }
