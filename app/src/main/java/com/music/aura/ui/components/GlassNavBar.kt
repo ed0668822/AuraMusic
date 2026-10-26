@@ -12,19 +12,19 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.music.aura.ui.components.floatingtabbar.GlassPillMotion
-import com.music.aura.ui.components.floatingtabbar.GlassSelectionPill
 import com.music.aura.ui.components.floatingtabbar.pillPlacement
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeChild
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.rememberCoroutineScope
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 
 @OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable
@@ -38,7 +38,8 @@ fun GlassNavBar(
     val shape = RoundedCornerShape(percent = 50)
     val scope = rememberCoroutineScope()
     val motion = remember { GlassPillMotion(scope, selectedIndex) }
-    
+    val density = LocalDensity.current
+
     // Update motion when selectedIndex changes externally
     LaunchedEffect(selectedIndex) {
         motion.animateTo(selectedIndex)
@@ -55,28 +56,28 @@ fun GlassNavBar(
             .hazeChild(state = hazeState, style = HazeMaterials.regular(MaterialTheme.colorScheme.surface))
             .border(0.5.dp, Color.White.copy(alpha = 0.10f), shape)
     ) {
-        val tabWidth = maxWidth / tabs.size
-        motion.stepDp = tabWidth.value
+        val tabWidthPx = with(density) { maxWidth.toPx() } / tabs.size
+        val heightPx = with(density) { maxHeight.toPx() }
+        
+        motion.stepDp = maxWidth.value / tabs.size
 
         // Animated Pill
         if (motion.isFlat) {
             Box(
                 modifier = Modifier
                     .pillPlacement(
-                        center = { Offset(tabWidth.toPx() * motion.position + tabWidth.toPx() / 2, size.height / 2f) },
-                        size = { Size(tabWidth.toPx(), size.height) }
+                        center = { Offset(tabWidthPx * motion.position + tabWidthPx / 2, heightPx / 2f) },
+                        size = { Size(tabWidthPx, heightPx) }
                     )
                     .background(glassIndicatorColor(), shape)
             )
         } else {
             // Glass Pill with real refraction
-            // Note: Since we don't have the LayerBackdrop passed here, we use a simpler tint for now
-            // The full complex rendering requires the exported backdrop which we can add later.
             Box(
                 modifier = Modifier
                     .pillPlacement(
-                        center = { Offset(tabWidth.toPx() * motion.position + tabWidth.toPx() / 2, size.height / 2f) },
-                        size = { Size(tabWidth.toPx(), size.height) }
+                        center = { Offset(tabWidthPx * motion.position + tabWidthPx / 2, heightPx / 2f) },
+                        size = { Size(tabWidthPx, heightPx) }
                     )
                     .background(glassIndicatorColor(), shape)
             )
@@ -120,11 +121,3 @@ fun GlassNavBar(
         }
     }
 }
-
-@Composable
-private fun glassIndicatorColor(): Color =
-    if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) {
-        Color.White.copy(alpha = 0.5f)
-    } else {
-        Color.White.copy(alpha = 0.14f)
-    }
