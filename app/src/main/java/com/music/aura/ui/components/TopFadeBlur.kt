@@ -78,13 +78,6 @@ fun TopFadeBlur(
     )
 }
 
-/**
- * Altura de la barra superior: status bar + 52dp.
- *
- * El `with(density) { ... }` es necesario porque `.toDp()` es una extensión
- * de `Density`, y sin él Kotlin no puede resolver a qué scope pertenece el
- * `Int` (de ahí el error previo: "expected Dp, actual String").
- */
 @Composable
 fun topBarHeight(): Dp {
     val density = LocalDensity.current
