@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -26,10 +27,7 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.music.aura.data.ProfileRepository
 import com.music.aura.data.SettingsRepository
-import com.music.aura.ui.components.RowDivider
-import com.music.aura.ui.components.SegmentedControl
-import com.music.aura.ui.components.SettingsGroup
-import com.music.aura.ui.components.SettingsRow
+import com.music.aura.ui.components.*
 
 @Composable
 fun SettingsScreen(
@@ -40,8 +38,6 @@ fun SettingsScreen(
     if (!isVisible) return
 
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    
     var userName by remember { mutableStateOf(ProfileRepository.userName) }
     var userPhoto by remember { mutableStateOf(ProfileRepository.userPhotoUri) }
     var showNameDialog by remember { mutableStateOf(false) }
@@ -50,7 +46,9 @@ fun SettingsScreen(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
         if (uri != null) {
-            context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            try {
+                context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            } catch (_: Exception) {}
             userPhoto = uri.toString()
             ProfileRepository.userPhotoUri = userPhoto
         }
@@ -90,6 +88,7 @@ fun SettingsScreen(
             .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
     ) {
+        // Top Bar
         Row(
             modifier = Modifier.fillMaxWidth().padding(top = 40.dp, start = 8.dp, end = 8.dp, bottom = 16.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -117,7 +116,7 @@ fun SettingsScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     if (userPhoto != null) {
-                        AsyncImage(model = userPhoto, contentDescription = null, modifier = Modifier.fillMaxSize())
+                        AsyncImage(model = userPhoto, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
                     } else {
                         Icon(Icons.Rounded.Person, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(30.dp))
                     }
@@ -161,14 +160,6 @@ fun SettingsScreen(
             )
             RowDivider()
             SettingsRow(
-                icon = Icons.Rounded.Shuffle,
-                title = "AutoMix",
-                subtitle = "Transiciones perfectas entre canciones.",
-                value = "$crossfade s",
-                onClick = { /* TODO: Diálogo AutoMix */ }
-            )
-            RowDivider()
-            SettingsRow(
                 icon = Icons.Rounded.Tune,
                 title = "Equalizer",
                 subtitle = "Tone, seven bands and balance",
@@ -176,7 +167,7 @@ fun SettingsScreen(
             )
         }
 
-        // --- Reproducción ---
+        // --- Playback ---
         SettingsGroup(header = "Playback") {
             SettingsRow(
                 icon = Icons.Rounded.Autorenew,
@@ -193,16 +184,11 @@ fun SettingsScreen(
             )
             RowDivider()
             SettingsRow(
-                icon = Icons.Rounded.SpatialAudio,
-                title = "Spatial audio",
-                subtitle = "Amplía las pistas estéreo para una sensación más envolvente.",
-                trailing = {
-                    Switch(
-                        checked = false,
-                        onCheckedChange = { /* TODO */ },
-                        colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary)
-                    )
-                }
+                icon = Icons.Rounded.Shuffle,
+                title = "AutoMix",
+                subtitle = "Transiciones perfectas entre canciones.",
+                value = "$crossfade s",
+                onClick = { }
             )
         }
 
@@ -217,20 +203,6 @@ fun SettingsScreen(
                     onSelect = { SettingsRepository.setThemeMode(it) }
                 )
             }
-            RowDivider()
-            SettingsRow(
-                icon = Icons.Rounded.AutoAwesome,
-                title = "Liquid Glass",
-                subtitle = "Cristal real en la barra de navegación. Android 12+.",
-                trailing = {
-                    Switch(
-                        checked = liquidGlass,
-                        onCheckedChange = { SettingsRepository.setLiquidGlass(it) },
-                        colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary)
-                    )
-                },
-                onClick = { SettingsRepository.setLiquidGlass(!liquidGlass) }
-            )
             RowDivider()
             SettingsRow(
                 icon = Icons.Rounded.MotionPhotosOff,
@@ -258,6 +230,20 @@ fun SettingsScreen(
                     )
                 },
                 onClick = { SettingsRepository.setReduceDynamicBlur(!reduceDynamicBlur) }
+            )
+            RowDivider()
+            SettingsRow(
+                icon = Icons.Rounded.AutoAwesome,
+                title = "Liquid Glass",
+                subtitle = "Cristal real en la barra de navegación.",
+                trailing = {
+                    Switch(
+                        checked = liquidGlass,
+                        onCheckedChange = { SettingsRepository.setLiquidGlass(it) },
+                        colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary)
+                    )
+                },
+                onClick = { SettingsRepository.setLiquidGlass(!liquidGlass) }
             )
         }
 
@@ -298,7 +284,7 @@ fun SettingsScreen(
                 icon = Icons.Rounded.Folder,
                 title = "Local music folder",
                 subtitle = "Music/Aura",
-                onClick = { /* TODO: SAF Picker */ }
+                onClick = { }
             )
             RowDivider()
             SettingsRow(
@@ -323,7 +309,7 @@ fun SettingsScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("Aura Music", fontWeight = FontWeight.Bold)
-                Text("v1.8.0", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("v1.9.0", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
 
