@@ -3,9 +3,7 @@ package com.music.aura.ui.player
 import androidx.compose.ui.graphics.ImageBitmap
 
 internal fun isLikelyBlackFrame(bitmap: ImageBitmap): Boolean {
-    val w = bitmap.width
-    val h = bitmap.height
-    if (w <= 0 || h <= 0) return true
+    val w = bitmap.width0) return true
     val stride = maxOf(1, minOf(w, h) / 32)
     var sumLum = 0L
     var count = 0
