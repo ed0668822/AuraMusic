@@ -11,22 +11,27 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
-import com.music.aura.data.AppUpdateChecker
 import com.music.aura.data.ProfileRepository
 import com.music.aura.data.SettingsRepository
+import com.music.aura.ui.components.RowDivider
+import com.music.aura.ui.components.SegmentedControl
+import com.music.aura.ui.components.SettingsGroup
+import com.music.aura.ui.components.SettingsRow
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     isVisible: Boolean,
@@ -36,10 +41,11 @@ fun SettingsScreen(
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    
+    // Perfil
     var userName by remember { mutableStateOf(ProfileRepository.userName) }
     var userPhoto by remember { mutableStateOf(ProfileRepository.userPhotoUri) }
     var showNameDialog by remember { mutableStateOf(false) }
-    var isCheckingUpdate by remember { mutableStateOf(false) }
 
     val photoPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
@@ -50,6 +56,16 @@ fun SettingsScreen(
             ProfileRepository.userPhotoUri = userPhoto
         }
     }
+
+    // Estados de Settings
+    val themeMode by SettingsRepository.themeMode.collectAsState()
+    val dolbyAtmos by SettingsRepository.dolbyAtmos.collectAsState()
+    val liquidGlass by SettingsRepository.liquidGlass.collectAsState()
+    val syncedLyrics by SettingsRepository.syncedLyrics.collectAsState()
+    val blurLyrics by SettingsRepository.blurUnfocusedLyrics.collectAsState()
+    val filterNonMusic by SettingsRepository.filterNonMusicAudio.collectAsState()
+    val autoplay by SettingsRepository.autoplay.collectAsState()
+    val crossfade by SettingsRepository.crossfadeSeconds.collectAsState()
 
     if (showNameDialog) {
         var tempName by remember { mutableStateOf(userName) }
@@ -69,77 +85,186 @@ fun SettingsScreen(
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).verticalScroll(rememberScrollState())
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .verticalScroll(rememberScrollState())
     ) {
+        // Top Bar
         Row(
-            modifier = Modifier.fillMaxWidth().padding(top = 40.dp, start = 8.dp, end = 8.dp),
+            modifier = Modifier.fillMaxWidth().padding(top = 40.dp, start = 8.dp, end = 8.dp, bottom = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onDismiss) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás") }
-            Text("Ajustes", style = MaterialTheme.typography.titleLarge)
-        }
-
-        // Perfil
-        Text("PERFIL", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth().clickable { photoPicker.launch(arrayOf("image/*")) }.padding(horizontal = 24.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(modifier = Modifier.size(56.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center) {
-                if (userPhoto != null) AsyncImage(model = userPhoto, contentDescription = null, modifier = Modifier.fillMaxSize())
-                else Icon(Icons.Filled.Person, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            IconButton(onClick = onDismiss) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
             }
-            Spacer(Modifier.width(16.dp))
-            Text("Foto de perfil (toca para cambiar)", style = MaterialTheme.typography.bodySmall)
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth().clickable { showNameDialog = true }.padding(horizontal = 24.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("Nombre", modifier = Modifier.weight(1f))
-            Text(userName, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                text = "Settings",
+                fontSize = 34.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.padding(start = 8.dp)
+            )
         }
 
-        // Tema
-        Text("APARIENCIA", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp))
-        val themeOptions = listOf("Oscuro", "Claro", "Seguir sistema")
-        themeOptions.forEachIndexed { index, label ->
+        // --- Perfil ---
+        SettingsGroup(topSpacing = 0.dp) {
             Row(
-                modifier = Modifier.fillMaxWidth().clickable { SettingsRepository.themeMode = index }.padding(horizontal = 24.dp, vertical = 12.dp),
+                modifier = Modifier.fillMaxWidth().clickable { photoPicker.launch(arrayOf("image/*")) }.padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(label, modifier = Modifier.weight(1f))
-                RadioButton(selected = SettingsRepository.themeMode == index, onClick = { SettingsRepository.themeMode = index })
-            }
-        }
-
-        // Actualizaciones
-        Text("SISTEMA", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth().clickable {
-                isCheckingUpdate = true
-                scope.launch {
-                    AppUpdateChecker.check()
-                    isCheckingUpdate = false
+                Box(
+                    modifier = Modifier.size(60.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (userPhoto != null) {
+                        AsyncImage(model = userPhoto, contentDescription = null, modifier = Modifier.fillMaxSize())
+                    } else {
+                        Icon(Icons.Filled.Person, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(30.dp))
+                    }
                 }
-            }.padding(horizontal = 24.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(Icons.Filled.Refresh, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(Modifier.width(16.dp))
-            Text("Buscar actualizaciones", modifier = Modifier.weight(1f))
-            if (isCheckingUpdate) CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                Spacer(Modifier.width(16.dp))
+                Column {
+                    Text(text = userName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Text(text = "Toca para cambiar foto", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            RowDivider()
+            SettingsRow(
+                icon = Icons.Filled.Edit,
+                title = "Nombre",
+                value = userName,
+                onClick = { showNameDialog = true }
+            )
         }
 
-        // Acerca de
-        Text("ACERCA DE", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp))
-        Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp)) {
+        // --- Audio ---
+        SettingsGroup(header = "Audio Quality") {
+            SettingsRow(
+                icon = Icons.Filled.Speaker,
+                title = "Dolby Atmos",
+                subtitle = "Reproduce la versión envolvente cuando esté disponible.",
+                trailing = {
+                    Switch(
+                        checked = dolbyAtmos,
+                        onCheckedChange = { SettingsRepository.setDolbyAtmos(it) },
+                        colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary)
+                    )
+                },
+                onClick = { SettingsRepository.setDolbyAtmos(!dolbyAtmos) }
+            )
+            RowDivider()
+            SettingsRow(
+                icon = Icons.Filled.GraphicEq,
+                title = "Lossless",
+                subtitle = "Reproduce la máxima calidad local.",
+                trailing = { Text("Lossless", color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold) }
+            )
+            RowDivider()
+            SettingsRow(
+                icon = Icons.Filled.Shuffle,
+                title = "AutoMix",
+                subtitle = "Transiciones perfectas entre canciones.",
+                trailing = {
+                    Text("$crossfade s", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                },
+                onClick = { /* TODO: Abrir diálogo de AutoMix */ }
+            )
+        }
+
+        // --- Apariencia ---
+        SettingsGroup(header = "Appearance") {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("Aura Music", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text("Versión 1.4.0", style = MaterialTheme.typography.bodySmall)
-                Text("Reproductor 100% local. Soporte Dolby Atmos.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Theme", style = MaterialTheme.typography.bodyLarge)
+                Spacer(Modifier.height(8.dp))
+                SegmentedControl(
+                    options = listOf("System", "Light", "Dark"),
+                    selectedIndex = themeMode,
+                    onSelect = { SettingsRepository.setThemeMode(it) }
+                )
+            }
+            RowDivider()
+            SettingsRow(
+                icon = Icons.Filled.AutoAwesome,
+                title = "Liquid Glass",
+                subtitle = "Cristal real en la barra de navegación. Android 12+.",
+                trailing = {
+                    Switch(
+                        checked = liquidGlass,
+                        onCheckedChange = { SettingsRepository.setLiquidGlass(it) },
+                        colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary)
+                    )
+                },
+                onClick = { SettingsRepository.setLiquidGlass(!liquidGlass) }
+            )
+        }
+
+        // --- Letras ---
+        SettingsGroup(header = "Lyrics") {
+            SettingsRow(
+                icon = Icons.Filled.Lyrics,
+                title = "Synced lyrics",
+                subtitle = "Ilumina las palabras mientras se cantan.",
+                trailing = {
+                    Switch(
+                        checked = syncedLyrics,
+                        onCheckedChange = { SettingsRepository.setSyncedLyrics(it) },
+                        colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary)
+                    )
+                },
+                onClick = { SettingsRepository.setSyncedLyrics(!syncedLyrics) }
+            )
+            RowDivider()
+            SettingsRow(
+                icon = Icons.Filled.BlurOn,
+                title = "Blur unfocused lyrics",
+                subtitle = "Mantiene el foco en la línea actual.",
+                trailing = {
+                    Switch(
+                        checked = blurLyrics,
+                        onCheckedChange = { SettingsRepository.setBlurUnfocusedLyrics(it) },
+                        colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary)
+                    )
+                },
+                onClick = { SettingsRepository.setBlurUnfocusedLyrics(!blurLyrics) }
+            )
+        }
+
+        // --- Local Music ---
+        SettingsGroup(header = "Local Music") {
+            SettingsRow(
+                icon = Icons.Filled.Folder,
+                title = "Local music folder",
+                subtitle = "Music/Aura",
+                onClick = { /* TODO: Elegir carpeta SAF */ }
+            )
+            RowDivider()
+            SettingsRow(
+                icon = Icons.Filled.FilterAlt,
+                title = "Filter non-music audio",
+                subtitle = "Oculta clips, notas de voz y sonidos del sistema.",
+                trailing = {
+                    Switch(
+                        checked = filterNonMusic,
+                        onCheckedChange = { SettingsRepository.setFilterNonMusicAudio(it) },
+                        colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary)
+                    )
+                },
+                onClick = { SettingsRepository.setFilterNonMusicAudio(!filterNonMusic) }
+            )
+        }
+
+        // --- Acerca de ---
+        SettingsGroup(header = "About") {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Aura Music", fontWeight = FontWeight.Bold)
+                Text("v1.6.0", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
-        Spacer(Modifier.height(32.dp))
+
+        Spacer(Modifier.height(48.dp))
     }
 }
