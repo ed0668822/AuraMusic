@@ -39,12 +39,12 @@ fun LibraryScreen(
 ) {
     val uiState by libraryViewModel.uiState.collectAsState()
     var minutesListened by remember { mutableStateOf(0L) }
-    var userName by remember { mutableStateOf(ProfileRepository.userName) }
     var userPhoto by remember { mutableStateOf(ProfileRepository.userPhotoUri) }
 
     LaunchedEffect(Unit) {
         val summary = ListeningStats.summary(ReplayPeriod.ALL_TIME)
         minutesListened = summary.minutes
+        userPhoto = ProfileRepository.userPhotoUri
     }
 
     LazyColumn(
@@ -69,12 +69,7 @@ fun LibraryScreen(
                     contentAlignment = Alignment.Center,
                 ) {
                     if (userPhoto != null) {
-                        AsyncImage(
-                            model = userPhoto,
-                            contentDescription = "Perfil",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
+                        AsyncImage(model = userPhoto, contentDescription = "Perfil", contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
                     } else {
                         Icon(Icons.Filled.Person, contentDescription = "Perfil", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
@@ -82,7 +77,7 @@ fun LibraryScreen(
             }
         }
 
-        // Replay Card (Clicable)
+        // Replay Card
         item {
             Box(
                 modifier = Modifier
@@ -112,7 +107,7 @@ fun LibraryScreen(
             }
         }
 
-        // Local Music Button
+        // Local Music Link
         item {
             Row(
                 modifier = Modifier
