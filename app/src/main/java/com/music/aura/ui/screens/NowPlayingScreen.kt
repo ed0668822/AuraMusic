@@ -20,36 +20,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil3.compose.AsyncImage
 import com.music.aura.R
 import com.music.aura.playback.PlaybackViewModel
-import com.music.aura.ui.components.*
+import com.music.aura.ui.components.AnimatedArtwork
+import com.music.aura.ui.components.PlayerControls
+import com.music.aura.ui.components.SyncedLyricsPanel
+import com.music.aura.ui.components.ThinSlider
 import com.music.aura.ui.theme.ArtworkColors
 import com.music.aura.ui.theme.DynamicAuraTheme
 import com.music.aura.ui.theme.DynamicThemeViewModel
 import com.music.aura.ui.theme.MeshGradient
 
-import androidx.compose.material3.ExperimentalMaterial3Api
-
-// Justo encima de la función NowPlayingScreen:
 @OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun NowPlayingScreen(
-    playbackViewModel: PlaybackViewModel,
-    isVisible: Boolean,
-    onDismiss: () -> Unit,
-    onOpenQueue: () -> Unit,
-) {
-    // ... el resto del archivo NowPlayingScreen.kt queda exactamente igual ...
-}
-
 @Composable
 fun NowPlayingScreen(
     playbackViewModel: PlaybackViewModel,
@@ -66,7 +54,14 @@ fun NowPlayingScreen(
     }
     val artworkColors by themeViewModel.artworkColors.collectAsState()
 
+    val fallbackColors = ArtworkColors(
+        primary = Color(0xFFFA2D48),
+        secondary = Color(0xFF8B5CF6),
+        background = Color(0xFF0E0E14),
+    )
+
     var showLyrics by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     AnimatedVisibility(
         visible = isVisible && song != null,
@@ -81,14 +76,14 @@ fun NowPlayingScreen(
     ) {
         if (song == null) return@AnimatedVisibility
 
-        DynamicAuraTheme(colors = artworkColors) {
+        DynamicAuraTheme(colors = artworkColors ?: fallbackColors) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.background),
             ) {
                 MeshGradient(
-                    colors = artworkColors ?: ArtworkColors(),
+                    colors = artworkColors ?: fallbackColors,
                     isPlaying = state.isPlaying,
                     modifier = Modifier.fillMaxSize(),
                 )
@@ -114,7 +109,6 @@ fun NowPlayingScreen(
                         .padding(horizontal = 24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    // Header
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -165,7 +159,6 @@ fun NowPlayingScreen(
 
                     Spacer(modifier = Modifier.height(32.dp))
 
-                    // Título con Iconos de Calidad
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center,
@@ -180,13 +173,12 @@ fun NowPlayingScreen(
                             textAlign = TextAlign.Center,
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        // Icono Lossless (puedes condicionarlo a si es FLAC o WAV)
                         if (song.filePath?.endsWith(".flac", ignoreCase = true) == true) {
                             Image(
                                 painter = painterResource(id = R.drawable.ic_lossless),
                                 contentDescription = "Lossless",
                                 modifier = Modifier.size(20.dp, 12.dp),
-                                colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(MaterialTheme.colorScheme.onSurfaceVariant)
+                                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurfaceVariant)
                             )
                         }
                     }
@@ -202,6 +194,19 @@ fun NowPlayingScreen(
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth(),
                     )
+
+                    if (!song.album.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = song.album,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
 
                     Spacer(modifier = Modifier.weight(1f))
 
@@ -229,8 +234,8 @@ fun NowPlayingScreen(
                 if (showLyrics) {
                     ModalBottomSheet(
                         onDismissRequest = { showLyrics = false },
+                        sheetState = sheetState,
                         containerColor = MaterialTheme.colorScheme.background,
-                        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
                     ) {
                         if (state.lyrics != null && state.lyrics!!.isSynced) {
                             SyncedLyricsPanel(
