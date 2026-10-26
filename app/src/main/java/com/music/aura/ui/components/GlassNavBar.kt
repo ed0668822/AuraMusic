@@ -24,7 +24,6 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeChild
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
-import kotlinx.coroutines.rememberCoroutineScope
 
 @OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable
@@ -36,6 +35,7 @@ fun GlassNavBar(
     modifier: Modifier = Modifier,
 ) {
     val shape = RoundedCornerShape(percent = 50)
+    // CORREGIDO: rememberCoroutineScope viene de androidx.compose.runtime.*
     val scope = rememberCoroutineScope()
     val motion = remember { GlassPillMotion(scope, selectedIndex) }
     val density = LocalDensity.current
