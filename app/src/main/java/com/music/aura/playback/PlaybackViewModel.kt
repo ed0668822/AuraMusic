@@ -10,6 +10,7 @@ import androidx.media3.session.MediaController
 import com.music.aura.data.lyrics.Lyrics
 import com.music.aura.data.lyrics.LyricsRepository
 import com.music.aura.data.model.LocalSong
+import com.music.aura.data.stats.ListeningStats
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,9 +20,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
-/**
- * Estado completo de la reproducción para la UI.
- */
 data class PlaybackState(
     val currentSong: LocalSong? = null,
     val isPlaying: Boolean = false,
@@ -34,41 +32,36 @@ data class PlaybackState(
     val lyrics: Lyrics? = null,
 )
 
-/**
- * ViewModel que gestiona la conexión con AuraPlaybackService
- * a través de MediaController y expone el estado de reproducción.
- *
- * Carga las letras locales del MediaStore de forma reactiva cada vez
- * que cambia la canción actual.
- */
 class PlaybackViewModel(application: Application) : AndroidViewModel(application) {
 
     private var controller: MediaController? = null
     private var positionJob: Job? = null
     private var lyricsJob: Job? = null
     private var lastLyricsSongId: String? = null
+    private var lastTickPositionMs = 0L // Para calcular el delta de escucha
 
     private val _state = MutableStateFlow(PlaybackState())
     val state: StateFlow<PlaybackState> = _state.asStateFlow()
 
-    /** Listener que observa cambios del reproductor. */
     private val playerListener = object : Player.Listener {
-
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+            lastTickPositionMs = 0L
             syncState()
         }
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             _state.update { it.copy(isPlaying = isPlaying) }
-            if (isPlaying) startPositionPolling() else stopPositionPolling()
+            if (isPlaying) {
+                startPositionPolling()
+            } else {
+                stopPositionPolling()
+                ListeningStats.flush()
+            }
         }
 
         override fun onPlaybackStateChanged(playbackState: Int) {
-            val loading = playbackState == Player.STATE_BUFFERING
-            _state.update { it.copy(isLoading = loading) }
-            if (playbackState == Player.STATE_READY) {
-                syncDuration()
-            }
+            _state.update { it.copy(isLoading = playbackState == Player.STATE_BUFFERING) }
+            if (playbackState == Player.STATE_READY) syncDuration()
         }
 
         override fun onTimelineChanged(timeline: Timeline, reason: Int) {
@@ -95,12 +88,7 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             val ctrl = controller ?: return@launch
             _state.update {
-                it.copy(
-                    queue = songs,
-                    currentIndex = startIndex,
-                    currentSong = songs.getOrNull(startIndex),
-                    isLoading = true,
-                )
+                it.copy(queue = songs, currentIndex = startIndex, currentSong = songs.getOrNull(startIndex), isLoading = true)
             }
             PlayerConnection.playSongs(ctrl, songs, startIndex)
         }
@@ -111,17 +99,13 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
         if (ctrl.isPlaying) ctrl.pause() else ctrl.play()
     }
 
-    fun next() {
-        controller?.seekToNextMediaItem()
-    }
-
-    fun previous() {
-        controller?.seekToPreviousMediaItem()
-    }
+    fun next() = controller?.seekToNextMediaItem()
+    fun previous() = controller?.seekToPreviousMediaItem()
 
     fun seekTo(positionMs: Long) {
         controller?.seekTo(positionMs)
         _state.update { it.copy(positionMs = positionMs) }
+        lastTickPositionMs = positionMs // Evitar que el salto cuente como tiempo escuchado
     }
 
     fun seekToIndex(index: Int) {
@@ -129,16 +113,13 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
         if (index < 0 || index >= ctrl.mediaItemCount) return
         ctrl.seekToDefaultPosition(index)
         ctrl.play()
-        _state.update {
-            it.copy(currentIndex = index, currentSong = it.queue.getOrNull(index))
-        }
+        _state.update { it.copy(currentIndex = index, currentSong = it.queue.getOrNull(index)) }
     }
 
     fun removeFromQueue(index: Int) {
         val ctrl = controller ?: return
         val currentIdx = ctrl.currentMediaItemIndex
-        if (index == currentIdx) return
-        if (ctrl.mediaItemCount <= 1) return
+        if (index == currentIdx || ctrl.mediaItemCount <= 1) return
         ctrl.removeMediaItem(index)
         _state.update { currentState ->
             val newQueue = currentState.queue.toMutableList()
@@ -161,9 +142,7 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
 
         _state.update {
             it.copy(
-                currentSong = song,
-                currentIndex = currentIndex,
-                isPlaying = ctrl.isPlaying,
+                currentSong = song, currentIndex = currentIndex, isPlaying = ctrl.isPlaying,
                 isLoading = ctrl.playbackState == Player.STATE_BUFFERING,
                 positionMs = ctrl.currentPosition.coerceAtLeast(0L),
                 durationMs = ctrl.duration.coerceAtLeast(0L),
@@ -171,10 +150,8 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
             )
         }
 
-        // Cargar letras si cambió la canción
-        if (song != null && song.id != lastLyricsSongId) {
-            loadLyrics(song)
-        } else if (song == null) {
+        if (song != null && song.id != lastLyricsSongId) loadLyrics(song)
+        else if (song == null) {
             lastLyricsSongId = null
             _state.update { it.copy(lyrics = null) }
         }
@@ -185,7 +162,6 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
         _state.update { it.copy(durationMs = ctrl.duration.coerceAtLeast(0L)) }
     }
 
-    /** Carga las letras embebidas/sidecar de [song] de forma asíncrona. */
     private fun loadLyrics(song: LocalSong) {
         lastLyricsSongId = song.id
         lyricsJob?.cancel()
@@ -193,10 +169,7 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
         lyricsJob = viewModelScope.launch {
             val context = getApplication<Application>()
             val parsed = LyricsRepository.load(context, song)
-            // Solo aplicar si seguimos en la misma canción
-            if (lastLyricsSongId == song.id) {
-                _state.update { it.copy(lyrics = parsed) }
-            }
+            if (lastLyricsSongId == song.id) _state.update { it.copy(lyrics = parsed) }
         }
     }
 
@@ -204,17 +177,12 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
         val metadata = item.mediaMetadata
         val extras = metadata.extras
         return LocalSong(
-            id = item.mediaId,
-            title = metadata.title?.toString() ?: "Unknown",
+            id = item.mediaId, title = metadata.title?.toString() ?: "Unknown",
             artist = metadata.artist?.toString() ?: "Unknown Artist",
-            album = metadata.albumTitle?.toString(),
-            contentUri = item.localConfiguration?.uri?.toString() ?: "",
-            artworkUri = metadata.artworkUri?.toString(),
-            durationMs = extras?.getLong("durationMs", 0L) ?: 0L,
-            filePath = extras?.getString("filePath"),
-            trackNumber = extras?.getInt("trackNumber", -1)?.takeIf { it > 0 },
-            year = extras?.getInt("year", -1)?.takeIf { it > 0 },
-            dateAddedMs = extras?.getLong("dateAddedMs", 0L) ?: 0L,
+            album = metadata.albumTitle?.toString(), contentUri = item.localConfiguration?.uri?.toString() ?: "",
+            artworkUri = metadata.artworkUri?.toString(), durationMs = extras?.getLong("durationMs", 0L) ?: 0L,
+            filePath = extras?.getString("filePath"), trackNumber = extras?.getInt("trackNumber", -1)?.takeIf { it > 0 },
+            year = extras?.getInt("year", -1)?.takeIf { it > 0 }, dateAddedMs = extras?.getLong("dateAddedMs", 0L) ?: 0L,
         )
     }
 
@@ -223,13 +191,19 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
         positionJob = viewModelScope.launch {
             while (isActive) {
                 val ctrl = controller ?: break
-                _state.update {
-                    it.copy(
-                        positionMs = ctrl.currentPosition.coerceAtLeast(0L),
-                        durationMs = ctrl.duration.coerceAtLeast(0L),
-                    )
+                val currentPos = ctrl.currentPosition.coerceAtLeast(0L)
+                
+                // --- LÓGICA DE ESTADÍSTICAS ---
+                val delta = currentPos - lastTickPositionMs
+                // Si avanzó entre 0 y 5 segundos (ignorar saltos), y hay canción actual
+                if (delta in 1..5000 && _state.value.currentSong != null && ctrl.isPlaying) {
+                    ListeningStats.record(_state.value.currentSong!!, delta, false)
                 }
-                delay(500L)
+                lastTickPositionMs = currentPos
+                // ------------------------------
+
+                _state.update { it.copy(positionMs = currentPos, durationMs = ctrl.duration.coerceAtLeast(0L)) }
+                delay(1000L) // Cada segundo para mayor precisión
             }
         }
     }
@@ -242,11 +216,10 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
     override fun onCleared() {
         positionJob?.cancel()
         lyricsJob?.cancel()
+        ListeningStats.flush() // Guardar al salir
         controller?.let { ctrl ->
             ctrl.removeListener(playerListener)
-            MediaController.releaseFuture(
-                com.google.common.util.concurrent.Futures.immediateFuture(ctrl)
-            )
+            MediaController.releaseFuture(com.google.common.util.concurrent.Futures.immediateFuture(ctrl))
         }
         controller = null
         super.onCleared()
