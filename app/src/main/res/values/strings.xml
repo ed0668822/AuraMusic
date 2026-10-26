@@ -1,6 +1,19 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Aura Music</string>
-    <string name="notification_channel_name">Reproducción de música</string>
-    <string name="notification_channel_description">Controles de reproducción en segundo plano</string>
+    <!-- ... (tus textos existentes) ... -->
+    
+    <string name="search_hint">Buscar canciones, artistas, álbumes…</string>
+    <string name="search">Buscar</string>
+    <string name="clear_search">Borrar búsqueda</string>
+    <string name="library">Library</string>
+    <string name="listen_now">Listen Now</string>
+    <string name="recently_added">Añadido recientemente</string>
+    <string name="albums">Álbumes</string>
+    <string name="artists">Artistas</string>
+    <string name="songs">Canciones</string>
+    <string name="local_music">Local Music</string>
+    <string name="on_device">En el dispositivo</string>
+    <string name="play">Play</string>
+    <string name="shuffle">Shuffle</string>
+    <string name="more">Más</string>
 </resources>
