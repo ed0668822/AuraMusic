@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.music.aura.data.ProfileRepository
 import com.music.aura.data.SettingsRepository
-import com.music.aura.data.stats.ListeningStats
 import com.music.aura.ui.components.RowDivider
 import com.music.aura.ui.components.SegmentedControl
 import com.music.aura.ui.components.SettingsGroup
@@ -43,7 +42,6 @@ fun SettingsScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     
-    // Perfil
     var userName by remember { mutableStateOf(ProfileRepository.userName) }
     var userPhoto by remember { mutableStateOf(ProfileRepository.userPhotoUri) }
     var showNameDialog by remember { mutableStateOf(false) }
@@ -58,7 +56,6 @@ fun SettingsScreen(
         }
     }
 
-    // Estados de Settings
     val themeMode by SettingsRepository.themeMode.collectAsState()
     val dolbyAtmos by SettingsRepository.dolbyAtmos.collectAsState()
     val liquidGlass by SettingsRepository.liquidGlass.collectAsState()
@@ -93,7 +90,6 @@ fun SettingsScreen(
             .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
     ) {
-        // Top Bar
         Row(
             modifier = Modifier.fillMaxWidth().padding(top = 40.dp, start = 8.dp, end = 8.dp, bottom = 16.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -123,7 +119,7 @@ fun SettingsScreen(
                     if (userPhoto != null) {
                         AsyncImage(model = userPhoto, contentDescription = null, modifier = Modifier.fillMaxSize())
                     } else {
-                        Icon(Icons.Filled.Person, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(30.dp))
+                        Icon(Icons.Rounded.Person, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(30.dp))
                     }
                 }
                 Spacer(Modifier.width(16.dp))
@@ -134,7 +130,7 @@ fun SettingsScreen(
             }
             RowDivider()
             SettingsRow(
-                icon = Icons.Filled.Edit,
+                icon = Icons.Rounded.Edit,
                 title = "Nombre",
                 value = userName,
                 onClick = { showNameDialog = true }
@@ -144,7 +140,7 @@ fun SettingsScreen(
         // --- Audio ---
         SettingsGroup(header = "Audio Quality") {
             SettingsRow(
-                icon = Icons.Filled.Speaker,
+                icon = Icons.Rounded.Speaker,
                 title = "Dolby Atmos",
                 subtitle = "Reproduce la versión envolvente cuando esté disponible.",
                 trailing = {
@@ -158,14 +154,14 @@ fun SettingsScreen(
             )
             RowDivider()
             SettingsRow(
-                icon = Icons.Filled.GraphicEq,
+                icon = Icons.Rounded.GraphicEq,
                 title = "Lossless",
                 subtitle = "Reproduce la máxima calidad local.",
                 trailing = { Text("Lossless", color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold) }
             )
             RowDivider()
             SettingsRow(
-                icon = Icons.Filled.Shuffle,
+                icon = Icons.Rounded.Shuffle,
                 title = "AutoMix",
                 subtitle = "Transiciones perfectas entre canciones.",
                 value = "$crossfade s",
@@ -173,7 +169,7 @@ fun SettingsScreen(
             )
             RowDivider()
             SettingsRow(
-                icon = Icons.Filled.Tune,
+                icon = Icons.Rounded.Tune,
                 title = "Equalizer",
                 subtitle = "Tone, seven bands and balance",
                 onClick = onOpenEqualizer
@@ -183,7 +179,7 @@ fun SettingsScreen(
         // --- Reproducción ---
         SettingsGroup(header = "Playback") {
             SettingsRow(
-                icon = Icons.Filled.Autorenew,
+                icon = Icons.Rounded.Autorenew,
                 title = "Autoplay",
                 subtitle = "Sigue reproduciendo canciones similares al terminar la cola.",
                 trailing = {
@@ -197,7 +193,7 @@ fun SettingsScreen(
             )
             RowDivider()
             SettingsRow(
-                icon = Icons.Filled.SpatialAudio,
+                icon = Icons.Rounded.SpatialAudio,
                 title = "Spatial audio",
                 subtitle = "Amplía las pistas estéreo para una sensación más envolvente.",
                 trailing = {
@@ -223,7 +219,7 @@ fun SettingsScreen(
             }
             RowDivider()
             SettingsRow(
-                icon = Icons.Filled.AutoAwesome,
+                icon = Icons.Rounded.AutoAwesome,
                 title = "Liquid Glass",
                 subtitle = "Cristal real en la barra de navegación. Android 12+.",
                 trailing = {
@@ -237,7 +233,7 @@ fun SettingsScreen(
             )
             RowDivider()
             SettingsRow(
-                icon = Icons.Filled.MotionPhotosOff,
+                icon = Icons.Rounded.MotionPhotosOff,
                 title = "Reduce animation",
                 subtitle = "Congela el gradiente del reproductor en lugar de dejarlo flotar.",
                 trailing = {
@@ -251,7 +247,7 @@ fun SettingsScreen(
             )
             RowDivider()
             SettingsRow(
-                icon = Icons.Filled.BlurOff,
+                icon = Icons.Rounded.BlurOff,
                 title = "Reduce dynamic blur",
                 subtitle = "Cambia el cristal difuminado por fondos sólidos en toda la app.",
                 trailing = {
@@ -268,7 +264,7 @@ fun SettingsScreen(
         // --- Letras ---
         SettingsGroup(header = "Lyrics") {
             SettingsRow(
-                icon = Icons.Filled.Lyrics,
+                icon = Icons.Rounded.Lyrics,
                 title = "Synced lyrics",
                 subtitle = "Ilumina las palabras mientras se cantan.",
                 trailing = {
@@ -282,7 +278,7 @@ fun SettingsScreen(
             )
             RowDivider()
             SettingsRow(
-                icon = Icons.Filled.BlurOn,
+                icon = Icons.Rounded.BlurOn,
                 title = "Blur unfocused lyrics",
                 subtitle = "Mantiene el foco en la línea actual.",
                 trailing = {
@@ -299,14 +295,14 @@ fun SettingsScreen(
         // --- Local Music ---
         SettingsGroup(header = "Local Music") {
             SettingsRow(
-                icon = Icons.Filled.Folder,
+                icon = Icons.Rounded.Folder,
                 title = "Local music folder",
                 subtitle = "Music/Aura",
                 onClick = { /* TODO: SAF Picker */ }
             )
             RowDivider()
             SettingsRow(
-                icon = Icons.Filled.FilterAlt,
+                icon = Icons.Rounded.FilterAlt,
                 title = "Filter non-music audio",
                 subtitle = "Oculta clips, notas de voz y sonidos del sistema.",
                 trailing = {
@@ -327,7 +323,7 @@ fun SettingsScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("Aura Music", fontWeight = FontWeight.Bold)
-                Text("v1.7.0", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("v1.8.0", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
 
