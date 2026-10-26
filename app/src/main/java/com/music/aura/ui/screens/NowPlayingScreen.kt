@@ -7,30 +7,30 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.Subject
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil3.compose.AsyncImage
+import com.music.aura.R
 import com.music.aura.playback.PlaybackViewModel
-import com.music.aura.ui.components.AnimatedArtwork
-import com.music.aura.ui.components.LyricsSheet
-import com.music.aura.ui.components.PlayerControls
-import com.music.aura.ui.components.ThinSlider
+import com.music.aura.ui.components.*
 import com.music.aura.ui.theme.ArtworkColors
 import com.music.aura.ui.theme.DynamicAuraTheme
 import com.music.aura.ui.theme.DynamicThemeViewModel
@@ -73,14 +73,12 @@ fun NowPlayingScreen(
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.background),
             ) {
-                // Fondo: MeshGradient animado con colores del artwork
                 MeshGradient(
                     colors = artworkColors ?: ArtworkColors(),
                     isPlaying = state.isPlaying,
                     modifier = Modifier.fillMaxSize(),
                 )
 
-                // Scrim vertical MUY suave
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -151,17 +149,33 @@ fun NowPlayingScreen(
                         progressFraction = progressFraction,
                     )
 
-                    Spacer(modifier = Modifier.height(40.dp))
+                    Spacer(modifier = Modifier.height(32.dp))
 
-                    Text(
-                        text = song.title,
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
+                    // Título con Iconos de Calidad
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = song.title,
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            textAlign = TextAlign.Center,
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        // Icono Lossless (puedes condicionarlo a si es FLAC o WAV)
+                        if (song.filePath?.endsWith(".flac", ignoreCase = true) == true) {
+                            Image(
+                                painter = painterResource(id = R.drawable.ic_lossless),
+                                contentDescription = "Lossless",
+                                modifier = Modifier.size(20.dp, 12.dp),
+                                colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(MaterialTheme.colorScheme.onSurfaceVariant)
+                            )
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(6.dp))
 
@@ -175,22 +189,8 @@ fun NowPlayingScreen(
                         modifier = Modifier.fillMaxWidth(),
                     )
 
-                    if (!song.album.isNullOrBlank()) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = song.album,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                    }
-
                     Spacer(modifier = Modifier.weight(1f))
 
-                    // Usamos el nuevo ThinSlider de BitChord
                     ThinSlider(
                         value = progressFraction,
                         onValueChange = { fraction ->
@@ -213,11 +213,23 @@ fun NowPlayingScreen(
                 }
 
                 if (showLyrics) {
-                    LyricsSheet(
-                        lyrics = state.lyrics,
-                        positionMs = state.positionMs,
-                        onDismiss = { showLyrics = false },
-                    )
+                    ModalBottomSheet(
+                        onDismissRequest = { showLyrics = false },
+                        containerColor = MaterialTheme.colorScheme.background,
+                        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+                    ) {
+                        if (state.lyrics != null && state.lyrics!!.isSynced) {
+                            SyncedLyricsPanel(
+                                lyrics = state.lyrics!!,
+                                positionMs = state.positionMs,
+                                modifier = Modifier.fillMaxHeight(0.9f)
+                            )
+                        } else {
+                            Box(Modifier.fillMaxHeight(0.9f), contentAlignment = Alignment.Center) {
+                                Text("Letras no sincronizadas", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+                    }
                 }
             }
         }
