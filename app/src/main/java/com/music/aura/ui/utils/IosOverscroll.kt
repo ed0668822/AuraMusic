@@ -1,12 +1,9 @@
-/*
- * Adapted from Convx's IosOverscroll.kt (GPL-3.0):
- * https://github.com/cosmictaserdev-creator/Convx
- */
 package com.music.aura.ui.utils
 
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.OverscrollEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableFloatState
@@ -16,15 +13,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.layout.Measurable
-import androidx.compose.ui.layout.MeasureResult
-import androidx.compose.ui.layout.MeasureScope
-import androidx.compose.ui.node.DelegatableNode
-import androidx.compose.ui.node.LayoutModifierNode
-import androidx.compose.ui.node.ModifierNodeElement
-import androidx.compose.ui.platform.InspectorInfo
-import androidx.compose.ui.unit.Constraints
-import androidx.compose.ui.unit.Density
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.Velocity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
@@ -39,9 +28,6 @@ private const val highVelocityThreshold = 5_000f
 private const val normalBounceStiffness = 247f
 private const val fastBounceStiffness = 130f
 
-/**
- * Converts raw pull distance to UIKit's self-limiting rubber-band curve.
- */
 private fun rubberBand(rawDistance: Float, containerPx: Float): Float {
     val dimension = containerPx.takeIf { it > 0f } ?: fallbackContainerPx
     val distance = abs(rawDistance)
@@ -50,15 +36,9 @@ private fun rubberBand(rawDistance: Float, containerPx: Float): Float {
     return banded * sign(rawDistance)
 }
 
-/**
- * An iOS-style overscroll effect for Compose scroll containers.
- *
- * It replaces Android's stretch/glow with a UIScrollView-like rubber band during a
- * drag, then critically damps the content back to its resting position on release.
- */
+@OptIn(ExperimentalFoundationApi::class)
 private class IosOverscrollEffect(
-    private val scope: CoroutineScope,
-    private val density: Density
+    private val scope: CoroutineScope
 ) : OverscrollEffect {
     private val rawPullX = mutableFloatStateOf(0f)
     private val rawPullY = mutableFloatStateOf(0f)
@@ -68,15 +48,18 @@ private class IosOverscrollEffect(
     override val isInProgress: Boolean
         get() = rawPullX.floatValue != 0f || rawPullY.floatValue != 0f
 
-    // ✅ CORREGIDO: La interfaz OverscrollEffect ahora requiere 'node' en lugar de 'effectModifier'
-    override val node: DelegatableNode = IosOverscrollNode(
-        offsetX = { rubberBand(rawPullX.floatValue, containerWidthPx) },
-        offsetY = { rubberBand(rawPullY.floatValue, containerHeightPx) },
-        onMeasured = { width, height ->
-            containerWidthPx = width
-            containerHeightPx = height
-        },
-    )
+    // ✅ CORREGIDO: OverscrollEffect ahora requiere 'effectModifier' en lugar de 'node' o 'OverscrollFactory'
+    override val effectModifier: Modifier = Modifier.layout { measurable, constraints ->
+        val placeable = measurable.measure(constraints)
+        containerWidthPx = (if (constraints.hasBoundedWidth) constraints.maxWidth else placeable.width).toFloat()
+        containerHeightPx = (if (constraints.hasBoundedHeight) constraints.maxHeight else placeable.height).toFloat()
+        layout(placeable.width, placeable.height) {
+            placeable.placeWithLayer(0, 0) {
+                translationX = rubberBand(rawPullX.floatValue, containerWidthPx)
+                translationY = rubberBand(rawPullY.floatValue, containerHeightPx)
+            }
+        }
+    }
 
     override fun applyToScroll(
         delta: Offset,
@@ -146,40 +129,10 @@ private class IosOverscrollEffect(
     }
 }
 
-private class IosOverscrollNode(
-    private val offsetX: () -> Float,
-    private val offsetY: () -> Float,
-    private val onMeasured: (Float, Float) -> Unit,
-) : Modifier.Node(), LayoutModifierNode {
-    override fun MeasureScope.measure(
-        measurable: Measurable,
-        constraints: Constraints,
-    ): MeasureResult {
-        val placeable = measurable.measure(constraints)
-        onMeasured(
-            (if (constraints.hasBoundedWidth) constraints.maxWidth else placeable.width).toFloat(),
-            (if (constraints.hasBoundedHeight) constraints.maxHeight else placeable.height).toFloat(),
-        )
-        return layout(placeable.width, placeable.height) {
-            placeable.placeWithLayer(0, 0) {
-                translationX = offsetX()
-                translationY = offsetY()
-            }
-        }
-    }
-}
-
-/**
- * Provides iOS-style rubber-band overscroll to every descendant scroll container.
- */
 @Composable
 fun rememberIosOverscrollEffect(): OverscrollEffect {
-    val density = Density(LocalDensity.current.density, LocalDensity.current.fontScale)
     val scope = rememberCoroutineScope()
-    return remember(density, scope) {
-        IosOverscrollEffect(scope, density)
+    return remember(scope) {
+        IosOverscrollEffect(scope)
     }
 }
-
-// Import necesario para LocalDensity
-import androidx.compose.ui.platform.LocalDensity
