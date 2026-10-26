@@ -5,7 +5,6 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization")
 }
 
-// AUTO-INCREMENTO DE VERSIÓN
 val runNumber = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 0
 val autoVersionName = if (runNumber > 0) "1.9.$runNumber" else "1.9.0"
 val autoVersionCode = if (runNumber > 0) 10000 + runNumber else (System.currentTimeMillis() / 60000).toInt()
@@ -23,13 +22,13 @@ android {
         buildConfigField("String", "UPDATE_APK_PREFIX", "\"app-\"")
     }
 
-    // 🔥 CONFIGURACIÓN DE FIRMA PARA ACTUALIZACIONES 🔥
+    // FIRMA PARA ACTUALIZACIONES
     signingConfigs {
         create("release") {
-            // En GitHub Actions, el workflow decodifica el keystore y lo llama "aura-release.jks"
-            // En local, lee del archivo "aura-release.jks" si existe en la raíz del módulo
             val keystorePath = System.getenv("KEYSTORE_PATH") ?: "aura-release.jks"
-            val storeFile = file(keystorePath)
+            // 🔥 CORREGIDO AQUÍ: usar rootProject.file() en lugar de file()
+            // El workflow crea la keystore en la raíz del proyecto, no en app/
+            val storeFile = rootProject.file(keystorePath)
             
             if (storeFile.exists()) {
                 this.storeFile = storeFile
@@ -48,12 +47,10 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            // 🔥 Aplicar la firma al Release
             signingConfig = signingConfigs.findByName("release")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
         debug {
-            // 🔥 Aplicar la misma firma al Debug para que coincida con el Release
             signingConfig = signingConfigs.findByName("release")
         }
     }
@@ -64,7 +61,6 @@ android {
     }
 }
 
-// EL BLOQUE KOTLIN VA AFUERA DEL BLOQUE ANDROID
 kotlin {
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
@@ -87,12 +83,10 @@ dependencies {
     implementation("androidx.core:core-ktx:1.15.0")
     debugImplementation("androidx.compose.ui:ui-tooling")
 
-    // Media3
     implementation("androidx.media3:media3-exoplayer:1.5.1")
     implementation("androidx.media3:media3-session:1.5.1")
     implementation("androidx.media3:media3-common:1.5.1")
 
-    // FFmpeg Decoders (para Dolby Atmos, ALAC, etc.)
     implementation("io.github.anilbeesetti:nextlib-media3ext:1.11.1-0.16.0")
 
     implementation("io.coil-kt.coil3:coil-compose:3.0.4")
