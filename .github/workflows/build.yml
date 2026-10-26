@@ -16,20 +16,20 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    # 1. Crear la firma desde el secreto de GitHub
+    # 1. Decodificar la firma (Keystore)
     - name: Decode Keystore
       env:
         KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
       run: |
-        echo "$KEYSTORE_BASE64" | base64 --decode > aura-release.p12
+        echo "$KEYSTORE_BASE64" | base64 --decode > aura-release.jks
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
 
-    # 2. Compilar firmando con la llave
+    # 2. Compilar firmando con la llave (usando aura-release.jks)
     - name: Build Debug APK
       env:
-        KEYSTORE_PATH: "aura-release.p12"
+        KEYSTORE_PATH: "aura-release.jks"
         KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
       run: gradle clean assembleDebug
