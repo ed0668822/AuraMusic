@@ -20,10 +20,11 @@ class AuraPlaybackService : MediaSessionService() {
     override fun onCreate() {
         super.onCreate()
 
-        // 1. FFmpeg
+        // 1. Configurar el decodificador FFmpeg (para Dolby Atmos, ALAC, etc.)
         val renderersFactory = NextRenderersFactory(this)
             .setEnableDecoderFallback(true)
 
+        // 2. Construir el ExoPlayer con AudioAttributes
         val player = ExoPlayer.Builder(this, renderersFactory)
             .setAudioAttributes(
                 AudioAttributes.Builder()
@@ -34,19 +35,17 @@ class AuraPlaybackService : MediaSessionService() {
             )
             .setHandleAudioBecomingNoisy(true)
             .setWakeMode(C.WAKE_MODE_LOCAL)
-            // --- AUTOMIX (Crossfade) ---
-            // ExoPlayer soporta crossfade nativo desde la versión 1.0
-            .setPauseAtEndOfMediaItems(false)
-            .setSkipSilenceEnabled(false)
-            // Si tienes configurado el crossfade en segundos, ExoPlayer lo aplicará
-            // Nota: El crossfade real de audio se configura mediante el AudioSink (más adelante)
             .build()
 
+        // 3. Configurar la sesión (para la notificación y controles de pantalla de bloqueo)
         val sessionActivityIntent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
+        
         val sessionActivity = PendingIntent.getActivity(
-            this, 0, sessionActivityIntent,
+            this, 
+            0, 
+            sessionActivityIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
@@ -61,6 +60,7 @@ class AuraPlaybackService : MediaSessionService() {
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         val player = mediaSession?.player
+        // Si el usuario cierra la app desde los recientes y no está reproduciendo, detenemos el servicio
         if (player == null || !player.playWhenReady || player.mediaItemCount == 0) {
             stopSelf()
         }
