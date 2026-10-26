@@ -10,10 +10,6 @@ data class LyricLine(
 
 /**
  * Letras de una canción, sincronizadas o planas.
- *
- * [isSynced] es true cuando las líneas tienen timestamps reales (LRC).
- * Cuando es false, cada línea tiene un timestamp artificial equiespaciado
- * para que la UI pueda hacer scroll pasivo sin resaltar ninguna.
  */
 data class Lyrics(
     val lines: List<LyricLine>,
@@ -30,14 +26,20 @@ data class Lyrics(
     }
 
     companion object {
-        /** Parser LRC: `[mm:ss.xx]texto` (con fracciones de 1–3 dígitos). */
-        private val TIMESTAMP_REGEX =
+        // Coincide con [00:31.495] o [00:31.49]
+        private val LINE_TIMESTAMP_REGEX =
             Regex("""\[(\d+):(\d{2})(?:[.:](\d{1,3}))?]""")
+        
+        // Coincide con <00:31.495> (Enhanced LRC)
+        private val WORD_TIMESTAMP_REGEX = 
+            Regex("""<\d+:\d{2}(?:\.\d{1,3})?>""")
+            
+        // Coincide con "v1:", "v2:", etc.
+        private val VERSE_PREFIX_REGEX = 
+            Regex("""^v\d+:""", RegexOption.IGNORE_CASE)
 
         /**
-         * Parsea texto LRC o letra plana.
-         * - Si contiene timestamps → [isSynced] true, ordenado por tiempo.
-         * - Si no → cada línea recibe un timestamp artificial equiespaciado.
+         * Parsea texto LRC (estándar o Enhanced) o letra plana.
          */
         fun parse(raw: String): Lyrics? {
             if (raw.isBlank()) return null
@@ -47,34 +49,48 @@ data class Lyrics(
             var sawAnyTimestamp = false
 
             raw.lines().forEach { rawLine ->
-                val line = rawLine.trim()
+                var line = rawLine.trim()
                 if (line.isEmpty()) return@forEach
 
                 // Saltar metadata tipo [ar:Artist], [ti:Title]
                 if (line.length > 3 && line[0] == '[' && !line[1].isDigit()) return@forEach
 
-                val matches = TIMESTAMP_REGEX.findAll(line).toList()
-                if (matches.isEmpty()) {
-                    plain.add(line)
-                    return@forEach
-                }
-                sawAnyTimestamp = true
+                // Buscar timestamp de línea estándar
+                val lineMatches = LINE_TIMESTAMP_REGEX.findAll(line).toList()
+                
+                if (lineMatches.isNotEmpty()) {
+                    sawAnyTimestamp = true
+                    
+                    // El texto de la línea es todo lo que está DESPUÉS del último timestamp de línea
+                    val lastMatch = lineMatches.last()
+                    var text = line.substring(lastMatch.range.last + 1).trim()
 
-                val text = line.substring(matches.last().range.last + 1).trim()
-                if (text.isEmpty()) return@forEach
+                    // Limpieza para Enhanced LRC
+                    text = WORD_TIMESTAMP_REGEX.replace(text, "").trim()
+                    text = VERSE_PREFIX_REGEX.replace(text, "").trim()
 
-                matches.forEach { m ->
-                    val min = m.groupValues[1].toLongOrNull() ?: return@forEach
-                    val sec = m.groupValues[2].toLongOrNull() ?: return@forEach
-                    val fracStr = m.groupValues[3]
-                    val frac = when (fracStr.length) {
-                        0 -> 0L
-                        1 -> fracStr.toLong() * 100
-                        2 -> fracStr.toLong() * 10
-                        else -> fracStr.take(3).toLong()
+                    if (text.isNotEmpty()) {
+                        // Tomamos el primer timestamp para la línea (el resto son redundantes si hay varios)
+                        val firstMatch = lineMatches.first()
+                        val min = firstMatch.groupValues[1].toLongOrNull() ?: 0L
+                        val sec = firstMatch.groupValues[2].toLongOrNull() ?: 0L
+                        val fracStr = firstMatch.groupValues[3]
+                        val frac = when (fracStr.length) {
+                            0 -> 0L
+                            1 -> fracStr.toLong() * 100
+                            2 -> fracStr.toLong() * 10
+                            else -> fracStr.take(3).toLong()
+                        }
+                        val ms = min * 60_000 + sec * 1_000 + frac
+                        timed.add(LyricLine(ms, text))
                     }
-                    val ms = min * 60_000 + sec * 1_000 + frac
-                    timed.add(LyricLine(ms, text))
+                } else {
+                    // Texto plano o Enhanced LRC sin timestamp de línea
+                    var text = WORD_TIMESTAMP_REGEX.replace(line, "").trim()
+                    text = VERSE_PREFIX_REGEX.replace(text, "").trim()
+                    if (text.isNotEmpty()) {
+                        plain.add(text)
+                    }
                 }
             }
 
