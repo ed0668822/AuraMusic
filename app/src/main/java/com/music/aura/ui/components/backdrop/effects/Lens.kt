@@ -59,7 +59,8 @@ fun BackdropEffectScope.lens(
         } else {
             throwUnsupportedSDFException()
         }
-    effect(effect)
+    // AQUÍ ESTABA EL ERROR: Asignamos la variable en lugar de llamarla como función
+    renderEffect = effect
 }
 
 private val BackdropEffectScope.cornerRadii: FloatArray?
