@@ -8,7 +8,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -52,10 +51,6 @@ import com.music.aura.ui.theme.DynamicAuraTheme
 import com.music.aura.ui.theme.DynamicThemeViewModel
 import com.music.aura.ui.theme.MeshGradient
 
-/**
- * Pantalla completa del reproductor con fondo MeshGradient animado,
- * artwork grande, controles premium y bottom sheet de letras.
- */
 @Composable
 fun NowPlayingScreen(
     playbackViewModel: PlaybackViewModel,
@@ -93,23 +88,23 @@ fun NowPlayingScreen(
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.background),
             ) {
-                // Fondo: MeshGradient animado con colores del artwork
+                // Fondo animado
                 MeshGradient(
                     colors = artworkColors ?: ArtworkColors(),
                     isPlaying = state.isPlaying,
                     modifier = Modifier.fillMaxSize(),
                 )
 
-                // Scrim vertical para legibilidad de controles
+                // Scrim suave (capa oscura para legibilidad)
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(
                             Brush.verticalGradient(
                                 colors = listOf(
-                                    Color.Black.copy(alpha = 0.20f),
+                                    Color.Black.copy(alpha = 0.15f),
                                     Color.Transparent,
-                                    Color.Black.copy(alpha = 0.35f),
+                                    Color.Black.copy(alpha = 0.25f),
                                 ),
                             ),
                         ),
@@ -122,7 +117,7 @@ fun NowPlayingScreen(
                         .padding(horizontal = 24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    // Header: colapsar + cola
+                    // Header
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -138,10 +133,7 @@ fun NowPlayingScreen(
 
                         Spacer(modifier = Modifier.weight(1f))
 
-                        // Botón letras (deshabilitado si no hay)
-                        IconButton(
-                            onClick = { showLyrics = true },
-                        ) {
+                        IconButton(onClick = { showLyrics = true }) {
                             Icon(
                                 imageVector = Icons.Rounded.Subject,
                                 contentDescription = "Ver letras",
