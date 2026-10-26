@@ -14,6 +14,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.music.aura.data.SettingsRepository
@@ -77,11 +79,9 @@ fun TopFadeBlur(
 }
 
 @Composable
-fun topBarHeight(): androidx.compose.ui.unit.Dp {
-    val density = androidx.compose.ui.platform.LocalDensity.current
-    val statusBars = WindowInsets.statusBars
-    val inset = with(density) {
-        statusBars.getTop(this).toDp()
-    }
-    return inset + 52.dp
+fun topBarHeight(): Dp {
+    val density = LocalDensity.current
+    // Corregido: Usar WindowInsets.statusBars correctamente
+    val statusBarHeight = WindowInsets.statusBars.getTop(density).toDp()
+    return statusBarHeight + 52.dp
 }
