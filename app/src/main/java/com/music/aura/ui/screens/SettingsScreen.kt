@@ -12,6 +12,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,8 +22,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.music.aura.data.AppUpdateChecker
 import com.music.aura.data.ProfileRepository
 import com.music.aura.data.SettingsRepository
+import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen(
@@ -32,17 +35,17 @@ fun SettingsScreen(
     if (!isVisible) return
 
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var userName by remember { mutableStateOf(ProfileRepository.userName) }
     var userPhoto by remember { mutableStateOf(ProfileRepository.userPhotoUri) }
     var showNameDialog by remember { mutableStateOf(false) }
+    var isCheckingUpdate by remember { mutableStateOf(false) }
 
     val photoPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
         if (uri != null) {
-            context.contentResolver.takePersistableUriPermission(
-                uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
-            )
+            context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
             userPhoto = uri.toString()
             ProfileRepository.userPhotoUri = userPhoto
         }
@@ -53,14 +56,7 @@ fun SettingsScreen(
         AlertDialog(
             onDismissRequest = { showNameDialog = false },
             title = { Text("Editar Nombre") },
-            text = {
-                OutlinedTextField(
-                    value = tempName,
-                    onValueChange = { tempName = it },
-                    label = { Text("Nombre") },
-                    singleLine = true
-                )
-            },
+            text = { OutlinedTextField(value = tempName, onValueChange = { tempName = it }, singleLine = true) },
             confirmButton = {
                 TextButton(onClick = {
                     userName = tempName
@@ -68,53 +64,33 @@ fun SettingsScreen(
                     showNameDialog = false
                 }) { Text("Guardar") }
             },
-            dismissButton = {
-                TextButton(onClick = { showNameDialog = false }) { Text("Cancelar") }
-            }
+            dismissButton = { TextButton(onClick = { showNameDialog = false }) { Text("Cancelar") } }
         )
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .verticalScroll(rememberScrollState())
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).verticalScroll(rememberScrollState())
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(top = 40.dp, start = 8.dp, end = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onDismiss) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
-            }
+            IconButton(onClick = onDismiss) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás") }
             Text("Ajustes", style = MaterialTheme.typography.titleLarge)
         }
 
         // Perfil
-        Text(
-            text = "PERFIL",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
-        )
+        Text("PERFIL", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp))
         Row(
             modifier = Modifier.fillMaxWidth().clickable { photoPicker.launch(arrayOf("image/*")) }.padding(horizontal = 24.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                modifier = Modifier.size(56.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant),
-                contentAlignment = Alignment.Center
-            ) {
-                if (userPhoto != null) {
-                    AsyncImage(model = userPhoto, contentDescription = null, modifier = Modifier.fillMaxSize())
-                } else {
-                    Icon(Icons.Filled.Person, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
+            Box(modifier = Modifier.size(56.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center) {
+                if (userPhoto != null) AsyncImage(model = userPhoto, contentDescription = null, modifier = Modifier.fillMaxSize())
+                else Icon(Icons.Filled.Person, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Spacer(Modifier.width(16.dp))
-            Column {
-                Text("Foto de perfil (toca para cambiar)", style = MaterialTheme.typography.bodySmall)
-            }
+            Text("Foto de perfil (toca para cambiar)", style = MaterialTheme.typography.bodySmall)
         }
         Row(
             modifier = Modifier.fillMaxWidth().clickable { showNameDialog = true }.padding(horizontal = 24.dp, vertical = 12.dp),
@@ -125,12 +101,7 @@ fun SettingsScreen(
         }
 
         // Tema
-        Text(
-            text = "APARIENCIA",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
-        )
+        Text("APARIENCIA", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp))
         val themeOptions = listOf("Oscuro", "Claro", "Seguir sistema")
         themeOptions.forEachIndexed { index, label ->
             Row(
@@ -142,18 +113,31 @@ fun SettingsScreen(
             }
         }
 
+        // Actualizaciones
+        Text("SISTEMA", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth().clickable {
+                isCheckingUpdate = true
+                scope.launch {
+                    AppUpdateChecker.check()
+                    isCheckingUpdate = false
+                }
+            }.padding(horizontal = 24.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(Icons.Filled.Refresh, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.width(16.dp))
+            Text("Buscar actualizaciones", modifier = Modifier.weight(1f))
+            if (isCheckingUpdate) CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+        }
+
         // Acerca de
-        Text(
-            text = "ACERCA DE",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
-        )
+        Text("ACERCA DE", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp))
         Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp)) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("Aura Music", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text("Versión 1.3.0", style = MaterialTheme.typography.bodySmall)
-                Text("Reproductor 100% local. Sin red.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Versión 1.4.0", style = MaterialTheme.typography.bodySmall)
+                Text("Reproductor 100% local. Soporte Dolby Atmos.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         Spacer(Modifier.height(32.dp))
