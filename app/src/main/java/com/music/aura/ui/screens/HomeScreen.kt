@@ -1,129 +1,169 @@
 package com.music.aura.ui.screens
 
-import androidx.compose.ui.draw.blur
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
-import com.music.aura.LibraryViewModel
-import com.music.aura.data.AudioPermission
-import com.music.aura.data.LibraryState
-import com.music.aura.data.model.LocalAlbum
-import com.music.aura.data.model.LocalArtist
+import com.music.aura.R
 import com.music.aura.data.model.LocalSong
-import com.music.aura.playback.PlaybackViewModel
+import com.music.aura.ui.components.HERO_CARD_RATIO
+import com.music.aura.ui.components.PAGE_GUTTER
+import com.music.aura.ui.components.PlayingAccent
+import com.music.aura.ui.components.RowMoreButton
+import com.music.aura.ui.components.SearchPlayingBars
+import com.music.aura.ui.components.SHELF_CARD_WIDTH
 import com.music.aura.ui.components.ShelfRow
+import com.music.aura.ui.components.heroCardWidth
+import com.music.aura.ui.components.longPressMenuClickable
+import com.music.aura.ui.components.thumbnailBorder
+import com.music.aura.ui.components.trackColumnWidth
+import com.music.aura.ui.contextClick
+import com.music.aura.ui.icons.AuraIcons
+
+private val HOME_TITLE_LIFT = 28.dp
+private const val RECENT_TRACKS_PER_COLUMN = 4
 
 @Composable
 fun HomeScreen(
-    playbackViewModel: PlaybackViewModel,
-    libraryViewModel: LibraryViewModel = viewModel(),
+    recentlyPlayed: List<LocalSong>,
+    mostPlayed: List<LocalSong>,
+    recentlyAdded: List<LocalSong>,
+    listState: LazyListState,
+    onSongClick: (LocalSong) -> Unit,
+    onSongLongPress: (LocalSong) -> Unit,
+    currentSong: LocalSong?,
+    isPlaying: Boolean,
     modifier: Modifier = Modifier,
+    contentPadding: PaddingValues,
 ) {
-    val uiState by libraryViewModel.uiState.collectAsState()
-    val playbackState by playbackViewModel.state.collectAsState()
+    LazyColumn(
+        state = listState,
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(
+            top = (contentPadding.calculateTopPadding() - HOME_TITLE_LIFT).coerceAtLeast(0.dp),
+            bottom = contentPadding.calculateBottomPadding(),
+        ),
+    ) {
+        item { HomeTitle(stringResource(R.string.home)) }
 
-    LaunchedEffect(Unit) {
-        if (AudioPermission.isGranted(libraryViewModel.getApplication())) {
-            libraryViewModel.loadLibrary()
+        if (recentlyPlayed.isNotEmpty()) {
+            item(key = "recents") {
+                RecentShelf(
+                    title = stringResource(R.string.recently_played),
+                    songs = recentlyPlayed,
+                    onSongClick = onSongClick,
+                    onSongLongPress = onSongLongPress,
+                    currentSong = currentSong,
+                    isPlaying = isPlaying,
+                )
+            }
+        }
+
+        if (mostPlayed.isNotEmpty()) {
+            item(key = "most-played") {
+                SongShelf(
+                    title = stringResource(R.string.most_played),
+                    songs = mostPlayed,
+                    onSongClick = onSongClick,
+                    onSongLongPress = onSongLongPress,
+                    currentSong = currentSong,
+                    isPlaying = isPlaying,
+                )
+            }
+        }
+
+        if (recentlyAdded.isNotEmpty()) {
+            item(key = "recently-added") {
+                SongShelf(
+                    title = stringResource(R.string.recently_added),
+                    songs = recentlyAdded,
+                    onSongClick = onSongClick,
+                    onSongLongPress = onSongLongPress,
+                    currentSong = currentSong,
+                    isPlaying = isPlaying,
+                )
+            }
         }
     }
+}
 
-    Box(modifier = modifier.fillMaxSize()) {
-        when (val state = uiState.libraryState) {
-            is LibraryState.Loading -> {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                }
-            }
-            is LibraryState.Error -> {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(state.message, color = MaterialTheme.colorScheme.error)
-                }
-            }
-            is LibraryState.Success -> {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(top = 60.dp, bottom = 260.dp),
-                ) {
-                    // Título "Listen Now"
-                    item {
-                        Text(
-                            text = "Listen Now",
-                            fontSize = 34.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
-                        )
-                    }
+@Composable
+private fun HomeTitle(title: String, modifier: Modifier = Modifier) {
+    Column(modifier = modifier.padding(horizontal = PAGE_GUTTER, vertical = 8.dp)) {
+        Icon(
+            imageVector = AuraIcons.Home,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier
+                .padding(bottom = 14.dp)
+                .size(30.dp),
+        )
+        Text(
+            text = title,
+            style = MaterialTheme.typography.displayLarge,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
+    }
+}
 
-                    // Hero Card
-                    if (state.recentlyAdded.isNotEmpty()) {
-                        val latest = state.recentlyAdded.first()
-                        item {
-                            HomeHero(
-                                song = latest,
-                                onPlayClick = {
-                                    playbackViewModel.playSongs(state.songs, state.songs.indexOf(latest))
-                                },
-                                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
-                            )
-                        }
-                    }
-
-                    // Recientes
-                    if (state.recentlyAdded.isNotEmpty()) {
-                        item {
-                            Spacer(Modifier.height(16.dp))
-                            SongShelf(
-                                title = "Recents",
-                                songs = state.recentlyAdded.take(10),
-                                currentSongId = playbackState.currentSong?.id,
-                                isPlaying = playbackState.isPlaying,
-                                onSongClick = { index -> playbackViewModel.playSongs(state.recentlyAdded, index) }
-                            )
-                        }
-                    }
-
-                    // Álbumes
-                    if (state.albums.isNotEmpty()) {
-                        item {
-                            Spacer(Modifier.height(16.dp))
-                            AlbumShelf(
-                                title = "Álbumes",
-                                albums = state.albums.take(10),
-                                onAlbumClick = { album -> playbackViewModel.playSongs(album.songs, 0) }
-                            )
-                        }
-                    }
-
-                    // Artistas
-                    if (state.artists.isNotEmpty()) {
-                        item {
-                            Spacer(Modifier.height(16.dp))
-                            ArtistShelf(
-                                title = "Artistas",
-                                artists = state.artists.take(10),
-                                onArtistClick = { artist -> playbackViewModel.playSongs(artist.songs, 0) }
+@Composable
+private fun RecentShelf(
+    title: String,
+    songs: List<LocalSong>,
+    onSongClick: (LocalSong) -> Unit,
+    onSongLongPress: (LocalSong) -> Unit,
+    currentSong: LocalSong?,
+    isPlaying: Boolean,
+) {
+    Column(Modifier.padding(bottom = 26.dp)) {
+        SectionHeader(title)
+        BoxWithConstraints {
+            val columnWidth = trackColumnWidth(maxWidth)
+            ShelfRow(
+                contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                items(songs.chunked(RECENT_TRACKS_PER_COLUMN)) { column ->
+                    Column(Modifier.width(columnWidth)) {
+                        column.forEach { song ->
+                            CompactTrackRow(
+                                song = song,
+                                onClick = { onSongClick(song) },
+                                onLongPress = { onSongLongPress(song) },
+                                isCurrent = currentSong?.id == song.id,
+                                isPlaying = currentSong?.id == song.id && isPlaying,
                             )
                         }
                     }
@@ -137,223 +177,167 @@ fun HomeScreen(
 private fun SongShelf(
     title: String,
     songs: List<LocalSong>,
-    currentSongId: String?,
+    onSongClick: (LocalSong) -> Unit,
+    onSongLongPress: (LocalSong) -> Unit,
+    currentSong: LocalSong?,
     isPlaying: Boolean,
-    onSongClick: (Int) -> Unit
 ) {
-    Column {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
-        )
+    Column(Modifier.padding(bottom = 26.dp)) {
+        SectionHeader(title)
         ShelfRow(
-            contentPadding = PaddingValues(horizontal = 20.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            items(songs.size) { index ->
-                val song = songs[index]
-                Column(
-                    modifier = Modifier
-                        .width(140.dp)
-                        .clickable { onSongClick(index) }
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(140.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
-                    ) {
-                        if (song.artworkUri != null) {
-                            AsyncImage(
-                                model = song.artworkUri,
-                                contentDescription = null,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier.fillMaxSize()
-                            )
-                        }
-                    }
-                    Text(
-                        text = song.title,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = if (song.id == currentSongId) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-                    Text(
-                        text = song.artist,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
+            items(songs) { song ->
+                SongCard(
+                    song = song,
+                    onClick = { onSongClick(song) },
+                    onLongPress = { onSongLongPress(song) },
+                    isCurrent = currentSong?.id == song.id,
+                    isPlaying = currentSong?.id == song.id && isPlaying,
+                )
             }
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun AlbumShelf(
-    title: String,
-    albums: List<LocalAlbum>,
-    onAlbumClick: (LocalAlbum) -> Unit
+fun CompactTrackRow(
+    song: LocalSong,
+    onClick: () -> Unit,
+    onLongPress: (() -> Unit)?,
+    isCurrent: Boolean = false,
+    isPlaying: Boolean = false,
 ) {
-    Column {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
-        )
-        ShelfRow(
-            contentPadding = PaddingValues(horizontal = 20.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(albums.size) { index ->
-                val album = albums[index]
-                Column(
-                    modifier = Modifier
-                        .width(150.dp)
-                        .clickable { onAlbumClick(album) }
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(150.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
-                    ) {
-                        if (album.artworkUri != null) {
-                            AsyncImage(
-                                model = album.artworkUri,
-                                contentDescription = null,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier.fillMaxSize()
-                            )
-                        }
-                    }
-                    Text(
-                        text = album.name,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-                    Text(
-                        text = album.artist,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ArtistShelf(
-    title: String,
-    artists: List<LocalArtist>,
-    onArtistClick: (LocalArtist) -> Unit
-) {
-    Column {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
-        )
-        ShelfRow(
-            contentPadding = PaddingValues(horizontal = 20.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(artists.size) { index ->
-                val artist = artists[index]
-                Column(
-                    modifier = Modifier
-                        .width(100.dp)
-                        .clickable { onArtistClick(artist) },
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(100.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.surfaceVariant),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (artist.artworkUri != null) {
-                            AsyncImage(
-                                model = artist.artworkUri,
-                                contentDescription = null,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier.fillMaxSize()
-                            )
-                        } else {
-                            Icon(Icons.Filled.Person, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
-                    Text(
-                        text = artist.name,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun HomeHero(song: LocalSong, onPlayClick: () -> Unit, modifier: Modifier = Modifier) {
-    val shape = RoundedCornerShape(24.dp)
-    Box(
-        modifier = modifier
+    Row(
+        modifier = Modifier
             .fillMaxWidth()
-            .height(200.dp)
-            .clip(shape)
-            .background(MaterialTheme.colorScheme.surfaceVariant),
+            .longPressMenuClickable(onClick = onClick, onLongClick = onLongPress)
+            .contextClick(onLongPress)
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (song.artworkUri != null) {
+        Box(Modifier.size(48.dp)) {
             AsyncImage(
                 model = song.artworkUri,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize().blur(48.dp)
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(7.dp))
+                    .thumbnailBorder(RoundedCornerShape(7.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+            )
+            if (isCurrent && isPlaying) SearchPlayingBars(Modifier.align(Alignment.Center))
+        }
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                text = song.title,
+                style = MaterialTheme.typography.titleMedium,
+                color = if (isCurrent) PlayingAccent else MaterialTheme.colorScheme.onBackground,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = song.artist,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Brush.verticalGradient(listOf(Color.Black.copy(0.2f), Color.Black.copy(0.85f))))
-        )
-        Column(
-            modifier = Modifier.align(Alignment.BottomStart).padding(20.dp).fillMaxWidth(0.75f)
-        ) {
-            Text("ESCUCHA AHORA", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color.White.copy(0.75f))
-            Text(song.title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(song.artist, style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(0.7f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        if (onLongPress != null) {
+            RowMoreButton(onClick = onLongPress)
         }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun SongCard(
+    song: LocalSong,
+    onClick: () -> Unit,
+    onLongPress: (() -> Unit)? = null,
+    modifier: Modifier = Modifier.width(SHELF_CARD_WIDTH),
+    isCurrent: Boolean = false,
+    isPlaying: Boolean = false,
+) {
+    Column(
+        modifier = modifier
+            .longPressMenuClickable(onClick = onClick, onLongClick = onLongPress)
+            .contextClick(onLongPress),
+    ) {
         Box(
             modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(20.dp)
-                .size(56.dp)
-                .clip(CircleShape)
-                .background(Color.White)
-                .clickable(onClick = onPlayClick),
-            contentAlignment = Alignment.Center
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .clip(RoundedCornerShape(12.dp))
+                .thumbnailBorder(RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant),
         ) {
-            Icon(Icons.Filled.PlayArrow, contentDescription = "Play", tint = Color.Black, modifier = Modifier.size(28.dp))
+            AsyncImage(
+                model = song.artworkUri,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+            )
+            if (isCurrent && isPlaying) SearchPlayingBars(Modifier.align(Alignment.Center))
+        }
+        Spacer(Modifier.height(10.dp))
+        Text(
+            text = song.title,
+            style = MaterialTheme.typography.titleMedium,
+            color = if (isCurrent) PlayingAccent else MaterialTheme.colorScheme.onBackground,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            text = song.artist,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+@Composable
+internal fun SectionHeader(title: String, subtitle: String = "", onShowAll: (() -> Unit)? = null) {
+    Row(
+        modifier = Modifier
+            .padding(horizontal = PAGE_GUTTER, vertical = 10.dp)
+            .fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (subtitle.isNotBlank()) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+        if (onShowAll != null) {
+            Text(
+                text = stringResource(R.string.show_all),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .clickable(onClick = onShowAll)
+                    .padding(start = 12.dp, top = 4.dp, bottom = 4.dp),
+            )
         }
     }
 }
