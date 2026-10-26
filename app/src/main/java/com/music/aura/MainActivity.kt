@@ -34,22 +34,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.music.aura.data.AudioPermission
-import com.music.aura.data.SettingsRepository
 import com.music.aura.playback.PlaybackViewModel
 import com.music.aura.ui.components.BottomTab
 import com.music.aura.ui.components.GlassNavBar
 import com.music.aura.ui.components.MiniPlayer
 import com.music.aura.ui.screens.HomeScreen
 import com.music.aura.ui.screens.LibraryScreen
+import com.music.aura.ui.screens.LocalMusicScreen
 import com.music.aura.ui.screens.NowPlayingScreen
 import com.music.aura.ui.screens.QueueScreen
+import com.music.aura.ui.screens.ReplayScreen
 import com.music.aura.ui.screens.SettingsScreen
 import com.music.aura.ui.theme.AuraTheme
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 
 class MainActivity : ComponentActivity() {
-
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { _ -> }
@@ -58,18 +58,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        SettingsRepository.init(this)
-
         if (!AudioPermission.isGranted(this)) {
             permissionLauncher.launch(AudioPermission.requiredPermission())
         }
 
         setContent {
             AuraTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background,
-                ) {
+                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     AuraApp()
                 }
             }
@@ -84,10 +79,10 @@ private fun AuraApp() {
     var showNowPlaying by remember { mutableStateOf(false) }
     var showQueue by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
+    var showLocalMusic by remember { mutableStateOf(false) }
+    var showReplay by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        playbackViewModel.connect()
-    }
+    LaunchedEffect(Unit) { playbackViewModel.connect() }
 
     val playbackState by playbackViewModel.state.collectAsState()
     val hazeState = remember { HazeState() }
@@ -103,39 +98,49 @@ private fun AuraApp() {
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .hazeSource(hazeState), // Permite el efecto cristal
+            .hazeSource(hazeState),
     ) {
         when (selectedTab) {
             0 -> HomeScreen(playbackViewModel = playbackViewModel)
             1 -> Text("Explore (Próximamente)", modifier = Modifier.align(Alignment.Center))
-            2 -> LibraryScreen(
-                playbackViewModel = playbackViewModel,
-                onSettingsClick = { showSettings = true },
-            )
+            2 -> {
+                when {
+                    showReplay -> ReplayScreen(onBackClick = { showReplay = false })
+                    showLocalMusic -> LocalMusicScreen(
+                        playbackViewModel = playbackViewModel,
+                        onBackClick = { showLocalMusic = false }
+                    )
+                    else -> LibraryScreen(
+                        playbackViewModel = playbackViewModel,
+                        onSettingsClick = { showSettings = true },
+                        onOpenLocalMusic = { showLocalMusic = true },
+                        onOpenReplay = { showReplay = true }
+                    )
+                }
+            }
             3 -> Text("Search (Próximamente)", modifier = Modifier.align(Alignment.Center))
         }
 
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .padding(bottom = 16.dp, start = 12.dp, end = 12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            if (playbackState.currentSong != null && !showNowPlaying && !showQueue && !showSettings) {
-                MiniPlayer(
-                    state = playbackState,
-                    hazeState = hazeState,
-                    onPlayPause = { playbackViewModel.togglePlayPause() },
-                    onNext = { playbackViewModel.next() },
-                    onPrevious = { playbackViewModel.previous() },
-                    onExpand = { showNowPlaying = true },
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                )
-            }
-
-            if (!showNowPlaying && !showQueue && !showSettings) {
+        if (!showNowPlaying && !showQueue && !showSettings && !showLocalMusic && !showReplay) {
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(bottom = 16.dp, start = 12.dp, end = 12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                if (playbackState.currentSong != null) {
+                    MiniPlayer(
+                        state = playbackState,
+                        hazeState = hazeState,
+                        onPlayPause = { playbackViewModel.togglePlayPause() },
+                        onNext = { playbackViewModel.next() },
+                        onPrevious = { playbackViewModel.previous() },
+                        onExpand = { showNowPlaying = true },
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    )
+                }
                 GlassNavBar(
                     tabs = tabs,
                     selectedIndex = selectedTab,
@@ -150,18 +155,13 @@ private fun AuraApp() {
             playbackViewModel = playbackViewModel,
             isVisible = showNowPlaying,
             onDismiss = { showNowPlaying = false },
-            onOpenQueue = {
-                showNowPlaying = false
-                showQueue = true
-            },
+            onOpenQueue = { showNowPlaying = false; showQueue = true },
         )
-
         QueueScreen(
             playbackViewModel = playbackViewModel,
             isVisible = showQueue,
             onDismiss = { showQueue = false },
         )
-
         SettingsScreen(
             isVisible = showSettings,
             onDismiss = { showSettings = false },
