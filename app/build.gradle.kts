@@ -1,11 +1,9 @@
-import java.text.SimpleDateFormat
-import java.util.Date
-
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
-    id("org.jetbrains.kotlin.plugin.serialization")
+    // AÑADIDO: Versión explícita para el plugin de serialización
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.0.0" 
 }
 
 android {
@@ -17,8 +15,7 @@ android {
         minSdk = 26
         targetSdk = 35
         
-        // AUTO-INCREMENTO: Usa la fecha actual en minutos como versión.
-        // Esto garantiza que cada compilación sea una versión nueva.
+        // AUTO-INCREMENTO
         versionCode = (System.currentTimeMillis() / 60000).toInt()
         versionName = "1.2.0"
     }
@@ -77,8 +74,8 @@ dependencies {
     implementation("androidx.palette:palette-ktx:1.0.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.9.0")
 
+    // AÑADIDO: Dependencias para guardar los JSON de estadísticas
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.9.0")
 
     testImplementation("junit:junit:4.13.2")
 }
