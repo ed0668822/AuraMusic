@@ -5,6 +5,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization") version "2.0.0" 
 }
 
+// Lógica de versión automática
 val runNumber = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 0
 val autoVersionName = if (runNumber > 0) "1.4.$runNumber" else "1.4.0"
 val autoVersionCode = if (runNumber > 0) 10000 + runNumber else (System.currentTimeMillis() / 60000).toInt()
@@ -19,8 +20,6 @@ android {
         targetSdk = 35
         versionCode = autoVersionCode
         versionName = autoVersionName
-
-        // Prefijo del APK en GitHub Releases para el actualizador
         buildConfigField("String", "UPDATE_APK_PREFIX", "\"app-\"")
     }
 
@@ -58,11 +57,13 @@ dependencies {
     implementation("androidx.core:core-ktx:1.15.0")
     debugImplementation("androidx.compose.ui:ui-tooling")
 
-    // Media3 + FFmpeg Decoders (nextlib para Dolby Atmos, DTS, AC-4)
+    // Media3
     implementation("androidx.media3:media3-exoplayer:1.5.1")
     implementation("androidx.media3:media3-session:1.5.1")
     implementation("androidx.media3:media3-common:1.5.1")
-    implementation("com.github.anilbeesetti.nextlib:nextlib-media3ext:1.5.0")
+
+    // 🔥 FFmpeg Decoders (Dolby Atmos, DTS, AC-4, etc.) - CORREGIDO
+    implementation("io.github.anilbeesetti:nextlib-media3ext:1.11.1-0.16.0")
 
     implementation("io.coil-kt.coil3:coil-compose:3.0.4")
     implementation("dev.chrisbanes.haze:haze:1.3.1")
@@ -70,7 +71,5 @@ dependencies {
     implementation("androidx.palette:palette-ktx:1.0.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.9.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
-    
-    // Para el actualizador
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 }
