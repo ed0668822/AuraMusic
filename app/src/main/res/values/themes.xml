@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.AuraMusic" parent="android:Theme.Material.NoActionBar">
+    <!-- Cambiado a Theme.Aura para que coincida con el AndroidManifest -->
+    <style name="Theme.Aura" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">@android:color/black</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
