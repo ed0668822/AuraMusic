@@ -36,6 +36,20 @@ import com.music.aura.ui.theme.DynamicAuraTheme
 import com.music.aura.ui.theme.DynamicThemeViewModel
 import com.music.aura.ui.theme.MeshGradient
 
+import androidx.compose.material3.ExperimentalMaterial3Api
+
+// Justo encima de la función NowPlayingScreen:
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun NowPlayingScreen(
+    playbackViewModel: PlaybackViewModel,
+    isVisible: Boolean,
+    onDismiss: () -> Unit,
+    onOpenQueue: () -> Unit,
+) {
+    // ... el resto del archivo NowPlayingScreen.kt queda exactamente igual ...
+}
+
 @Composable
 fun NowPlayingScreen(
     playbackViewModel: PlaybackViewModel,
