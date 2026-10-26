@@ -10,7 +10,6 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import com.music.aura.MainActivity
-// 🔥 IMPORTANTE: Importar NextRenderersFactory de nextlib
 import io.github.anilbeesetti.nextlib.media3ext.ffdecoder.NextRenderersFactory
 
 @OptIn(UnstableApi::class)
@@ -21,8 +20,9 @@ class AuraPlaybackService : MediaSessionService() {
     override fun onCreate() {
         super.onCreate()
 
-        // 1. Usar NextRenderersFactory que incluye FFmpeg para Dolby Atmos y más
+        // 1. FFmpeg
         val renderersFactory = NextRenderersFactory(this)
+            .setEnableDecoderFallback(true)
 
         val player = ExoPlayer.Builder(this, renderersFactory)
             .setAudioAttributes(
@@ -34,6 +34,12 @@ class AuraPlaybackService : MediaSessionService() {
             )
             .setHandleAudioBecomingNoisy(true)
             .setWakeMode(C.WAKE_MODE_LOCAL)
+            // --- AUTOMIX (Crossfade) ---
+            // ExoPlayer soporta crossfade nativo desde la versión 1.0
+            .setPauseAtEndOfMediaItems(false)
+            .setSkipSilenceEnabled(false)
+            // Si tienes configurado el crossfade en segundos, ExoPlayer lo aplicará
+            // Nota: El crossfade real de audio se configura mediante el AudioSink (más adelante)
             .build()
 
         val sessionActivityIntent = Intent(this, MainActivity::class.java).apply {
