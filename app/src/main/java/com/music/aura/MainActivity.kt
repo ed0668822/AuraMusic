@@ -50,6 +50,7 @@ import com.music.aura.ui.screens.LocalMusicScreen
 import com.music.aura.ui.screens.NowPlayingScreen
 import com.music.aura.ui.screens.QueueScreen
 import com.music.aura.ui.screens.ReplayScreen
+import com.music.aura.ui.screens.SearchScreen
 import com.music.aura.ui.screens.SettingsScreen
 import com.music.aura.ui.theme.AuraTheme
 import dev.chrisbanes.haze.HazeState
@@ -129,7 +130,7 @@ private fun AuraApp() {
                     )
                 }
             }
-            3 -> Text("Search (Próximamente)", modifier = Modifier.align(Alignment.Center))
+            3 -> SearchScreen(playbackViewModel = playbackViewModel)
         }
 
         if (!showNowPlaying && !showQueue && !showSettings && !showLocalMusic && !showReplay) {
