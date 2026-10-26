@@ -1,3 +1,7 @@
+/*
+ * The glass rendering itself is Kyant0/backdrop (Apache-2.0), vendored at
+ * [com.music.aura.ui.components.backdrop].
+ */
 package com.music.aura.ui.components
 
 import android.os.Build
@@ -6,72 +10,152 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import com.music.aura.ui.components.backdrop.Backdrop
+import com.music.aura.ui.components.backdrop.backdrops.LayerBackdrop
+import com.music.aura.ui.components.backdrop.drawBackdrop
+import com.music.aura.ui.components.backdrop.effects.blur
+import com.music.aura.ui.components.backdrop.effects.lens
+import com.music.aura.ui.components.backdrop.highlight.Highlight
+import com.music.aura.ui.components.backdrop.highlight.HighlightElement
+import com.music.aura.ui.components.backdrop.internal.ShapeProvider
+import com.music.aura.ui.components.backdrop.shadow.Shadow
 
-/**
- * Placeholder de "liquid glass" para Aura Music.
- *
- * La implementación real (backdrop vendored + lens + highlight) se portará
- * en el Módulo 5. Mientras tanto, todas las APIs expuestas son seguras de
- * llamar y caen a MaterialTheme.colorScheme.surface.
- *
- * Nunca hace captura de backdrop ni refracción — cero coste de GPU.
- */
+/** Whether the liquid glass nav bar is turned on. */
+val LocalLiquidGlassEnabled = staticCompositionLocalOf { true }
 
-/** Switch maestro. Falso hasta que llegue el Módulo 5. */
-val LocalLiquidGlassEnabled = staticCompositionLocalOf { false }
+/** The backdrop content (app UI) that a liquid glass surface samples from. */
+val LocalAppBackdrop = staticCompositionLocalOf<Backdrop> { error("No AppBackdrop provided") }
 
-/** ¿La GPU puede hacer el blur real? (RenderEffect: API 31+). */
-fun isGlassSupported(sdkInt: Int = Build.VERSION.SDK_INT): Boolean =
-    sdkInt >= Build.VERSION_CODES.S
+internal val LocalGlassExport = compositionLocalOf<LayerBackdrop?> { null }
 
-/** Color de contenido sobre una superficie de cristal. */
+fun isGlassSupported(sdkInt: Int = Build.VERSION.SDK_INT): Boolean = sdkInt >= Build.VERSION_CODES.S
+
+private const val VIBRANCY = 1f
+private const val BLUR_RADIUS_DP = 8f
+private const val LENS_HEIGHT = 0.5f
+private const val LENS_AMOUNT = 0.5f
+private const val LENS_MAX_DP = 48f
+private const val SURFACE_OPACITY = 0.4f
+private const val GLASS_RESOLUTION_SCALE = 0.33f
+
+internal val GLASS_EDGE_WIDTH = 0.5.dp
+internal val GLASS_EDGE_COLOR = Color.White.copy(alpha = 0.10f)
+
 @Composable
 fun glassContentColor(): Color =
     if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) Color.Black else Color.White
 
-/** Color del indicador de selección. */
 @Composable
 fun glassIndicatorColor(): Color =
-    MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
+    if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) {
+        Color.White.copy(alpha = 0.5f)
+    } else {
+        Color.White.copy(alpha = 0.14f)
+    }
 
-/** Tinte del fondo de la barra. */
 @Composable
-fun glassBarTint(): Color? = null
+fun glassBarTint(): Color? =
+    if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) null else Color.White.copy(alpha = 0.09f)
 
-/** Edge de cristal reutilizable (hairline de 0.5dp). */
-val GLASS_EDGE_WIDTH = 0.5.dp
-val GLASS_EDGE_COLOR: Color = Color.White.copy(alpha = 0.10f)
-
-/**
- * Fallback: rellena con surface + border. No hace blur.
- * Cuando Módulo 5 llegue, esta función se reemplaza por la versión con backdrop.
- */
-@Composable
-fun Modifier.liquidGlass(
-    shape: CornerBasedShape,
-    surfaceTint: Color? = null,
-): Modifier = this
-    .clip(shape)
-    .background(surfaceTint ?: MaterialTheme.colorScheme.surface, shape)
-    .border(GLASS_EDGE_WIDTH, GLASS_EDGE_COLOR, shape)
-
-/** Solo el borde, sin relleno. */
-@Composable
-fun Modifier.liquidGlassRim(shape: CornerBasedShape): Modifier =
-    border(GLASS_EDGE_WIDTH, GLASS_EDGE_COLOR, shape)
-
-/** Variante "ligera": solo tint + borde. */
 @Composable
 fun Modifier.lightweightLiquidGlass(
     shape: CornerBasedShape,
     fallbackColor: Color,
-): Modifier = this
-    .clip(shape)
-    .background(fallbackColor, shape)
-    .border(GLASS_EDGE_WIDTH, GLASS_EDGE_COLOR, shape)
+): Modifier {
+    val useGlass = LocalLiquidGlassEnabled.current && isGlassSupported()
+    val glassTint = if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) {
+        Color(0xFFFAFAFA)
+    } else {
+        Color(0xFF121212)
+    }
+    val shapeProvider = ShapeProvider { shape }
+
+    return clip(shape)
+        .background(
+            color = if (useGlass) glassTint.copy(alpha = SURFACE_OPACITY) else fallbackColor,
+            shape = shape,
+        )
+        .then(
+            if (useGlass) {
+                HighlightElement(
+                    shapeProvider = shapeProvider,
+                    highlight = { Highlight.Default },
+                )
+            } else {
+                Modifier
+            },
+        )
+        .border(GLASS_EDGE_WIDTH, GLASS_EDGE_COLOR, shape)
+}
+
+@Composable
+fun Modifier.liquidGlassRim(shape: CornerBasedShape): Modifier {
+    if (!LocalLiquidGlassEnabled.current || !isGlassSupported()) return this
+    val shapeProvider = remember(shape) { ShapeProvider { shape } }
+    return then(
+        HighlightElement(
+            shapeProvider = shapeProvider,
+            highlight = { Highlight.Default },
+        ),
+    )
+}
+
+@Composable
+fun Modifier.liquidGlass(
+    shape: CornerBasedShape,
+    surfaceTint: Color? = null,
+): Modifier {
+    if (!isGlassSupported()) return this
+    // Hardcoded a false for now, since AppSettings isn't fully ported yet.
+    val reduceDynamicBlur = false
+    if (reduceDynamicBlur) {
+        return background(MaterialTheme.colorScheme.surface, shape)
+            .border(GLASS_EDGE_WIDTH, GLASS_EDGE_COLOR, shape)
+    }
+    val backdrop = LocalAppBackdrop.current
+    val exportedBackdrop = LocalGlassExport.current
+    val density = LocalDensity.current
+    val blurPx = with(density) { BLUR_RADIUS_DP.dp.toPx() } * GLASS_RESOLUTION_SCALE
+    val lensHeightPx = with(density) { (LENS_HEIGHT * LENS_MAX_DP).dp.toPx() } * GLASS_RESOLUTION_SCALE
+    val lensAmountPx = with(density) { (LENS_AMOUNT * LENS_MAX_DP).dp.toPx() } * GLASS_RESOLUTION_SCALE
+    val themeTint = if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) {
+        Color(0xFFFAFAFA)
+    } else {
+        Color(0xFF121212)
+    }
+    val surfaceTintColor = surfaceTint ?: themeTint.copy(alpha = SURFACE_OPACITY)
+
+    return drawBackdrop(
+        backdrop = backdrop,
+        shape = { shape },
+        effects = {
+            // colorControls(saturation = 1f + 0.5f * VIBRANCY)
+            blur(blurPx)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                lens(
+                    refractionHeight = lensHeightPx,
+                    refractionAmount = lensAmountPx,
+                    depthEffect = true,
+                    chromaticAberration = true,
+                )
+            }
+        },
+        highlight = { Highlight.Default },
+        shadow = { Shadow.Default },
+        onDrawSurface = {
+            drawRect(color = surfaceTintColor, size = size)
+        },
+        exportedBackdrop = exportedBackdrop,
+        backdropScale = GLASS_RESOLUTION_SCALE,
+    )
+}
