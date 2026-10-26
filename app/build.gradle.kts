@@ -1,3 +1,6 @@
+import java.text.SimpleDateFormat
+import java.util.Date
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -12,8 +15,11 @@ android {
         applicationId = "com.music.aura"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.1.0"
+        
+        // AUTO-INCREMENTO: Usa la fecha actual en minutos como versión.
+        // Esto garantiza que cada compilación sea una versión nueva.
+        versionCode = (System.currentTimeMillis() / 60000).toInt()
+        versionName = "1.2.0"
     }
 
     buildTypes {
@@ -43,7 +49,6 @@ kotlin {
 }
 
 dependencies {
-    // ---- Compose (Material 3) ----
     val composeBom = platform("androidx.compose:compose-bom:2024.12.01")
     implementation(composeBom)
     implementation("androidx.compose.ui:ui")
@@ -51,10 +56,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
-    
-    // Foundation pineada para el Overscroll (Módulo 1)
     implementation("androidx.compose.foundation:foundation:1.10.0")
-
     implementation("androidx.activity:activity-compose:1.9.3")
     implementation("androidx.navigation:navigation-compose:2.8.5")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
@@ -62,24 +64,17 @@ dependencies {
     implementation("androidx.core:core-ktx:1.15.0")
     debugImplementation("androidx.compose.ui:ui-tooling")
 
-    // ---- Media3 / ExoPlayer (reproducción local) ----
     implementation("androidx.media3:media3-exoplayer:1.5.1")
     implementation("androidx.media3:media3-session:1.5.1")
     implementation("androidx.media3:media3-common:1.5.1")
 
-    // ---- Imágenes: Coil 3 (carga desde URI local) ----
     implementation("io.coil-kt.coil3:coil-compose:3.0.4")
 
-    // ---- Frosted glass / blur (Haze) ----
     implementation("dev.chrisbanes.haze:haze:1.3.1")
     implementation("dev.chrisbanes.haze:haze-materials:1.3.1")
 
-    // ---- Palette (colores dominantes del artwork) ----
     implementation("androidx.palette:palette-ktx:1.0.0")
-
-    // ---- Corrutinas para Guava (Media3 Controller) ----
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.9.0")
 
-    // ---- Tests ----
     testImplementation("junit:junit:4.13.2")
 }
