@@ -8,7 +8,6 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.OverscrollEffect
-import androidx.compose.foundation.OverscrollFactory
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableFloatState
 import androidx.compose.runtime.mutableFloatStateOf
@@ -22,7 +21,8 @@ import androidx.compose.ui.layout.MeasureResult
 import androidx.compose.ui.layout.MeasureScope
 import androidx.compose.ui.node.DelegatableNode
 import androidx.compose.ui.node.LayoutModifierNode
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.node.ModifierNodeElement
+import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Velocity
@@ -56,7 +56,10 @@ private fun rubberBand(rawDistance: Float, containerPx: Float): Float {
  * It replaces Android's stretch/glow with a UIScrollView-like rubber band during a
  * drag, then critically damps the content back to its resting position on release.
  */
-private class IosOverscrollEffect : OverscrollEffect {
+private class IosOverscrollEffect(
+    private val scope: CoroutineScope,
+    private val density: Density
+) : OverscrollEffect {
     private val rawPullX = mutableFloatStateOf(0f)
     private val rawPullY = mutableFloatStateOf(0f)
     private var containerWidthPx = 0f
@@ -65,21 +68,27 @@ private class IosOverscrollEffect : OverscrollEffect {
     override val isInProgress: Boolean
         get() = rawPullX.floatValue != 0f || rawPullY.floatValue != 0f
 
+    // ✅ CORREGIDO: La interfaz OverscrollEffect ahora requiere 'node' en lugar de 'effectModifier'
+    override val node: DelegatableNode = IosOverscrollNode(
+        offsetX = { rubberBand(rawPullX.floatValue, containerWidthPx) },
+        offsetY = { rubberBand(rawPullY.floatValue, containerHeightPx) },
+        onMeasured = { width, height ->
+            containerWidthPx = width
+            containerHeightPx = height
+        },
+    )
+
     override fun applyToScroll(
         delta: Offset,
         source: NestedScrollSource,
         performScroll: (Offset) -> Offset,
     ): Offset {
-        // When pulling back from an existing stretch, settle the stretch before
-        // allowing the list itself to scroll. This keeps the motion continuous.
         val paidX = payDown(rawPullX, delta.x)
         val paidY = payDown(rawPullY, delta.y)
         val remaining = Offset(delta.x - paidX, delta.y - paidY)
         val consumed = performScroll(remaining)
         val leftover = remaining - consumed
 
-        // Absorb only touch deltas. Fling leftovers must be returned so Compose
-        // cancels its decay and gives their velocity to applyToFling below.
         var stretchedX = 0f
         var stretchedY = 0f
         if (source == NestedScrollSource.UserInput) {
@@ -135,15 +144,6 @@ private class IosOverscrollEffect : OverscrollEffect {
             ),
         ) { value, _ -> pull.floatValue = value }
     }
-
-    override val node: DelegatableNode = IosOverscrollNode(
-        offsetX = { rubberBand(rawPullX.floatValue, containerWidthPx) },
-        offsetY = { rubberBand(rawPullY.floatValue, containerHeightPx) },
-        onMeasured = { width, height ->
-            containerWidthPx = width
-            containerHeightPx = height
-        },
-    )
 }
 
 private class IosOverscrollNode(
@@ -169,22 +169,17 @@ private class IosOverscrollNode(
     }
 }
 
-private class IosOverscrollFactory(
-    private val density: Density,
-    private val scope: CoroutineScope,
-) : OverscrollFactory {
-    override fun createOverscrollEffect(): OverscrollEffect = IosOverscrollEffect()
-
-    override fun equals(other: Any?): Boolean =
-        other is IosOverscrollFactory && other.density == density && other.scope === scope
-
-    override fun hashCode(): Int = 31 * density.hashCode() + scope.hashCode()
-}
-
-/** Provides iOS-style rubber-band overscroll to every descendant scroll container. */
+/**
+ * Provides iOS-style rubber-band overscroll to every descendant scroll container.
+ */
 @Composable
-fun rememberIosOverscrollFactory(): OverscrollFactory {
-    val density = LocalDensity.current
+fun rememberIosOverscrollEffect(): OverscrollEffect {
+    val density = Density(LocalDensity.current.density, LocalDensity.current.fontScale)
     val scope = rememberCoroutineScope()
-    return remember(density, scope) { IosOverscrollFactory(density, scope) }
+    return remember(density, scope) {
+        IosOverscrollEffect(scope, density)
+    }
 }
+
+// Import necesario para LocalDensity
+import androidx.compose.ui.platform.LocalDensity
