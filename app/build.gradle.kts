@@ -2,8 +2,19 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
-    // AÑADIDO: Versión explícita para el plugin de serialización
     id("org.jetbrains.kotlin.plugin.serialization") version "2.0.0" 
+}
+
+// LÓGICA DE VERSIÓN AUTOMÁTICA
+// GitHub Actions provee un número de ejecución que incrementa en 1 con cada push.
+val runNumber = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 0
+// Si estamos en GitHub, usa 1.3.[número]. Si estamos en local, usa 1.3.0
+val autoVersionName = if (runNumber > 0) "1.3.$runNumber" else "1.3.0"
+// VersionCode usa el número de ejecución. Para compilaciones locales usa la fecha.
+val autoVersionCode = if (runNumber > 0) {
+    10000 + runNumber
+} else {
+    (System.currentTimeMillis() / 60000).toInt()
 }
 
 android {
@@ -15,9 +26,9 @@ android {
         minSdk = 26
         targetSdk = 35
         
-        // AUTO-INCREMENTO
-        versionCode = (System.currentTimeMillis() / 60000).toInt()
-        versionName = "1.2.0"
+        // Aplicamos las variables automáticas
+        versionCode = autoVersionCode
+        versionName = autoVersionName
     }
 
     buildTypes {
@@ -73,8 +84,6 @@ dependencies {
 
     implementation("androidx.palette:palette-ktx:1.0.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.9.0")
-
-    // AÑADIDO: Dependencias para guardar los JSON de estadísticas
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
 
     testImplementation("junit:junit:4.13.2")
