@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalFoundationApi::class)
+
 package com.music.aura.ui.utils
 
 import androidx.compose.animation.core.Spring
@@ -36,7 +38,6 @@ private fun rubberBand(rawDistance: Float, containerPx: Float): Float {
     return banded * sign(rawDistance)
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 private class IosOverscrollEffect(
     private val scope: CoroutineScope
 ) : OverscrollEffect {
