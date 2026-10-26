@@ -2,7 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.0.0" 
+    id("org.jetbrains.kotlin.plugin.serialization")
 }
 
 // Lógica de versión automática
@@ -12,7 +12,7 @@ val autoVersionCode = if (runNumber > 0) 10000 + runNumber else (System.currentT
 
 android {
     namespace = "com.music.aura"
-    compileSdk = 35
+    compileSdk = 36 // <--- ACTUALIZADO A 36 PARA SOPORTAR NEXTlib
 
     defaultConfig {
         applicationId = "com.music.aura"
@@ -38,7 +38,13 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions { jvmTarget = "17" }
+    
+    // Actualizado para evitar los avisos de deprecación
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        }
+    }
 }
 
 dependencies {
@@ -62,7 +68,7 @@ dependencies {
     implementation("androidx.media3:media3-session:1.5.1")
     implementation("androidx.media3:media3-common:1.5.1")
 
-    // 🔥 FFmpeg Decoders (Dolby Atmos, DTS, AC-4, etc.) - CORREGIDO
+    // FFmpeg Decoders (Dolby Atmos, DTS, AC-4, etc.)
     implementation("io.github.anilbeesetti:nextlib-media3ext:1.11.1-0.16.0")
 
     implementation("io.coil-kt.coil3:coil-compose:3.0.4")
