@@ -16,13 +16,12 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    # Instala Gradle automáticamente
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
 
-    # Ejecuta la compilación usando Gradle instalado
+    # Agregamos 'clean' para limpiar compilaciones pasadas
     - name: Build Debug APK
-      run: gradle assembleDebug
+      run: gradle clean assembleDebug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
