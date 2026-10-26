@@ -16,11 +16,13 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
+    # Instala Gradle automáticamente
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
 
+    # Ejecuta la compilación usando Gradle instalado
     - name: Build Debug APK
-      run: ./gradlew assembleDebug
+      run: gradle assembleDebug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
