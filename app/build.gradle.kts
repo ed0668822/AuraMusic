@@ -51,11 +51,8 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
-
-    // foundation PINNEADA a 1.10.0 (por encima del BOM 1.7.6):
-    // IosOverscroll.kt usa OverscrollFactory, que esa versión no tiene.
-    // Es una combinación soportada por Compose: foundation depende de ui,
-    // no al revés, así que 1.10.0-foundation + 1.7.x-ui/material3 funciona.
+    
+    // Foundation pineada para el Overscroll (Módulo 1)
     implementation("androidx.compose.foundation:foundation:1.10.0")
 
     implementation("androidx.activity:activity-compose:1.9.3")
