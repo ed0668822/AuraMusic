@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,17 +26,17 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.music.aura.data.ProfileRepository
 import com.music.aura.data.SettingsRepository
+import com.music.aura.data.stats.ListeningStats
 import com.music.aura.ui.components.RowDivider
 import com.music.aura.ui.components.SegmentedControl
 import com.music.aura.ui.components.SettingsGroup
 import com.music.aura.ui.components.SettingsRow
-import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     isVisible: Boolean,
     onDismiss: () -> Unit,
+    onOpenEqualizer: () -> Unit = {},
 ) {
     if (!isVisible) return
 
@@ -61,6 +62,8 @@ fun SettingsScreen(
     val themeMode by SettingsRepository.themeMode.collectAsState()
     val dolbyAtmos by SettingsRepository.dolbyAtmos.collectAsState()
     val liquidGlass by SettingsRepository.liquidGlass.collectAsState()
+    val reduceAnimation by SettingsRepository.reduceAnimation.collectAsState()
+    val reduceDynamicBlur by SettingsRepository.reduceDynamicBlur.collectAsState()
     val syncedLyrics by SettingsRepository.syncedLyrics.collectAsState()
     val blurLyrics by SettingsRepository.blurUnfocusedLyrics.collectAsState()
     val filterNonMusic by SettingsRepository.filterNonMusicAudio.collectAsState()
@@ -165,10 +168,45 @@ fun SettingsScreen(
                 icon = Icons.Filled.Shuffle,
                 title = "AutoMix",
                 subtitle = "Transiciones perfectas entre canciones.",
+                value = "$crossfade s",
+                onClick = { /* TODO: Diálogo AutoMix */ }
+            )
+            RowDivider()
+            SettingsRow(
+                icon = Icons.Filled.Tune,
+                title = "Equalizer",
+                subtitle = "Tone, seven bands and balance",
+                onClick = onOpenEqualizer
+            )
+        }
+
+        // --- Reproducción ---
+        SettingsGroup(header = "Playback") {
+            SettingsRow(
+                icon = Icons.Filled.Autorenew,
+                title = "Autoplay",
+                subtitle = "Sigue reproduciendo canciones similares al terminar la cola.",
                 trailing = {
-                    Text("$crossfade s", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Switch(
+                        checked = autoplay,
+                        onCheckedChange = { SettingsRepository.setAutoplay(it) },
+                        colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary)
+                    )
                 },
-                onClick = { /* TODO: Abrir diálogo de AutoMix */ }
+                onClick = { SettingsRepository.setAutoplay(!autoplay) }
+            )
+            RowDivider()
+            SettingsRow(
+                icon = Icons.Filled.SpatialAudio,
+                title = "Spatial audio",
+                subtitle = "Amplía las pistas estéreo para una sensación más envolvente.",
+                trailing = {
+                    Switch(
+                        checked = false,
+                        onCheckedChange = { /* TODO */ },
+                        colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary)
+                    )
+                }
             )
         }
 
@@ -196,6 +234,34 @@ fun SettingsScreen(
                     )
                 },
                 onClick = { SettingsRepository.setLiquidGlass(!liquidGlass) }
+            )
+            RowDivider()
+            SettingsRow(
+                icon = Icons.Filled.MotionPhotosOff,
+                title = "Reduce animation",
+                subtitle = "Congela el gradiente del reproductor en lugar de dejarlo flotar.",
+                trailing = {
+                    Switch(
+                        checked = reduceAnimation,
+                        onCheckedChange = { SettingsRepository.setReduceAnimation(it) },
+                        colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary)
+                    )
+                },
+                onClick = { SettingsRepository.setReduceAnimation(!reduceAnimation) }
+            )
+            RowDivider()
+            SettingsRow(
+                icon = Icons.Filled.BlurOff,
+                title = "Reduce dynamic blur",
+                subtitle = "Cambia el cristal difuminado por fondos sólidos en toda la app.",
+                trailing = {
+                    Switch(
+                        checked = reduceDynamicBlur,
+                        onCheckedChange = { SettingsRepository.setReduceDynamicBlur(it) },
+                        colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary)
+                    )
+                },
+                onClick = { SettingsRepository.setReduceDynamicBlur(!reduceDynamicBlur) }
             )
         }
 
@@ -236,7 +302,7 @@ fun SettingsScreen(
                 icon = Icons.Filled.Folder,
                 title = "Local music folder",
                 subtitle = "Music/Aura",
-                onClick = { /* TODO: Elegir carpeta SAF */ }
+                onClick = { /* TODO: SAF Picker */ }
             )
             RowDivider()
             SettingsRow(
@@ -261,7 +327,7 @@ fun SettingsScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("Aura Music", fontWeight = FontWeight.Bold)
-                Text("v1.6.0", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("v1.7.0", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
 
