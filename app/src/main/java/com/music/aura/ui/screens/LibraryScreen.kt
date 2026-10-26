@@ -2,146 +2,112 @@ package com.music.aura.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import coil3.compose.AsyncImage
-import com.music.aura.LibraryViewModel
-import com.music.aura.data.LibraryState
-import com.music.aura.data.ProfileRepository
-import com.music.aura.data.stats.ListeningStats
-import com.music.aura.data.stats.ReplayPeriod
-import com.music.aura.playback.PlaybackViewModel
+import com.music.aura.R
+import com.music.aura.ui.components.LIBRARY_GRID_SPACING
+import com.music.aura.ui.components.PAGE_GUTTER
+import com.music.aura.ui.components.libraryGrid
+import com.music.aura.ui.icons.AuraIcons
+
+data class LibraryLink(val title: String, val icon: ImageVector, val onClick: () -> Unit)
 
 @Composable
 fun LibraryScreen(
-    playbackViewModel: PlaybackViewModel,
-    libraryViewModel: LibraryViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
-    onSettingsClick: () -> Unit = {},
-    onOpenLocalMusic: () -> Unit = {},
-    onOpenReplay: () -> Unit = {},
+    listState: LazyListState,
+    links: List<LibraryLink>,
+    onShowAll: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues,
+    showTitle: Boolean = true,
 ) {
-    val uiState by libraryViewModel.uiState.collectAsState()
-    var minutesListened by remember { mutableStateOf(0L) }
-    var userPhoto by remember { mutableStateOf(ProfileRepository.userPhotoUri) }
-
-    LaunchedEffect(Unit) {
-        val summary = ListeningStats.summary(ReplayPeriod.ALL_TIME)
-        minutesListened = summary.minutes
-        userPhoto = ProfileRepository.userPhotoUri
-    }
-
     LazyColumn(
+        state = listState,
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = 260.dp, top = 60.dp),
+        contentPadding = contentPadding,
     ) {
-        // Header: Avatar + Title
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
+        if (showTitle) {
+            item {
                 Text(
-                    text = "Library",
-                    fontSize = 34.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    text = stringResource(R.string.library),
+                    style = MaterialTheme.typography.displayLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(horizontal = PAGE_GUTTER, vertical = 8.dp),
                 )
-                Box(
-                    modifier = Modifier.size(36.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant).clickable { onSettingsClick() },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    if (userPhoto != null) {
-                        AsyncImage(model = userPhoto, contentDescription = "Perfil", contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-                    } else {
-                        Icon(Icons.Filled.Person, contentDescription = "Perfil", tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
             }
         }
-
-        // Replay Card
-        item {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 8.dp)
-                    .height(180.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Brush.linearGradient(colors = listOf(Color(0xFF8B5CF6), Color(0xFFEC4899), Color(0xFFF59E0B))))
-                    .clickable { onOpenReplay() }
-                    .padding(20.dp)
-            ) {
-                Column(modifier = Modifier.align(Alignment.BottomStart)) {
-                    Text(
-                        text = "YOUR LISTENING EXPERIENCE",
-                        fontSize = 10.sp, fontWeight = FontWeight.Bold,
-                        color = Color.White.copy(alpha = 0.8f), letterSpacing = 1.sp
-                    )
-                    Text(
-                        text = "$minutesListened",
-                        fontSize = 48.sp, fontWeight = FontWeight.Black, color = Color.White,
-                    )
-                    Text(
-                        text = "MINUTES LISTENED",
-                        fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.8f),
-                    )
-                }
-            }
+        if (links.isNotEmpty()) {
+            item(key = "links") { LibraryLinkList(links = links) }
         }
+    }
+}
 
-        // Local Music Link
-        item {
+@Composable
+private fun LibraryLinkList(links: List<LibraryLink>) {
+    Column(Modifier.padding(top = 4.dp, bottom = 22.dp)) {
+        links.forEachIndexed { index, link ->
             Row(
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { onOpenLocalMusic() }
-                    .padding(horizontal = 20.dp, vertical = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                    .heightIn(min = 54.dp)
+                    .clickable { link.onClick() }
+                    .padding(horizontal = PAGE_GUTTER),
             ) {
                 Icon(
-                    imageVector = Icons.Filled.Folder,
+                    imageVector = link.icon,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(24.dp),
                 )
                 Spacer(Modifier.width(16.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Local Music",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    if (uiState.libraryState is LibraryState.Success) {
-                        val count = (uiState.libraryState as LibraryState.Success).songs.size
-                        Text(
-                            text = "$count Tracks",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
+                Text(
+                    text = link.title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    imageVector = AuraIcons.ChevronRight,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .6f),
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+            if (index < links.lastIndex) {
+                HorizontalDivider(
+                    modifier = Modifier.padding(start = PAGE_GUTTER + 24.dp + 16.dp),
+                    thickness = 0.5.dp,
+                    color = MaterialTheme.colorScheme.outline,
                 )
             }
         }
