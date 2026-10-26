@@ -1,22 +1,40 @@
 package com.music.aura
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.music.aura.data.AppUpdateChecker
@@ -26,10 +44,17 @@ import com.music.aura.ui.components.BottomTab
 import com.music.aura.ui.components.GlassNavBar
 import com.music.aura.ui.components.MiniPlayer
 import com.music.aura.ui.components.UpdateAvailableDialog
-import com.music.aura.ui.screens.*
+import com.music.aura.ui.screens.HomeScreen
+import com.music.aura.ui.screens.LibraryScreen
+import com.music.aura.ui.screens.LocalMusicScreen
+import com.music.aura.ui.screens.NowPlayingScreen
+import com.music.aura.ui.screens.QueueScreen
+import com.music.aura.ui.screens.ReplayScreen
+import com.music.aura.ui.screens.SettingsScreen
 import com.music.aura.ui.theme.AuraTheme
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { _ -> }
@@ -51,18 +76,21 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun AuraApp() {
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val playbackViewModel: PlaybackViewModel = viewModel()
+    
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     var showNowPlaying by remember { mutableStateOf(false) }
     var showQueue by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
     var showLocalMusic by remember { mutableStateOf(false) }
     var showReplay by remember { mutableStateOf(false) }
+    var showUpdateDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) { 
         playbackViewModel.connect() 
-        AppUpdateChecker.check() // <-- Buscar actualización al arrancar
+        AppUpdateChecker.check() // Buscar actualización al arrancar
     }
 
     val playbackState by playbackViewModel.state.collectAsState()
@@ -70,6 +98,13 @@ private fun AuraApp() {
     
     val updateInfo by AppUpdateChecker.available.collectAsState()
     val downloadState by AppUpdateChecker.download.collectAsState()
+
+    // Si hay una actualización, mostramos el diálogo automáticamente
+    LaunchedEffect(updateInfo) {
+        if (updateInfo != null) {
+            showUpdateDialog = true
+        }
+    }
 
     val tabs = listOf(
         BottomTab("Home", Icons.Filled.Home),
@@ -128,29 +163,29 @@ private fun AuraApp() {
         SettingsScreen(isVisible = showSettings, onDismiss = { showSettings = false })
 
         // Diálogo de actualización
-        updateInfo?.let { info ->
-            if (downloadState !is AppUpdateChecker.DownloadState.Idle || !isCheckingUpdate) {
-                 UpdateAvailableDialog(
-                    version = info.version,
-                    hazeState = hazeState,
-                    onDismiss = { AppUpdateChecker.resetDownload() }, // Ocultar temporalmente
-                    onDownload = { kotlinx.coroutines.GlobalScope.launch { AppUpdateChecker.downloadApk(context) } },
-                    onCancelDownload = { AppUpdateChecker.cancelDownload() },
-                    onInstall = {
-                        val state = downloadState
-                        if (state is AppUpdateChecker.DownloadState.Ready) {
-                            AppUpdateChecker.installApk(context, state.file)
-                        }
-                    },
-                    onOpenReleasePage = { 
-                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(info.releaseUrl))
-                        context.startActivity(intent)
+        if (showUpdateDialog && updateInfo != null) {
+            UpdateAvailableDialog(
+                version = updateInfo!!.version,
+                hazeState = hazeState,
+                onDismiss = { 
+                    showUpdateDialog = false 
+                    AppUpdateChecker.resetDownload()
+                },
+                onDownload = { 
+                    scope.launch { AppUpdateChecker.downloadApk(context) } 
+                },
+                onCancelDownload = { AppUpdateChecker.cancelDownload() },
+                onInstall = {
+                    val state = downloadState
+                    if (state is AppUpdateChecker.DownloadState.Ready) {
+                        AppUpdateChecker.installApk(context, state.file)
                     }
-                )
-            }
+                },
+                onOpenReleasePage = { 
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(updateInfo!!.releaseUrl))
+                    context.startActivity(intent)
+                }
+            )
         }
     }
 }
-
-// Función auxiliar para no dejar en blanco la variable en el if de arriba
-val isCheckingUpdate = false 
