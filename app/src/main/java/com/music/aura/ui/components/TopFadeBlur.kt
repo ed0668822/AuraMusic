@@ -58,7 +58,7 @@ fun TopFadeBlur(
                     startIntensity = PEAK,
                     endIntensity = 0f,
                 )
-                noiseFactor = 0f
+                // ✅ CORREGIDO: Se eliminó 'noiseFactor = 0f' porque no está disponible en Haze 1.3.1
             },
     )
 
@@ -78,6 +78,9 @@ fun TopFadeBlur(
     )
 }
 
+/**
+ * Altura de la barra superior: status bar + 52dp.
+ */
 @Composable
 fun topBarHeight(): Dp {
     val density = LocalDensity.current
