@@ -37,6 +37,7 @@ import com.music.aura.ui.components.backdrop.backdrops.LayerBackdrop
 import com.music.aura.ui.components.backdrop.drawBackdrop
 import com.music.aura.ui.components.backdrop.effects.lens
 import com.music.aura.ui.components.backdrop.highlight.Highlight
+// ✅ CORREGIDO: Importación explícita de Shadow
 import com.music.aura.ui.components.backdrop.shadow.Shadow
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
