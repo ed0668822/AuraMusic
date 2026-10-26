@@ -1,5 +1,6 @@
 package com.music.aura.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -26,8 +27,6 @@ import com.music.aura.ui.components.SongListItem
 import com.music.aura.ui.components.home.AlbumCarousel
 import com.music.aura.ui.components.home.ArtistCarousel
 
-// ... el resto del archivo LocalMusicScreen.kt queda exactamente igual ...
-
 @Composable
 fun LocalMusicScreen(
     playbackViewModel: PlaybackViewModel,
@@ -40,7 +39,6 @@ fun LocalMusicScreen(
     val tabs = listOf("Songs", "Artists", "Albums")
 
     Column(modifier = Modifier.fillMaxSize().padding(top = 40.dp)) {
-        // Top Bar
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -49,49 +47,65 @@ fun LocalMusicScreen(
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
             }
             Spacer(Modifier.weight(1f))
-            IconButton(onClick = {}) { Icon(Icons.Filled.Search, "Buscar") }
-            IconButton(onClick = {}) { Icon(Icons.Filled.MoreVert, "Más") }
+            IconButton(onClick = { }) { Icon(Icons.Filled.Search, "Buscar") }
+            IconButton(onClick = { }) { Icon(Icons.Filled.MoreVert, "Más") }
         }
 
-        // Header
         Column(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Box(
-                modifier = Modifier.size(160.dp).background(MaterialTheme.colorScheme.surfaceVariant, shape = MaterialTheme.shapes.large),
+                modifier = Modifier
+                    .size(160.dp)
+                    .background(MaterialTheme.colorScheme.surfaceVariant, shape = MaterialTheme.shapes.large),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Filled.Folder, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                Icon(
+                    Icons.Filled.Folder,
+                    contentDescription = null,
+                    modifier = Modifier.size(64.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
             Spacer(Modifier.height(16.dp))
             Text("Local Music", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-            Text("Archivos de audio en el dispositivo", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            
+            Text(
+                "Archivos de audio en el dispositivo",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
             if (uiState.libraryState is LibraryState.Success) {
                 val count = (uiState.libraryState as LibraryState.Success).songs.size
-                Text("$count Tracks", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    "$count Tracks",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
-            
+
             Spacer(Modifier.height(16.dp))
-            
-            // Play & Shuffle Buttons
+
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Button(
-                    onClick = { 
+                    onClick = {
                         val songs = (uiState.libraryState as? LibraryState.Success)?.songs ?: return@Button
                         playbackViewModel.playSongs(songs, 0)
                     },
                     modifier = Modifier.weight(1f).height(48.dp),
                     shape = MaterialTheme.shapes.extraLarge,
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onSurface, contentColor = MaterialTheme.colorScheme.surface)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.onSurface,
+                        contentColor = MaterialTheme.colorScheme.surface
+                    )
                 ) {
                     Icon(Icons.Filled.PlayArrow, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
                     Text("Play", fontWeight = FontWeight.Bold)
                 }
                 OutlinedButton(
-                    onClick = { /* Shuffle */ },
+                    onClick = { },
                     modifier = Modifier.weight(1f).height(48.dp),
                     shape = MaterialTheme.shapes.extraLarge
                 ) {
@@ -102,7 +116,6 @@ fun LocalMusicScreen(
             }
         }
 
-        // Tabs
         SegmentedControl(
             options = tabs,
             selectedIndex = selectedTab,
@@ -112,11 +125,10 @@ fun LocalMusicScreen(
 
         Spacer(Modifier.height(8.dp))
 
-        // Content
         val state = uiState.libraryState
         if (state is LibraryState.Success) {
             when (selectedTab) {
-                0 -> { // Songs
+                0 -> {
                     LazyColumn(contentPadding = PaddingValues(bottom = 40.dp)) {
                         val displaySongs = uiState.filteredSongs
                         itemsIndexed(items = displaySongs, key = { _, song -> song.id }) { index, song ->
@@ -129,14 +141,14 @@ fun LocalMusicScreen(
                         }
                     }
                 }
-                1 -> { // Artists
+                1 -> {
                     ArtistCarousel(
                         title = "",
                         artists = state.artists,
                         onArtistClick = { artist -> playbackViewModel.playSongs(artist.songs, 0) }
                     )
                 }
-                2 -> { // Albums
+                2 -> {
                     AlbumCarousel(
                         title = "",
                         albums = state.albums,
