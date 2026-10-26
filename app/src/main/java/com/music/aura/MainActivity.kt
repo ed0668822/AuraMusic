@@ -46,6 +46,7 @@ import com.music.aura.ui.screens.QueueScreen
 import com.music.aura.ui.screens.SettingsScreen
 import com.music.aura.ui.theme.AuraTheme
 import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
 
 class MainActivity : ComponentActivity() {
 
@@ -101,17 +102,17 @@ private fun AuraApp() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
+            .background(MaterialTheme.colorScheme.background)
+            .hazeSource(hazeState), // Permite el efecto cristal
     ) {
-
         when (selectedTab) {
             0 -> HomeScreen(playbackViewModel = playbackViewModel)
-            1 -> Text("Explore (Módulo 2)", modifier = Modifier.align(Alignment.Center))
+            1 -> Text("Explore (Próximamente)", modifier = Modifier.align(Alignment.Center))
             2 -> LibraryScreen(
                 playbackViewModel = playbackViewModel,
                 onSettingsClick = { showSettings = true },
             )
-            3 -> Text("Search (Módulo 2)", modifier = Modifier.align(Alignment.Center))
+            3 -> Text("Search (Próximamente)", modifier = Modifier.align(Alignment.Center))
         }
 
         Column(
