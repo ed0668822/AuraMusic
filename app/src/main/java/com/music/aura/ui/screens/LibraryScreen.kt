@@ -17,12 +17,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 import com.music.aura.LibraryViewModel
 import com.music.aura.data.LibraryState
+import com.music.aura.data.ProfileRepository
 import com.music.aura.data.stats.ListeningStats
 import com.music.aura.data.stats.ReplayPeriod
 import com.music.aura.playback.PlaybackViewModel
@@ -33,11 +35,13 @@ fun LibraryScreen(
     libraryViewModel: LibraryViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
     onSettingsClick: () -> Unit = {},
     onOpenLocalMusic: () -> Unit = {},
+    onOpenReplay: () -> Unit = {},
 ) {
     val uiState by libraryViewModel.uiState.collectAsState()
     var minutesListened by remember { mutableStateOf(0L) }
+    var userName by remember { mutableStateOf(ProfileRepository.userName) }
+    var userPhoto by remember { mutableStateOf(ProfileRepository.userPhotoUri) }
 
-    // Cargar estadísticas asíncronamente al entrar
     LaunchedEffect(Unit) {
         val summary = ListeningStats.summary(ReplayPeriod.ALL_TIME)
         minutesListened = summary.minutes
@@ -47,6 +51,7 @@ fun LibraryScreen(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 260.dp, top = 60.dp),
     ) {
+        // Header: Avatar + Title
         item {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp),
@@ -60,15 +65,24 @@ fun LibraryScreen(
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Box(
-                    modifier = Modifier.size(36.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant),
+                    modifier = Modifier.size(36.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant).clickable { onSettingsClick() },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(Icons.Filled.Person, contentDescription = "Perfil", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (userPhoto != null) {
+                        AsyncImage(
+                            model = userPhoto,
+                            contentDescription = "Perfil",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Icon(Icons.Filled.Person, contentDescription = "Perfil", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
             }
         }
 
-        // Tarjeta Replay con datos reales
+        // Replay Card (Clicable)
         item {
             Box(
                 modifier = Modifier
@@ -77,6 +91,7 @@ fun LibraryScreen(
                     .height(180.dp)
                     .clip(RoundedCornerShape(16.dp))
                     .background(Brush.linearGradient(colors = listOf(Color(0xFF8B5CF6), Color(0xFFEC4899), Color(0xFFF59E0B))))
+                    .clickable { onOpenReplay() }
                     .padding(20.dp)
             ) {
                 Column(modifier = Modifier.align(Alignment.BottomStart)) {
@@ -97,7 +112,7 @@ fun LibraryScreen(
             }
         }
 
-        // Botón Local Music
+        // Local Music Button
         item {
             Row(
                 modifier = Modifier
