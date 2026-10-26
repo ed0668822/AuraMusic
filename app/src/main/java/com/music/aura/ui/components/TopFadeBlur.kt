@@ -3,8 +3,10 @@ package com.music.aura.ui.components
 import androidx.compose.animation.core.EaseOutCubic
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -77,9 +79,9 @@ fun TopFadeBlur(
 @Composable
 fun topBarHeight(): androidx.compose.ui.unit.Dp {
     val density = androidx.compose.ui.platform.LocalDensity.current
-    val statusBars = androidx.compose.foundation.layout.WindowInsets.statusBars
+    val statusBars = WindowInsets.statusBars
     val inset = with(density) {
-        statusBars.getTop(density).toDp()
+        statusBars.getTop(this).toDp()
     }
     return inset + 52.dp
 }
