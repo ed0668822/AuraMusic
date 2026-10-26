@@ -6,13 +6,12 @@ import androidx.annotation.OptIn
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.audio.AudioSink
-import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import com.music.aura.MainActivity
+// 🔥 IMPORTANTE: Importar NextRenderersFactory de nextlib
+import io.github.anilbeesetti.nextlib.media3ext.ffdecoder.NextRenderersFactory
 
 @OptIn(UnstableApi::class)
 class AuraPlaybackService : MediaSessionService() {
@@ -22,14 +21,8 @@ class AuraPlaybackService : MediaSessionService() {
     override fun onCreate() {
         super.onCreate()
 
-        // 1. Configurar FFmpeg (Dolby Atmos, AC-4, DTS, ALAC)
-        val renderersFactory = DefaultRenderersFactory(this)
-            .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
-
-        // 2. Configurar AudioSink (Permite Float PCM para máxima calidad)
-        val audioSink = DefaultAudioSink.Builder(this)
-            .setEnableFloatOutput(true)
-            .build()
+        // 1. Usar NextRenderersFactory que incluye FFmpeg para Dolby Atmos y más
+        val renderersFactory = NextRenderersFactory(this)
 
         val player = ExoPlayer.Builder(this, renderersFactory)
             .setAudioAttributes(
