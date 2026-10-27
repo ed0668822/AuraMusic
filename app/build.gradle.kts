@@ -22,7 +22,24 @@ android {
         versionName = autoVersionName
         buildConfigField("String", "UPDATE_APK_PREFIX", "\"app-\"")
         
-        // CMake desactivado (archivos .cpp no presentes)
+        // ✅ NUEVO: Configuración de NDK y CMake
+        ndk {
+            // Incluye 64 y 32 bits. (x86_64 para emuladores, si lo necesitas).
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
+        }
+        externalNativeBuild {
+            cmake {
+                cppFlags += "-std=c++17"
+            }
+        }
+    }
+
+    // ✅ NUEVO: Ruta al archivo CMakeLists.txt
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1"
+        }
     }
 
     signingConfigs {
@@ -90,7 +107,7 @@ dependencies {
 
     debugImplementation("androidx.compose.ui:ui-tooling")
 
-    // Media3 (la versión 1.11.1 viene arrastrada por nextlib, por eso exige el SDK 36)
+    // Media3
     implementation("androidx.media3:media3-exoplayer:1.5.1")
     implementation("androidx.media3:media3-session:1.5.1")
     implementation("androidx.media3:media3-common:1.5.1")
