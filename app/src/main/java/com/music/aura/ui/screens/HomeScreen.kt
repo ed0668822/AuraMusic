@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -29,8 +28,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -38,18 +35,16 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.music.aura.R
 import com.music.aura.data.model.LocalSong
-import com.music.aura.ui.components.HERO_CARD_RATIO
 import com.music.aura.ui.components.PAGE_GUTTER
 import com.music.aura.ui.components.PlayingAccent
 import com.music.aura.ui.components.RowMoreButton
 import com.music.aura.ui.components.SearchPlayingBars
 import com.music.aura.ui.components.SHELF_CARD_WIDTH
 import com.music.aura.ui.components.ShelfRow
-import com.music.aura.ui.components.heroCardWidth
+import com.music.aura.ui.components.contextClick
 import com.music.aura.ui.components.longPressMenuClickable
 import com.music.aura.ui.components.thumbnailBorder
 import com.music.aura.ui.components.trackColumnWidth
-import com.music.aura.ui.contextClick
 import com.music.aura.ui.icons.AuraIcons
 
 private val HOME_TITLE_LIFT = 28.dp
@@ -70,7 +65,7 @@ fun HomeScreen(
 ) {
     LazyColumn(
         state = listState,
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(
             top = (contentPadding.calculateTopPadding() - HOME_TITLE_LIFT).coerceAtLeast(0.dp),
             bottom = contentPadding.calculateBottomPadding(),
