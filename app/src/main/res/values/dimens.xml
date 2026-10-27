@@ -1,8 +1,11 @@
-<dimen name="widget_band_compact">94dp</dimen>
-<dimen name="widget_band_wide">56dp</dimen>
-<dimen name="widget_band_padding">12dp</dimen>
-<dimen name="widget_button_compact">40dp</dimen>
-<dimen name="widget_button_wide">44dp</dimen>
-<dimen name="widget_corner_radius">18dp</dimen>
-<dimen name="widget_pill_art">48dp</dimen>
-<dimen name="widget_pill_height">56dp</dimen>
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="widget_band_compact">94dp</dimen>
+    <dimen name="widget_band_wide">56dp</dimen>
+    <dimen name="widget_band_padding">12dp</dimen>
+    <dimen name="widget_button_compact">40dp</dimen>
+    <dimen name="widget_button_wide">44dp</dimen>
+    <dimen name="widget_corner_radius">18dp</dimen>
+    <dimen name="widget_pill_art">48dp</dimen>
+    <dimen name="widget_pill_height">56dp</dimen>
+</resources>
