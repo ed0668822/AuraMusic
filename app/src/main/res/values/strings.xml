@@ -2,7 +2,6 @@
 <resources>
     <string name="app_name">Aura Music</string>
 
-    <!-- Search -->
     <string name="search">Buscar</string>
     <string name="search_hint">Buscar canciones, artistas, álbumes…</string>
     <string name="clear_search">Borrar búsqueda</string>
@@ -11,7 +10,6 @@
     <string name="search_library_no_results">Sin resultados para «%1$s»</string>
     <string name="recent_searches">Búsquedas recientes</string>
 
-    <!-- Library / Home -->
     <string name="library">Biblioteca</string>
     <string name="home">Inicio</string>
     <string name="explore">Explorar</string>
@@ -34,7 +32,6 @@
     <string name="open_playlist">Abrir lista</string>
     <string name="history_empty">Aún no has escuchado nada</string>
 
-    <!-- Playback -->
     <string name="play">Reproducir</string>
     <string name="shuffle">Aleatorio</string>
     <string name="play_next">Reproducir después</string>
@@ -49,7 +46,6 @@
     <string name="sleep_timer">Temporizador</string>
     <string name="one_hour">1 hora</string>
 
-    <!-- Song actions / info -->
     <string name="song_info">Información de la canción</string>
     <string name="song_info_album">Álbum</string>
     <string name="song_info_artist">Artista</string>
@@ -64,7 +60,6 @@
     <string name="save">Guardar</string>
     <string name="saved_bang">¡Guardado!</string>
 
-    <!-- Playlists -->
     <string name="add_to_playlist">Añadir a lista</string>
     <string name="your_playlists">Tus listas</string>
     <string name="new_playlist">Nueva lista</string>
@@ -80,7 +75,6 @@
     <string name="reorder_songs">Reordenar canciones</string>
     <string name="save_order">Guardar orden</string>
 
-    <!-- Lyrics -->
     <string name="lyrics_offset">Ajuste de letras</string>
     <string name="lyrics_offset_description">Desplaza las letras para sincronizarlas con el audio.</string>
     <string name="lyrics_offset_reset">Restablecer</string>
@@ -97,7 +91,6 @@
     <string name="couldnt_draw_picture">No se pudo generar la imagen</string>
     <string name="lyrics_share_pick_limit">Elige menos líneas para compartir</string>
 
-    <!-- Audio output -->
     <string name="audio_output">Salida de audio</string>
     <string name="audio_output_playing">Reproduciendo aquí</string>
     <string name="wired_headphones">Auriculares con cable</string>
@@ -105,7 +98,6 @@
     <string name="hdmi_output">HDMI</string>
     <string name="this_phone">Este teléfono</string>
 
-    <!-- Replay -->
     <string name="replay">Replay</string>
     <string name="not_enough_listening">Aún no hay suficientes datos</string>
     <string name="top_songs">Canciones más escuchadas</string>
@@ -129,7 +121,6 @@
     <string name="replay_period_yearly">Anual</string>
     <string name="replay_period_lifetime">Histórico</string>
 
-    <!-- Onboarding -->
     <string name="onboarding_welcome_title">Aura Music</string>
     <string name="onboarding_welcome_body">Tu música local, con un reproductor que se siente como en casa.</string>
     <string name="onboarding_next">Continuar</string>
@@ -140,7 +131,6 @@
     <string name="onboarding_skip">Omitir</string>
     <string name="onboarding_back">Atrás</string>
 
-    <!-- Widgets -->
     <string name="widget_artwork">Carátula</string>
     <string name="widget_previous">Anterior</string>
     <string name="widget_play">Reproducir / Pausar</string>
@@ -149,7 +139,6 @@
     <string name="widget_square_description">Aura Music — widget compacto</string>
     <string name="widget_wide_description">Aura Music — widget ancho</string>
 
-    <!-- Plurals -->
     <plurals name="minute_count">
         <item quantity="one">%d minuto</item>
         <item quantity="other">%d minutos</item>
