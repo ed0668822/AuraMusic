@@ -11,7 +11,8 @@ val autoVersionCode = if (runNumber > 0) 10000 + runNumber else (System.currentT
 
 android {
     namespace = "com.music.aura"
-    compileSdk = 35
+    // ✅ IMPORTANTE: Debe ser 36 por las librerías de Media3
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.music.aura"
@@ -20,25 +21,9 @@ android {
         versionCode = autoVersionCode
         versionName = autoVersionName
         buildConfigField("String", "UPDATE_APK_PREFIX", "\"app-\"")
-
-        // ❌ DESACTIVADO: NDK y CMake fallan porque los archivos .cpp no existen en el repo.
-        // ndk {
-        //     abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
-        // }
-        // externalNativeBuild {
-        //     cmake {
-        //         cppFlags += "-std=c++17"
-        //     }
-        // }
+        
+        // CMake desactivado (archivos .cpp no presentes)
     }
-
-    // ❌ DESACTIVADO: Evita que Gradle invoque a CMake.
-    // externalNativeBuild {
-    //     cmake {
-    //         path = file("src/main/cpp/CMakeLists.txt")
-    //         version = "3.22.1"
-    //     }
-    // }
 
     signingConfigs {
         create("release") {
@@ -105,6 +90,7 @@ dependencies {
 
     debugImplementation("androidx.compose.ui:ui-tooling")
 
+    // Media3 (la versión 1.11.1 viene arrastrada por nextlib, por eso exige el SDK 36)
     implementation("androidx.media3:media3-exoplayer:1.5.1")
     implementation("androidx.media3:media3-session:1.5.1")
     implementation("androidx.media3:media3-common:1.5.1")
