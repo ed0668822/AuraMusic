@@ -41,17 +41,3 @@ fun paletteSwatches(bitmap: ImageBitmap, maxSwatches: Int, clearFilters: Boolean
     }
     return builder.generate().swatches.take(maxSwatches)
 }
-
-object ColorUtils {
-    fun colorToHSL(color: Int, outHsl: FloatArray) {
-        androidx.core.graphics.ColorUtils.colorToHSL(color, outHsl)
-    }
-
-    fun HSLToColor(hsl: FloatArray): Int {
-        return androidx.core.graphics.ColorUtils.HSLToColor(hsl)
-    }
-
-    fun calculateLuminance(color: Int): Double {
-        return androidx.core.graphics.ColorUtils.calculateLuminance(color)
-    }
-}
