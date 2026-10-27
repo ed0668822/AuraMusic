@@ -15,10 +15,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 
 /**
- * El mini player en el que el player expandido se "acopla".
+ * The mini player the expanded player docks into, for a host that has one.
  *
- * La apertura y cierre del player es un solo movimiento en pantalla:
- * el artwork viaja entre su posición en el player y la del mini player.
+ * Opening and closing the player is one movement on screen: the sheet's
+ * artwork travels between its own place and the mini player's cover while the
+ * rest of the player fades — see the sleeve in NowPlayingScreen. The two are
+ * in different windows on a phone (the player is a modal sheet over the page),
+ * so nothing here is shared layout; it is the two ends of the movement, each
+ * reported by the side that owns it, and met in screen coordinates.
+ *
+ * Read in layout and draw only. Nothing in it is worth a recomposition.
  */
 @Stable
 class PlayerDock {
@@ -69,5 +75,5 @@ class PlayerDock {
     private val coversMiniArtState = derivedStateOf { attached && openFraction() > 0f }
 }
 
-/** El [PlayerDock] alrededor del player, si el host tiene un mini player. */
+/** The [PlayerDock] around the player, if its host has a mini player to dock into. */
 val LocalPlayerDock = staticCompositionLocalOf<PlayerDock?> { null }
