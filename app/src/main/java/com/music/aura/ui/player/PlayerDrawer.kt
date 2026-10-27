@@ -73,6 +73,7 @@ fun PlayerDrawer(
     title: String,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    reduceDynamicBlur: Boolean = false,
     titleGap: Dp = 14.dp,
     content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -144,11 +145,18 @@ fun PlayerDrawer(
                     .onSizeChanged { height = it.height }
                     .offset { IntOffset(0, offset.roundToInt()) }
                     .clip(DRAWER_SHAPE)
-                    .optimizedHazeEffect(
-                        state = hazeState,
-                        style = HazeMaterials.regular(Color(0xFF141414)),
+                    .then(
+                        if (reduceDynamicBlur) {
+                            Modifier.background(Color(0xFF121212))
+                        } else {
+                            Modifier
+                                .optimizedHazeEffect(
+                                    state = hazeState,
+                                    style = HazeMaterials.regular(Color(0xFF141414)),
+                                )
+                                .background(Color(0xFF121212).copy(alpha = 0.9f))
+                        }
                     )
-                    .background(Color(0xFF121212).copy(alpha = 0.9f))
                     .clickable(
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() },
