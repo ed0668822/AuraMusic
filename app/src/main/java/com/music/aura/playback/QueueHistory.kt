@@ -7,15 +7,9 @@ internal const val MAX_QUEUE_HISTORY = 25
 internal fun queueHistoryTrimCount(currentIndex: Int): Int =
     (currentIndex - MAX_QUEUE_HISTORY).coerceAtLeast(0)
 
-/**
- * Entries bypassed when a listener chooses a later row directly from the queue.
- */
 internal fun skippedByQueueJump(currentIndex: Int, targetIndex: Int): IntRange? =
     if (targetIndex > currentIndex + 1) (currentIndex + 1) until targetIndex else null
 
-/**
- * Starts a new queue at the row the listener selected.
- */
 internal fun <T> queueStartingAt(items: List<T>, startIndex: Int): List<T> {
     if (items.isEmpty()) return emptyList()
     return items.drop(startIndex.coerceIn(items.indices))
