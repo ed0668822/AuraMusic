@@ -1,242 +1,130 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="app_name">Aura Music</string>
+package com.music.aura.data
 
-    <!-- Search -->
-    <string name="search">Buscar</string>
-    <string name="search_hint">Buscar canciones, artistas, álbumes…</string>
-    <string name="clear_search">Borrar búsqueda</string>
-    <string name="search_empty">Busca canciones, artistas o álbumes</string>
-    <string name="search_library_empty">No hay canciones que coincidan</string>
-    <string name="search_library_no_results">Sin resultados para «%1$s»</string>
-    <string name="recent_searches">Búsquedas recientes</string>
+import android.content.Context
+import android.content.SharedPreferences
+import com.music.aura.playback.EqualizerPreset
+import kotlinx.coroutines.flow.MutableStateFlow
 
-    <!-- Library / Home -->
-    <string name="library">Biblioteca</string>
-    <string name="home">Inicio</string>
-    <string name="explore">Explorar</string>
-    <string name="listen_now">Escuchar ahora</string>
-    <string name="recently_added">Añadido recientemente</string>
-    <string name="recently_played">Reproducido recientemente</string>
-    <string name="most_played">Más escuchado</string>
-    <string name="albums">Álbumes</string>
-    <string name="artists">Artistas</string>
-    <string name="songs">Canciones</string>
-    <string name="local_music">Música local</string>
-    <string name="on_device">En el dispositivo</string>
-    <string name="show_all">Ver todo</string>
-    <string name="album">Álbum</string>
-    <string name="artist">Artista</string>
-    <string name="playlist">Lista</string>
-    <string name="open">Abrir</string>
-    <string name="open_album">Abrir álbum</string>
-    <string name="open_artist">Abrir artista</string>
-    <string name="open_playlist">Abrir lista</string>
-    <string name="history_empty">Aún no has escuchado nada</string>
-    <string name="all_songs">Todas las canciones</string>
-    <string name="audio_files_on_device">Archivos de audio en el dispositivo</string>
-    <string name="folders">Carpetas</string>
-    <string name="browse_by_folder">Explorar por carpeta</string>
+enum class EqualizerMode { DYNAMIC, MANUAL }
 
-    <!-- Playback -->
-    <string name="play">Reproducir</string>
-    <string name="shuffle">Aleatorio</string>
-    <string name="play_next">Reproducir después</string>
-    <string name="add_to_queue">Añadir a la cola</string>
-    <string name="queue">Cola</string>
-    <string name="now_playing">Sonando ahora</string>
-    <string name="next_in_queue">Siguiente</string>
-    <string name="next_from">Siguiente de %1$s</string>
-    <string name="remove_from_queue">Quitar de la cola</string>
-    <string name="drag_to_reorder">Arrastra para reordenar</string>
-    <string name="clear">Limpiar</string>
-    <string name="more">Más</string>
-    <string name="sleep_timer">Temporizador</string>
-    <string name="one_hour">1 hora</string>
-    <string name="audio_pipeline">Ruta de audio</string>
-    <string name="personal_phone">Este teléfono</string>
+object SettingsRepository {
+    private lateinit var prefs: SharedPreferences
 
-    <!-- Song actions / info -->
-    <string name="song_info">Información de la canción</string>
-    <string name="song_info_album">Álbum</string>
-    <string name="song_info_artist">Artista</string>
-    <string name="song_info_year">Año</string>
-    <string name="song_info_duration">Duración</string>
-    <string name="song_info_size">Tamaño</string>
-    <string name="song_info_path">Ruta</string>
-    <string name="done">Hecho</string>
-    <string name="back">Atrás</string>
-    <string name="cancel">Cancelar</string>
-    <string name="share">Compartir</string>
-    <string name="save">Guardar</string>
-    <string name="saved">¡Guardado!</string>
-    <string name="saved_bang">¡Guardado!</string>
+    // ── Existing ──────────────────────────────────────────────────────────────
+    val themeMode = MutableStateFlow(0)
+    val dolbyAtmos = MutableStateFlow(true)
+    val liquidGlass = MutableStateFlow(true)
+    val reduceAnimation = MutableStateFlow(false)
+    val reduceDynamicBlur = MutableStateFlow(false)
+    val syncedLyrics = MutableStateFlow(true)
+    val blurUnfocusedLyrics = MutableStateFlow(true)
+    val filterNonMusicAudio = MutableStateFlow(true)
+    val autoplay = MutableStateFlow(true)
+    val crossfadeSeconds = MutableStateFlow(0)
 
-    <!-- Playlists -->
-    <string name="add_to_playlist">Añadir a lista</string>
-    <string name="your_playlists">Tus listas</string>
-    <string name="new_playlist">Nueva lista</string>
-    <string name="no_playlists_yet">Aún no hay listas</string>
-    <string name="saved_locally">Guardada en el dispositivo</string>
-    <string name="playlist_name">Nombre de la lista</string>
-    <string name="clear_name">Borrar nombre</string>
-    <string name="create_playlist">Crear lista</string>
-    <string name="remove_from_playlist">Quitar de la lista</string>
-    <string name="rename">Renombrar</string>
-    <string name="delete_playlist">Borrar lista</string>
-    <string name="delete_playlist_confirmation">¿Borrar «%1$s»?</string>
-    <string name="reorder_songs">Reordenar canciones</string>
-    <string name="save_order">Guardar orden</string>
+    // ── Equalizer ─────────────────────────────────────────────────────────────
+    val equalizerEnabled = MutableStateFlow(false)
+    val equalizerMode = MutableStateFlow(EqualizerMode.DYNAMIC)
+    val equalizerToneX = MutableStateFlow(0)
+    val equalizerToneY = MutableStateFlow(0)
+    val equalizerFocused = MutableStateFlow(false)
+    val equalizerBalance = MutableStateFlow(0f)
+    val equalizerBands = MutableStateFlow(List(7) { 0f })
+    val equalizerPreset = MutableStateFlow(EqualizerPreset.FLAT)
 
-    <!-- Lyrics -->
-    <string name="lyrics_offset">Ajuste de letras</string>
-    <string name="lyrics_offset_description">Desplaza las letras para sincronizarlas con el audio.</string>
-    <string name="lyrics_offset_reset">Restablecer</string>
-    <string name="decrease_lyrics_offset">Reducir desplazamiento</string>
-    <string name="increase_lyrics_offset">Aumentar desplazamiento</string>
-    <string name="choose_lyrics_provider">Fuente de letras</string>
-    <string name="lyrics_provider_current">Actual</string>
-    <string name="lyrics_provider_found">Encontradas</string>
-    <string name="lyrics_provider_not_found">No encontradas</string>
-    <string name="lyrics_provider_fetching">Buscando…</string>
-    <string name="lyrics_provider_not_fetched">Sin probar</string>
-    <string name="lyrics_share_title">Compartir letra</string>
-    <string name="your_lyrics_card">Tu tarjeta de letras</string>
-    <string name="couldnt_draw_picture">No se pudo generar la imagen</string>
-    <string name="lyrics_share_pick_limit">Elige menos líneas para compartir</string>
-    <string name="lyrics_share_description">Comparte la letra de esta canción</string>
-    <string name="lyrics_share_story">Modo historia</string>
-    <string name="lyrics_share_story_revert">Volver a modo normal</string>
-    <string name="share_your_lyrics">Comparte tus letras</string>
+    // ── Spatial / Loudness ────────────────────────────────────────────────────
+    val spatialAudio = MutableStateFlow(false)
+    val loudnessNormalization = MutableStateFlow(false)
 
-    <!-- Audio output -->
-    <string name="audio_output">Salida de audio</string>
-    <string name="audio_output_playing">Reproduciendo aquí</string>
-    <string name="wired_headphones">Auriculares con cable</string>
-    <string name="usb_audio">Audio USB</string>
-    <string name="hdmi_output">HDMI</string>
-    <string name="this_phone">Este teléfono</string>
+    // ── Player ────────────────────────────────────────────────────────────────
+    val hideVolumeBar = MutableStateFlow(false)
+    val showNerdStats = MutableStateFlow(false)
+    val lyricsOffsetMs = MutableStateFlow(0)
+    
+    // ✅ NUEVO: Para la cola de reproducción
+    val showQueueHistory = MutableStateFlow(false)
 
-    <!-- Replay -->
-    <string name="replay">Replay</string>
-    <string name="not_enough_listening">Aún no hay suficientes datos</string>
-    <string name="top_songs">Canciones más escuchadas</string>
-    <string name="top_artists">Artistas más escuchados</string>
-    <string name="top_song">Canción top</string>
-    <string name="top_artist">Artista top</string>
-    <string name="top_album">Álbum top</string>
-    <string name="listening_shape">Tu forma de escuchar</string>
-    <string name="minutes_listened">Minutos escuchados</string>
-    <string name="your_listening_experience">Tu experiencia</string>
-    <string name="default_replay_holder">Aura</string>
-    <string name="member_since">Desde</string>
-    <string name="midnight">Medianoche</string>
-    <string name="midday">Mediodía</string>
-    <string name="this_month">Este mes</string>
-    <string name="this_year">Este año</string>
-    <string name="this_week">Esta semana</string>
-    <string name="all_time">Todo el tiempo</string>
-    <string name="replay_this_week">Esta semana</string>
-    <string name="replay_period_weekly">Semanal</string>
-    <string name="replay_period_monthly">Mensual</string>
-    <string name="replay_period_yearly">Anual</string>
-    <string name="replay_period_lifetime">Histórico</string>
-    <string name="share_my_replay">Compartir mi Replay</string>
-    <string name="your_replay">Tu Replay</string>
-    <string name="share_your_replay">Comparte tu Replay</string>
-    <string name="close_replay">Cerrar</string>
-    <string name="replay_share_summary_description">Resumen de tu año musical</string>
-    <string name="replay_share_card_description">Tarjeta de tu año musical</string>
-    <string name="replay_intro_headline">Tu año en música</string>
-    <string name="replay_minutes_headline_prefix">Has escuchado</string>
-    <string name="replay_minutes_headline_suffix">minutos</string>
-    <string name="replay_songs_headline_prefix">Tu canción top fue</string>
-    <string name="replay_songs_headline_suffix">veces</string>
-    <string name="replay_artists_headline_prefix">Tu artista top fue</string>
-    <string name="replay_artists_headline_suffix">minutos</string>
-    <string name="replay_albums_headline_prefix">Tu álbum top fue</string>
-    <string name="replay_albums_headline_suffix">veces</string>
-    <string name="replay_genres_headline_prefix">Tu género top fue</string>
-    <string name="replay_genres_headline_suffix"></string>
-    <string name="replay_habits_headline">Tus hábitos</string>
-    <string name="replay_summary_headline">Resumen final</string>
-    <string name="replay_private_counting">Cuenta privada</string>
-    <string name="replay_hours_across">horas en</string>
-    <string name="replay_across">a través de</string>
-    <string name="replay_play_count">%1$s reproducciones</string>
-    <string name="different_albums">álbumes diferentes</string>
-    <string name="your_biggest_day">Tu día más fuerte</string>
-    <string name="when_you_listen_the_most">Cuando más escuchas</string>
-    <string name="minutes">minutos</string>
-    <string name="top_genre">Género top</string>
-    <string name="tap_share_for_picture">Toca compartir para imagen</string>
+    fun init(context: Context) {
+        prefs = context.applicationContext.getSharedPreferences("aura_settings", Context.MODE_PRIVATE)
+        themeMode.value = prefs.getInt("theme_mode", 0)
+        dolbyAtmos.value = prefs.getBoolean("dolby_atmos", true)
+        liquidGlass.value = prefs.getBoolean("liquid_glass", true)
+        reduceAnimation.value = prefs.getBoolean("reduce_animation", false)
+        reduceDynamicBlur.value = prefs.getBoolean("reduce_dynamic_blur", false)
+        syncedLyrics.value = prefs.getBoolean("synced_lyrics", true)
+        blurUnfocusedLyrics.value = prefs.getBoolean("blur_lyrics", true)
+        filterNonMusicAudio.value = prefs.getBoolean("filter_non_music", true)
+        autoplay.value = prefs.getBoolean("autoplay", true)
+        crossfadeSeconds.value = prefs.getInt("crossfade", 0)
 
-    <!-- Equalizer -->
-    <string name="equalizer">Ecualizador</string>
-    <string name="equalizer_footer">Ajusta el sonido a tu gusto</string>
-    <string name="equalizer_tone">Tono</string>
-    <string name="equalizer_focused_footer">Rango enfocado</string>
-    <string name="equalizer_broad_footer">Rango amplio</string>
-    <string name="equalizer_broad">Amplio</string>
-    <string name="equalizer_focused">Enfocado</string>
-    <string name="equalizer_preset">Preset</string>
-    <string name="equalizer_bands">Bandas</string>
-    <string name="equalizer_bands_footer">Ajusta las frecuencias</string>
-    <string name="equalizer_reset">Restablecer</string>
-    <string name="equalizer_balance">Balance</string>
-    <string name="equalizer_balance_footer">Izquierda / Derecha</string>
-    <string name="equalizer_tilt">Inclinación</string>
-    <string name="equalizer_contour">Contorno</string>
-    <string name="equalizer_balance_left">L</string>
-    <string name="equalizer_balance_right">R</string>
-    <string name="equalizer_dynamic">Dinámico</string>
-    <string name="equalizer_manual">Manual</string>
-    <string name="eq_preset_flat">Plano</string>
-    <string name="eq_preset_acoustic">Acústico</string>
-    <string name="eq_preset_bass_boost">Bajos +</string>
-    <string name="eq_preset_bass_cut">Bajos -</string>
-    <string name="eq_preset_vocal">Vocal</string>
-    <string name="eq_preset_treble_boost">Agudos +</string>
-    <string name="eq_preset_treble_cut">Agudos -</string>
-    <string name="eq_preset_loudness">Sonoridad</string>
-    <string name="eq_preset_spoken_word">Palabra hablada</string>
-    <string name="eq_preset_electronic">Electrónica</string>
-    <string name="eq_preset_rock">Rock</string>
-    <string name="eq_preset_hip_hop">Hip-Hop</string>
-    <string name="eq_preset_jazz">Jazz</string>
-    <string name="eq_preset_classical">Clásica</string>
-    <string name="eq_preset_small_speakers">Altavoces pequeños</string>
-    <string name="eq_preset_late_night">Noche</string>
-    <string name="eq_preset_custom">Personalizado</string>
+        equalizerEnabled.value = prefs.getBoolean("eq_enabled", false)
+        equalizerMode.value = EqualizerMode.entries.getOrElse(prefs.getInt("eq_mode", 0)) { EqualizerMode.DYNAMIC }
+        equalizerToneX.value = prefs.getInt("eq_tone_x", 0)
+        equalizerToneY.value = prefs.getInt("eq_tone_y", 0)
+        equalizerFocused.value = prefs.getBoolean("eq_focused", false)
+        equalizerBalance.value = prefs.getFloat("eq_balance", 0f)
+        equalizerBands.value = (0 until 7).map { prefs.getFloat("eq_band_$it", 0f) }
+        equalizerPreset.value = runCatching {
+            EqualizerPreset.valueOf(prefs.getString("eq_preset", "FLAT") ?: "FLAT")
+        }.getOrDefault(EqualizerPreset.FLAT)
 
-    <!-- Onboarding -->
-    <string name="onboarding_welcome_title">Aura Music</string>
-    <string name="onboarding_welcome_body">Tu música local, con un reproductor que se siente como en casa.</string>
-    <string name="onboarding_next">Continuar</string>
-    <string name="onboarding_permission_title">Acceso a tu música</string>
-    <string name="onboarding_permission_body">Necesitamos permiso para leer tus archivos de audio.</string>
-    <string name="onboarding_grant_permission">Conceder permiso</string>
-    <string name="onboarding_start">Empezar</string>
-    <string name="onboarding_skip">Omitir</string>
-    <string name="onboarding_back">Atrás</string>
+        spatialAudio.value = prefs.getBoolean("spatial_audio", false)
+        loudnessNormalization.value = prefs.getBoolean("loudness_norm", false)
+        hideVolumeBar.value = prefs.getBoolean("hide_volume_bar", false)
+        showNerdStats.value = prefs.getBoolean("show_nerd_stats", false)
+        lyricsOffsetMs.value = prefs.getInt("lyrics_offset_ms", 0)
+        
+        // ✅ NUEVO
+        showQueueHistory.value = prefs.getBoolean("show_queue_history", false)
+    }
 
-    <!-- Widgets -->
-    <string name="widget_artwork">Carátula</string>
-    <string name="widget_previous">Anterior</string>
-    <string name="widget_play">Reproducir / Pausar</string>
-    <string name="widget_next">Siguiente</string>
-    <string name="widget_nothing_played">Nada en reproducción</string>
-    <string name="widget_square_description">Aura Music — widget compacto</string>
-    <string name="widget_wide_description">Aura Music — widget ancho</string>
-    <string name="widget_pill_description">Aura Music — widget píldora</string>
+    // ── Existing setters ──────────────────────────────────────────────────────
+    fun setThemeMode(value: Int) { themeMode.value = value; prefs.edit().putInt("theme_mode", value).apply() }
+    fun setDolbyAtmos(value: Boolean) { dolbyAtmos.value = value; prefs.edit().putBoolean("dolby_atmos", value).apply() }
+    fun setLiquidGlass(value: Boolean) { liquidGlass.value = value; prefs.edit().putBoolean("liquid_glass", value).apply() }
+    fun setReduceAnimation(value: Boolean) { reduceAnimation.value = value; prefs.edit().putBoolean("reduce_animation", value).apply() }
+    fun setReduceDynamicBlur(value: Boolean) { reduceDynamicBlur.value = value; prefs.edit().putBoolean("reduce_dynamic_blur", value).apply() }
+    fun setSyncedLyrics(value: Boolean) { syncedLyrics.value = value; prefs.edit().putBoolean("synced_lyrics", value).apply() }
+    fun setBlurUnfocusedLyrics(value: Boolean) { blurUnfocusedLyrics.value = value; prefs.edit().putBoolean("blur_lyrics", value).apply() }
+    fun setFilterNonMusicAudio(value: Boolean) { filterNonMusicAudio.value = value; prefs.edit().putBoolean("filter_non_music", value).apply() }
+    fun setAutoplay(value: Boolean) { autoplay.value = value; prefs.edit().putBoolean("autoplay", value).apply() }
+    fun setCrossfadeSeconds(value: Int) { crossfadeSeconds.value = value; prefs.edit().putInt("crossfade", value).apply() }
 
-    <!-- Plurals -->
-    <plurals name="minute_count">
-        <item quantity="one">%d minuto</item>
-        <item quantity="other">%d minutos</item>
-    </plurals>
-    <plurals name="add_to_playlists_count">
-        <item quantity="one">Añadir a %d lista</item>
-        <item quantity="other">Añadir a %d listas</item>
-    </plurals>
-</resources>
+    // ── Equalizer setters ─────────────────────────────────────────────────────
+    fun setEqualizerEnabled(value: Boolean) { equalizerEnabled.value = value; prefs.edit().putBoolean("eq_enabled", value).apply() }
+    fun setEqualizerMode(value: EqualizerMode) { equalizerMode.value = value; prefs.edit().putInt("eq_mode", value.ordinal).apply() }
+    fun setEqualizerTone(x: Int, y: Int) {
+        equalizerToneX.value = x; equalizerToneY.value = y
+        prefs.edit().putInt("eq_tone_x", x).putInt("eq_tone_y", y).apply()
+    }
+    fun setEqualizerFocused(value: Boolean) { equalizerFocused.value = value; prefs.edit().putBoolean("eq_focused", value).apply() }
+    fun setEqualizerBalance(value: Float) { equalizerBalance.value = value; prefs.edit().putFloat("eq_balance", value).apply() }
+    fun setEqualizerBands(bands: List<Float>) {
+        equalizerBands.value = bands
+        val editor = prefs.edit()
+        bands.forEachIndexed { i, v -> editor.putFloat("eq_band_$i", v) }
+        editor.apply()
+    }
+    fun setEqualizerPreset(value: EqualizerPreset) {
+        equalizerPreset.value = value
+        prefs.edit().putString("eq_preset", value.name).apply()
+        if (value != EqualizerPreset.CUSTOM) {
+            setEqualizerBands(value.bands)
+        }
+    }
+
+    // ── Spatial / Loudness setters ────────────────────────────────────────────
+    fun setSpatialAudio(value: Boolean) { spatialAudio.value = value; prefs.edit().putBoolean("spatial_audio", value).apply() }
+    fun setLoudnessNormalization(value: Boolean) { loudnessNormalization.value = value; prefs.edit().putBoolean("loudness_norm", value).apply() }
+
+    // ── Player setters ────────────────────────────────────────────────────────
+    fun setHideVolumeBar(value: Boolean) { hideVolumeBar.value = value; prefs.edit().putBoolean("hide_volume_bar", value).apply() }
+    fun setShowNerdStats(value: Boolean) { showNerdStats.value = value; prefs.edit().putBoolean("show_nerd_stats", value).apply() }
+    fun setLyricsOffsetMs(value: Int) { lyricsOffsetMs.value = value; prefs.edit().putInt("lyrics_offset_ms", value).apply() }
+    
+    // ✅ NUEVO
+    fun setShowQueueHistory(value: Boolean) {
+        showQueueHistory.value = value
+        prefs.edit().putBoolean("show_queue_history", value).apply()
+    }
+}
