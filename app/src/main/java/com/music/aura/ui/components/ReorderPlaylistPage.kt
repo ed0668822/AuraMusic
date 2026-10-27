@@ -135,7 +135,7 @@ private fun ReorderableSongList(
     contentPadding: PaddingValues,
 ) {
     val listState = rememberLazyListState()
-    var held by remember { mutableStateOf<Long?>(null) }
+    var held by remember { mutableStateOf<String?>(null) }
     var offset by remember { mutableFloatStateOf(0f) }
     var autoScroll by remember { mutableFloatStateOf(0f) }
     val density = LocalDensity.current
