@@ -22,8 +22,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.History
-import androidx.compose.material.icons.rounded.NorthWest
-import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -41,7 +39,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
 import com.music.aura.R
 import com.music.aura.data.model.LocalSong
 import com.music.aura.ui.components.MessageState
@@ -49,12 +46,9 @@ import com.music.aura.ui.components.PAGE_GUTTER
 import com.music.aura.ui.components.PlayingAccent
 import com.music.aura.ui.components.ROW_DIVIDER_INSET
 import com.music.aura.ui.components.SearchField
-import com.music.aura.ui.components.SearchPlayingBars
 import com.music.aura.ui.components.SongRow
-import com.music.aura.ui.components.longPressMenuClickable
 import com.music.aura.ui.components.songListSkeleton
-import com.music.aura.ui.components.thumbnailBorder
-import com.music.aura.ui.contextClick
+import com.music.aura.ui.components.contextClick
 
 @Composable
 fun SearchScreen(
