@@ -74,6 +74,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
+    implementation("androidx.palette:palette-ktx:1.0.0")
     // ✅ CORREGIDO: Eliminada la línea implementation("androidx.compose.foundation:foundation:1.10.0") para evitar conflictos con el BOM
     implementation("androidx.activity:activity-compose:1.9.3")
     implementation("androidx.navigation:navigation-compose:2.8.5")
