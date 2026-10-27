@@ -21,9 +21,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.math.abs
 
-/**
- * Interfaz para el pull desde el mini player.
- */
 interface MiniPlayerPull {
     fun drag(delta: Float)
     fun release(velocity: Float)
@@ -34,12 +31,8 @@ private const val SLIDE_SETTLED_PX = 0.5f
 private const val SHEET_VELOCITY_FRESH_MS = 80f
 private const val LAYOUT_WAIT_MS = 300L
 private const val WINDOW_ENTER_MS = 600L
+private const val DEFAULT_TRAVEL_PX = 2400f
 
-/**
- * Controla la posición del sheet del player durante las animaciones
- * de apertura, cierre y drag. Spring críticamente amortiguado
- * (sin rebote), ~0.45s de respuesta — idéntico a Apple Music.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Stable
 class PlayerSheetMotion(
@@ -78,7 +71,7 @@ class PlayerSheetMotion(
     private var closing = false
 
     private fun travel(): Float =
-        dock.sheetTravel.takeIf { it > 0f } ?: (windowInfo?.containerSize?.height ?: 0).toFloat()
+        dock.sheetTravel.takeIf { it > 0f } ?: DEFAULT_TRAVEL_PX
 
     private fun sheetOffset(): Float = try {
         sheet?.requireOffset() ?: Float.NaN
