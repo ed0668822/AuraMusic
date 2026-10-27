@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_library(log-lib log)
 
 # ─── 1. Analizador de Automix (Fase 3 - Desactivado por ahora) ───────────────
-# Se comentará hasta que subamos los archivos .cpp de la Fase 3.
+# Se activará cuando subamos los archivos de la Fase 3.
 # add_library(aura_analysis SHARED
 #     analyzer/audio_analysis.cpp
 #     analyzer/tempo_analysis.cpp
@@ -18,7 +18,6 @@ find_library(log-lib log)
 #     jni/mel_jni.cpp
 #     jni/vocal_jni.cpp
 # )
-
 # target_include_directories(aura_analysis PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 # target_compile_options(aura_analysis PRIVATE -O3 -fvisibility=hidden)
 # target_link_libraries(aura_analysis ${log-lib})
@@ -31,5 +30,7 @@ target_link_options(aura_dsd PRIVATE "-Wl,-z,max-page-size=16384")
 
 # ─── 3. Decodificador DST (SACD comprimido) ──────────────────────────────────
 add_library(aura_dst SHARED dsd/dst/decoder.c dsd/dst/jni.cpp)
+# ✅ AQUÍ ESTÁ LA SOLUCIÓN: Le decimos al compilador dónde buscar decoder.h y compat.h
+target_include_directories(aura_dst PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/dsd/dst)
 target_compile_options(aura_dst PRIVATE -O3 -fno-strict-aliasing -fvisibility=hidden)
 target_link_options(aura_dst PRIVATE "-Wl,-z,max-page-size=16384")
