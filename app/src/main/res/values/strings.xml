@@ -195,6 +195,14 @@
     <string name="equalizer_balance_right">R</string>
     <string name="equalizer_dynamic">Dinámico</string>
     <string name="equalizer_manual">Manual</string>
+    <string name="selected">Seleccionado</string>
+    <string name="system_equalizer">Ecualizador del sistema</string>
+    <string name="system_equalizer_subtitle">Abrir el panel de audio del dispositivo</string>
+    <string name="system_equalizer_footer">Usa el ecualizador del sistema si tu dispositivo lo soporta.</string>
+    <string name="equalizer_bitstream_title">DSP no disponible</string>
+    <string name="equalizer_bitstream_subtitle">Esta pista se reproduce sin decodificar a PCM (Dolby/Offload), por lo que los efectos no se aplican.</string>
+    <string name="equalizer_bitstream_footer">El ecualizador funciona en pistas locales PCM estándar.</string>
+
     <string name="eq_preset_flat">Plano</string>
     <string name="eq_preset_acoustic">Acústico</string>
     <string name="eq_preset_bass_boost">Bajos +</string>
