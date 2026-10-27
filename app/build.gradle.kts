@@ -24,6 +24,7 @@ android {
         ndk {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
         }
+
         externalNativeBuild {
             cmake {
                 cppFlags += "-std=c++17"
@@ -57,13 +58,17 @@ android {
     }
 
     buildTypes {
+        debug {
+            signingConfig = null
+        }
+
         release {
             isMinifyEnabled = false
             signingConfig = signingConfigs.findByName("release")
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-        }
-        debug {
-            signingConfig = null
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 
@@ -82,17 +87,20 @@ kotlin {
 dependencies {
     val composeBom = platform("androidx.compose:compose-bom:2024.12.01")
     implementation(composeBom)
+
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
+
     implementation("androidx.palette:palette-ktx:1.0.0")
     implementation("androidx.activity:activity-compose:1.9.3")
     implementation("androidx.navigation:navigation-compose:2.8.5")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     implementation("androidx.core:core-ktx:1.15.0")
+
     debugImplementation("androidx.compose.ui:ui-tooling")
 
     implementation("androidx.media3:media3-exoplayer:1.5.1")
