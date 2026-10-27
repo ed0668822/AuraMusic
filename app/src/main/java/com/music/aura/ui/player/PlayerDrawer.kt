@@ -53,10 +53,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.music.aura.data.SettingsRepository
 import com.music.aura.ui.components.optimizedHazeEffect
-import com.music.aura.ui.utils.containSheetGestures
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
@@ -69,15 +66,6 @@ internal val SCRIM_COLOR = Color.Black.copy(alpha = 0.5f)
 
 private const val DISMISS_DRAG_FRACTION = 0.25f
 
-/**
- * Whether the drawer's nested scroll connection follows list scroll leftovers.
- * Set to false for drawers whose content does not scroll internally.
- */
-internal var drawerFollowsListScroll = true
-
-/**
- * The bottom-edge drawer shell every player sheet in this package puts up.
- */
 @OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable
 fun PlayerDrawer(
@@ -88,8 +76,6 @@ fun PlayerDrawer(
     titleGap: Dp = 14.dp,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val reduceDynamicBlur by SettingsRepository.reduceDynamicBlur.collectAsStateWithLifecycle()
-
     var drag by remember { mutableFloatStateOf(0f) }
     var height by remember { mutableIntStateOf(0) }
     val offset by animateFloatAsState(
@@ -137,7 +123,6 @@ fun PlayerDrawer(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .containSheetGestures()
             .background(SCRIM_COLOR.copy(alpha = SCRIM_COLOR.alpha * scrimAlpha))
             .clickable(
                 indication = null,
@@ -159,24 +144,17 @@ fun PlayerDrawer(
                     .onSizeChanged { height = it.height }
                     .offset { IntOffset(0, offset.roundToInt()) }
                     .clip(DRAWER_SHAPE)
-                    .then(
-                        if (reduceDynamicBlur) {
-                            Modifier.background(Color(0xFF121212))
-                        } else {
-                            Modifier
-                                .optimizedHazeEffect(
-                                    state = hazeState,
-                                    style = HazeMaterials.regular(Color(0xFF141414)),
-                                )
-                                .background(Color(0xFF121212).copy(alpha = 0.9f))
-                        }
+                    .optimizedHazeEffect(
+                        state = hazeState,
+                        style = HazeMaterials.regular(Color(0xFF141414)),
                     )
+                    .background(Color(0xFF121212).copy(alpha = 0.9f))
                     .clickable(
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() },
                         onClick = {},
                     )
-                    .then(if (drawerFollowsListScroll) Modifier.nestedScroll(drawerScroll) else Modifier)
+                    .nestedScroll(drawerScroll)
                     .pointerInput(height) {
                         detectVerticalDragGestures(
                             onDragEnd = dismissOnRelease,
