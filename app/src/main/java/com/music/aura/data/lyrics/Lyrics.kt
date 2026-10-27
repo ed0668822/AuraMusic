@@ -1,14 +1,6 @@
 package com.music.aura.data.lyrics
 
 /**
- * Una línea de letra con su marca de tiempo (0 si la letra no está sincronizada).
- */
-data class LyricLine(
-    val timestampMs: Long,
-    val text: String,
-)
-
-/**
  * Letras de una canción, sincronizadas o planas.
  */
 data class Lyrics(
@@ -20,7 +12,7 @@ data class Lyrics(
         if (!isSynced || lines.isEmpty()) return -1
         var idx = -1
         for (i in lines.indices) {
-            if (lines[i].timestampMs <= positionMs) idx = i else break
+            if (lines[i].timeMs <= positionMs) idx = i else break
         }
         return idx
     }
@@ -29,13 +21,13 @@ data class Lyrics(
         // Coincide con [00:31.495] o [00:31.49]
         private val LINE_TIMESTAMP_REGEX =
             Regex("""\[(\d+):(\d{2})(?:[.:](\d{1,3}))?]""")
-        
+
         // Coincide con <00:31.495> (Enhanced LRC)
-        private val WORD_TIMESTAMP_REGEX = 
+        private val WORD_TIMESTAMP_REGEX =
             Regex("""<\d+:\d{2}(?:\.\d{1,3})?>""")
-            
+
         // Coincide con "v1:", "v2:", etc.
-        private val VERSE_PREFIX_REGEX = 
+        private val VERSE_PREFIX_REGEX =
             Regex("""^v\d+:""", RegexOption.IGNORE_CASE)
 
         /**
@@ -52,25 +44,17 @@ data class Lyrics(
                 var line = rawLine.trim()
                 if (line.isEmpty()) return@forEach
 
-                // Saltar metadata tipo [ar:Artist], [ti:Title]
                 if (line.length > 3 && line[0] == '[' && !line[1].isDigit()) return@forEach
 
-                // Buscar timestamp de línea estándar
                 val lineMatches = LINE_TIMESTAMP_REGEX.findAll(line).toList()
-                
                 if (lineMatches.isNotEmpty()) {
                     sawAnyTimestamp = true
-                    
-                    // El texto de la línea es todo lo que está DESPUÉS del último timestamp de línea
                     val lastMatch = lineMatches.last()
                     var text = line.substring(lastMatch.range.last + 1).trim()
-
-                    // Limpieza para Enhanced LRC
                     text = WORD_TIMESTAMP_REGEX.replace(text, "").trim()
                     text = VERSE_PREFIX_REGEX.replace(text, "").trim()
 
                     if (text.isNotEmpty()) {
-                        // Tomamos el primer timestamp para la línea (el resto son redundantes si hay varios)
                         val firstMatch = lineMatches.first()
                         val min = firstMatch.groupValues[1].toLongOrNull() ?: 0L
                         val sec = firstMatch.groupValues[2].toLongOrNull() ?: 0L
@@ -82,10 +66,9 @@ data class Lyrics(
                             else -> fracStr.take(3).toLong()
                         }
                         val ms = min * 60_000 + sec * 1_000 + frac
-                        timed.add(LyricLine(ms, text))
+                        timed.add(LyricLine(timeMs = ms, text = text))
                     }
                 } else {
-                    // Texto plano o Enhanced LRC sin timestamp de línea
                     var text = WORD_TIMESTAMP_REGEX.replace(line, "").trim()
                     text = VERSE_PREFIX_REGEX.replace(text, "").trim()
                     if (text.isNotEmpty()) {
@@ -96,11 +79,11 @@ data class Lyrics(
 
             return when {
                 sawAnyTimestamp && timed.isNotEmpty() -> Lyrics(
-                    lines = timed.sortedBy { it.timestampMs },
+                    lines = timed.sortedBy { it.timeMs },
                     isSynced = true,
                 )
                 plain.isNotEmpty() -> Lyrics(
-                    lines = plain.mapIndexed { i, text -> LyricLine(i * 3_000L, text) },
+                    lines = plain.mapIndexed { i, text -> LyricLine(timeMs = i * 3_000L, text = text) },
                     isSynced = false,
                 )
                 else -> null
