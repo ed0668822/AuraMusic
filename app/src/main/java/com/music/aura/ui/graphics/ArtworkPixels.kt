@@ -1,13 +1,13 @@
 package com.music.aura.ui.graphics
 
 import android.graphics.Bitmap
-import android.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.palette.graphics.Palette
 import coil3.Image
 import coil3.request.ImageRequest
+import coil3.request.allowHardware
 
 fun ImageBitmap.argbPixels(): IntArray {
     val bitmap = asAndroidBitmap()
@@ -29,10 +29,6 @@ fun Image.toImageBitmap(): ImageBitmap {
     return (this as coil3.BitmapImage).bitmap.asImageBitmap()
 }
 
-/**
- * Extrae swatches de color de un bitmap usando AndroidX Palette.
- * [clearFilters] = true elimina los filtros por defecto (near-black/near-white).
- */
 fun paletteSwatches(bitmap: ImageBitmap, maxSwatches: Int, clearFilters: Boolean): List<Palette.Swatch> {
     val androidBitmap = try {
         bitmap.asAndroidBitmap()
@@ -48,11 +44,11 @@ fun paletteSwatches(bitmap: ImageBitmap, maxSwatches: Int, clearFilters: Boolean
 
 object ColorUtils {
     fun colorToHSL(color: Int, outHsl: FloatArray) {
-        Color.colorToHSL(color, outHsl)
+        androidx.core.graphics.ColorUtils.colorToHSL(color, outHsl)
     }
 
     fun HSLToColor(hsl: FloatArray): Int {
-        return Color.HSVToColor(hsl)
+        return androidx.core.graphics.ColorUtils.HSLToColor(hsl)
     }
 
     fun calculateLuminance(color: Int): Double {
