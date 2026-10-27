@@ -40,5 +40,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: aura-release
-          path: app/build/outputs/apk/release/app-release.apk
+          # El comodín *.apk asegura encontrar el archivo incluso si cambia de nombre
+          path: app/build/outputs/apk/release/*.apk
           if-no-files-found: error
