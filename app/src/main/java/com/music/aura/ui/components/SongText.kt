@@ -35,10 +35,11 @@ fun Modifier.thumbnailBorder(shape: Shape): Modifier = composed {
     this.border(
         width = 1.dp,
         color = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.15f) else Color.Black.copy(alpha = 0.15f),
-        shape = shape
+        shape = shape,
     )
 }
 
+/** A song title with the catalogue-standard explicit badge in front of it. */
 @Composable
 fun ExplicitSongTitle(
     song: LocalSong,
@@ -58,6 +59,10 @@ fun ExplicitSongTitle(
     }
 }
 
+/**
+ * The explicit mark, as Apple Music draws it: a filled tile with the E cut
+ * out of it.
+ */
 @Composable
 fun ExplicitBadge(color: Color, modifier: Modifier = Modifier) {
     val measurer = rememberTextMeasurer()
