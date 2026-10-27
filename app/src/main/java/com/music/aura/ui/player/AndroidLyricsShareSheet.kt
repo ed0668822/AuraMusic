@@ -14,9 +14,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import dev.chrisbanes.haze.HazeState
 
-data class LyricsShareRequest(val songId: String)
-data class LyricsShareLine(val text: String)
-
 @Composable
 internal fun AndroidLyricsShareSheet(
     hazeState: HazeState,
