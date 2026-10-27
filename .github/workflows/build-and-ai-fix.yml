@@ -50,23 +50,21 @@ jobs:
           
           AI_PAYLOAD=$(jq -n --arg text "$PROMPT" '{contents: [{parts: [{text: $text}]}]}')
 
-          RESPONSE=$(curl -s -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}" \
+          # Actualizado a gemini-2.0-flash
+          RESPONSE=$(curl -s -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}" \
             -H 'Content-Type: application/json' \
             -d "$AI_PAYLOAD")
 
-          # Imprimir respuesta en consola de GitHub para depurar si hay error
           echo "Respuesta de la API:"
           echo "$RESPONSE"
 
           AI_ANALYSIS=$(echo "$RESPONSE" | jq -r '.candidates[0].content.parts[0].text // empty')
           
           if [ -z "$AI_ANALYSIS" ] || [ "$AI_ANALYSIS" = "null" ]; then
-            # Intentar capturar si Google devolvió un error específico
             ERROR_MSG=$(echo "$RESPONSE" | jq -r '.error.message // "Desconocido"')
             AI_ANALYSIS="No se pudo procesar la respuesta de la IA. Motivo API: $ERROR_MSG"
           fi
 
-          # Construir mensaje limpio para Discord usando jq (evita por completo los %0A literales)
           DISCORD_MESSAGE="🚨 **Error de compilación detectado**"$'\n\n'"**Análisis y Solución de la IA:**"$'\n\n'"$AI_ANALYSIS"
           
           DISCORD_PAYLOAD=$(jq -n --arg content "${DISCORD_MESSAGE:0:1900}" '{content: $content}')
