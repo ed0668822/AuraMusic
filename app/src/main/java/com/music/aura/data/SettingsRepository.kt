@@ -40,6 +40,9 @@ object SettingsRepository {
     val hideVolumeBar = MutableStateFlow(false)
     val showNerdStats = MutableStateFlow(false)
     val lyricsOffsetMs = MutableStateFlow(0)
+    
+    // ✅ NUEVO: Para la cola de reproducción
+    val showQueueHistory = MutableStateFlow(false)
 
     fun init(context: Context) {
         prefs = context.applicationContext.getSharedPreferences("aura_settings", Context.MODE_PRIVATE)
@@ -70,6 +73,9 @@ object SettingsRepository {
         hideVolumeBar.value = prefs.getBoolean("hide_volume_bar", false)
         showNerdStats.value = prefs.getBoolean("show_nerd_stats", false)
         lyricsOffsetMs.value = prefs.getInt("lyrics_offset_ms", 0)
+        
+        // ✅ NUEVO
+        showQueueHistory.value = prefs.getBoolean("show_queue_history", false)
     }
 
     // ── Existing setters ──────────────────────────────────────────────────────
@@ -115,4 +121,10 @@ object SettingsRepository {
     fun setHideVolumeBar(value: Boolean) { hideVolumeBar.value = value; prefs.edit().putBoolean("hide_volume_bar", value).apply() }
     fun setShowNerdStats(value: Boolean) { showNerdStats.value = value; prefs.edit().putBoolean("show_nerd_stats", value).apply() }
     fun setLyricsOffsetMs(value: Int) { lyricsOffsetMs.value = value; prefs.edit().putInt("lyrics_offset_ms", value).apply() }
+    
+    // ✅ NUEVO
+    fun setShowQueueHistory(value: Boolean) {
+        showQueueHistory.value = value
+        prefs.edit().putBoolean("show_queue_history", value).apply()
+    }
 }
