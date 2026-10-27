@@ -2,6 +2,10 @@ package com.music.aura.ui.player
 
 import kotlin.math.abs
 
+/**
+ * The lyric playhead: a clock that runs on its own frames and is steered by
+ * the player's readings rather than set by them.
+ */
 internal class LyricClock(startMs: Long) {
     var displayedMs: Double = startMs.toDouble()
         private set
@@ -135,8 +139,7 @@ internal class LyricClock(startMs: Long) {
         }
         val pairSpan = historyAt[newest] - historyAt[newest - 1]
         if (!rateSettled && pairSpan >= MIN_PAIR_SPAN_MS) {
-            val measured = ((historyMs[newest] - historyMs[newest - 1]) / pairSpan)
-                .coerceIn(MIN_RATE, MAX_RATE)
+            val measured = ((historyMs[newest] - historyMs[newest - 1]) / pairSpan).coerceIn(MIN_RATE, MAX_RATE)
             rate += (measured - rate) * PAIR_LEARNING
         }
     }
