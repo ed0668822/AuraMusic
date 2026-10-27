@@ -58,7 +58,6 @@ import com.music.aura.ui.components.thumbnailBorder
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-// Necesario para la UI
 private const val PLAYER_GUTTER = 16
 
 internal fun keepScrollInList(listState: LazyListState) = object : NestedScrollConnection {
@@ -146,8 +145,6 @@ internal fun InlineQueue(
     LaunchedEffect(listState) { snapshotFlow { listState.isScrollInProgress }.collect(onScrollingChange) }
     val keepScroll = remember(listState) { keepScrollInList(listState) }
     
-    // TODO: Implementar rememberPlayerControlsOnScroll si es necesario, por ahora se ignora.
-    
     val showHistory by SettingsRepository.showQueueHistory.collectAsStateWithLifecycle()
     val tracks = remember(queue, currentIndex, showHistory) { splitQueue(queue, currentIndex, showHistory) }
     val drag = rememberQueueDrag(listState, tracks, onMove, onDragActiveChange)
@@ -174,7 +171,7 @@ internal fun InlineQueue(
             if (tracks.user.isNotEmpty()) QueueClearButton(MaterialTheme.typography.titleMedium, controlsLocked, onClear)
         }
         Spacer(Modifier.height(4.dp))
-        Box(modifier = Modifier.fillMaxWidth().bleedHorizontally(PLAYER_GUTTER.dp).fadingEdges()) {
+        Box(modifier = Modifier.fillMaxWidth().fadingEdges()) {
             LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxWidth().nestedScroll(keepScroll),
