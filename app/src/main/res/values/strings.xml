@@ -138,6 +138,7 @@
     <string name="widget_nothing_played">Nada en reproducción</string>
     <string name="widget_square_description">Aura Music — widget compacto</string>
     <string name="widget_wide_description">Aura Music — widget ancho</string>
+    <string name="widget_pill_description">Aura Music — widget píldora</string>
 
     <plurals name="minute_count">
         <item quantity="one">%d minuto</item>
