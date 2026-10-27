@@ -218,9 +218,7 @@ private fun AuraApp() {
             ) {
                 if (playbackState.currentSong != null) {
                     MiniPlayer(
-                        song = playbackState.currentSong!!,
-                        isPlaying = playbackState.isPlaying,
-                        isLoading = playbackState.isLoading,
+                        state = playbackState,
                         hazeState = hazeState,
                         onPlayPause = { playbackViewModel.togglePlayPause() },
                         onNext = { playbackViewModel.next() },
