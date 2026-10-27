@@ -5,29 +5,17 @@ import com.music.aura.data.model.PlaybackSourceType
 import com.music.aura.data.model.QueueTier
 import java.util.UUID
 
-/**
- * Information about where a queue or track was started from in the UI.
- */
 data class QueueSource(
     val title: String,
     val type: PlaybackSourceType,
     val id: String? = null,
 )
 
-/**
- * Result of constructing a context queue, containing the reconstructed timeline
- * and the 0-based start index representing the user's tapped track.
- */
 data class ContextQueueResult(
     val timeline: List<LocalSong>,
     val startIndex: Int,
 )
 
-/**
- * Plan for executing a queue jump, indicating whether the operation is a pure seek,
- * the index permutation of original timeline items to keep/reorder, the new target index,
- * and whether the target track should be promoted to [QueueTier.CONTEXT].
- */
 data class JumpOrderPlan(
     val isPureSeek: Boolean,
     val newOrderIndices: List<Int>,
@@ -35,19 +23,8 @@ data class JumpOrderPlan(
     val promoteTargetToContext: Boolean = false,
 )
 
-/**
- * The two-tier queue's rules, as plain list edits.
- *
- * CONTEXT: the album, playlist, artist or folder being played.
- * USER_QUEUE: tracks manually added via "Play Next" or "Add to Queue".
- */
 object QueueTimeline {
 
-    /**
-     * Converts a [LocalSong] into a queue entry belonging to [tier].
-     *
-     * Invariant: [LocalSong.queueEntryId] is assigned ONCE when entering the queue.
-     */
     fun LocalSong.asQueueEntry(tier: QueueTier): LocalSong = copy(
         queueTier = tier,
         queueEntryId = queueEntryId ?: UUID.randomUUID().toString(),
@@ -67,11 +44,6 @@ object QueueTimeline {
         playbackSourceId = source.id,
     )
 
-    /**
-     * Constructs an interleaved queue for starting a Context (Album, Playlist, Artist, Folder):
-     *
-     * Invariant: [Preceding Context] + [Selected Track] + [Preserved USER_QUEUE] + [Following Context Tracks].
-     */
     fun buildContextQueue(
         currentTimeline: List<LocalSong>,
         currentIndex: Int,
@@ -95,11 +67,6 @@ object QueueTimeline {
         )
     }
 
-    /**
-     * Constructs a queue for playing a one-off song (from Search, Home):
-     *
-     * Invariant: [Tapped Track] + [Preserved USER_QUEUE].
-     */
     fun buildOneOffQueue(
         currentTimeline: List<LocalSong>,
         currentIndex: Int,
@@ -107,15 +74,8 @@ object QueueTimeline {
         source: QueueSource,
     ): List<LocalSong> =
         listOf(tappedSong.from(source).asQueueEntry(QueueTier.CONTEXT)) +
-            upcomingUserQueue(currentTimeline, currentIndex)
+                upcomingUserQueue(currentTimeline, currentIndex)
 
-    /**
-     * Finds the insertion index for user-queued tracks.
-     *
-     * Invariant:
-     * - "Play Next" (isNext = true) inserts at the head of USER_QUEUE.
-     * - "Add to Queue" (isNext = false) inserts at the tail of USER_QUEUE.
-     */
     fun findUserQueueInsertionIndex(
         timeline: List<LocalSong>,
         currentIndex: Int,
@@ -130,14 +90,6 @@ object QueueTimeline {
         return timeline.size
     }
 
-    /**
-     * Computes the jump plan and index permutation for tapping a track at [targetIndex].
-     *
-     * Invariants:
-     * 1. Backward or same track: pure seek.
-     * 2. CONTEXT: if no USER_QUEUE items were crossed, pure seek. Otherwise, pin user queue after target.
-     * 3. USER_QUEUE: Bypassed manual queue items are pruned.
-     */
     fun computeJumpOrder(
         tiers: List<QueueTier>,
         currentIndex: Int,
@@ -145,11 +97,7 @@ object QueueTimeline {
     ): JumpOrderPlan? {
         if (currentIndex !in tiers.indices || targetIndex !in tiers.indices) return null
         if (targetIndex <= currentIndex) {
-            return JumpOrderPlan(
-                isPureSeek = true,
-                newOrderIndices = tiers.indices.toList(),
-                newTargetIndex = targetIndex,
-            )
+            return JumpOrderPlan(true, tiers.indices.toList(), targetIndex)
         }
 
         val targetTier = tiers[targetIndex]
@@ -157,11 +105,7 @@ object QueueTimeline {
             QueueTier.CONTEXT -> {
                 val crossedUserQueue = (currentIndex + 1 until targetIndex).filter { tiers[it] == QueueTier.USER_QUEUE }
                 if (crossedUserQueue.isEmpty()) {
-                    JumpOrderPlan(
-                        isPureSeek = true,
-                        newOrderIndices = tiers.indices.toList(),
-                        newTargetIndex = targetIndex,
-                    )
+                    JumpOrderPlan(true, tiers.indices.toList(), targetIndex)
                 } else {
                     val precedingHistory = (0..currentIndex).toList()
                     val bypassedContext = (currentIndex + 1 until targetIndex).filter { tiers[it] == QueueTier.CONTEXT }
@@ -169,10 +113,11 @@ object QueueTimeline {
                     val followingUserQueue = (targetIndex + 1 until tiers.size).filter { tiers[it] == QueueTier.USER_QUEUE }
                     val allUpcomingUserQueue = crossedUserQueue + followingUserQueue
                     val followingContext = (targetIndex + 1 until tiers.size).filter { tiers[it] == QueueTier.CONTEXT }
+                    val followingAutoplay = (targetIndex + 1 until tiers.size).filter { tiers[it] == QueueTier.AUTOPLAY }
 
-                    val order = precedingHistory + bypassedContext + target + allUpcomingUserQueue + followingContext
+                    val order = precedingHistory + bypassedContext + target + allUpcomingUserQueue + followingContext + followingAutoplay
                     val newTarget = precedingHistory.size + bypassedContext.size
-                    JumpOrderPlan(isPureSeek = false, newOrderIndices = order, newTargetIndex = newTarget)
+                    JumpOrderPlan(false, order, newTarget)
                 }
             }
             QueueTier.USER_QUEUE -> {
@@ -180,16 +125,23 @@ object QueueTimeline {
                 val target = listOf(targetIndex)
                 val subsequentUserQueue = (targetIndex + 1 until tiers.size).filter { tiers[it] == QueueTier.USER_QUEUE }
                 val upcomingContext = (currentIndex + 1 until tiers.size).filter { tiers[it] == QueueTier.CONTEXT }
+                val upcomingAutoplay = (currentIndex + 1 until tiers.size).filter { tiers[it] == QueueTier.AUTOPLAY }
 
-                val order = history + target + subsequentUserQueue + upcomingContext
-                JumpOrderPlan(isPureSeek = false, newOrderIndices = order, newTargetIndex = history.size)
+                val order = history + target + subsequentUserQueue + upcomingContext + upcomingAutoplay
+                JumpOrderPlan(false, order, history.size)
+            }
+            QueueTier.AUTOPLAY -> {
+                val history = (0..currentIndex).toList()
+                val target = listOf(targetIndex)
+                val preservedUserQueue = (currentIndex + 1 until tiers.size).filter { tiers[it] == QueueTier.USER_QUEUE }
+                val subsequentAutoplay = (targetIndex + 1 until tiers.size).filter { tiers[it] == QueueTier.AUTOPLAY }
+
+                val order = history + target + preservedUserQueue + subsequentAutoplay
+                JumpOrderPlan(false, order, history.size, true)
             }
         }
     }
 
-    /**
-     * Reconstructs the upcoming queue when a listener taps an item in the queue.
-     */
     fun buildJumpQueue(
         currentTimeline: List<LocalSong>,
         currentIndex: Int,
@@ -214,51 +166,38 @@ object QueueTimeline {
         }
     }
 
-    /** Indices of the upcoming USER_QUEUE rows — what "Clear" removes. */
     fun upcomingUserQueueIndices(tiers: List<QueueTier>, currentIndex: Int): List<Int> =
         ((currentIndex + 1).coerceAtLeast(0) until tiers.size).filter { tiers[it] == QueueTier.USER_QUEUE }
 
-    /**
-     * Indices of played USER_QUEUE rows to prune once playback has moved into CONTEXT.
-     */
     fun playedUserQueueIndices(tiers: List<QueueTier>, currentIndex: Int): List<Int> {
         if (currentIndex !in tiers.indices || currentIndex == 0) return emptyList()
         if (tiers[currentIndex] != QueueTier.CONTEXT) return emptyList()
         return (0 until currentIndex).filter { tiers[it] == QueueTier.USER_QUEUE }
     }
 
-    /**
-     * The order a queue goes in when it is started while shuffle is on.
-     */
     fun shuffledStartingOrder(songs: List<LocalSong>, startIndex: Int): List<LocalSong> {
         if (songs.isEmpty()) return songs
         val at = startIndex.coerceIn(songs.indices)
         val rest = songs.filterIndexed { i, _ -> i != at }
         return listOf(songs[at]) +
-            rest.filter { it.queueTier == QueueTier.USER_QUEUE } +
-            rest.filter { it.queueTier == QueueTier.CONTEXT }.shuffled()
+                rest.filter { it.queueTier == QueueTier.USER_QUEUE } +
+                rest.filter { it.queueTier == QueueTier.CONTEXT }.shuffled() +
+                rest.filter { it.queueTier == QueueTier.AUTOPLAY }.shuffled()
     }
 
-    /**
-     * Shuffle applied to what is still to come: USER_QUEUE is never shuffled,
-     * CONTEXT is shuffled within its own section.
-     */
     fun shuffledUpcomingOrder(upcoming: List<QueueTier>): List<Int> {
         val user = upcoming.indices.filter { upcoming[it] == QueueTier.USER_QUEUE }
         val context = upcoming.indices.filter { upcoming[it] == QueueTier.CONTEXT }
-        return user + avoidIdentityShuffle(context, context.shuffled())
+        val autoplay = upcoming.indices.filter { upcoming[it] == QueueTier.AUTOPLAY }
+        return user + avoidIdentityShuffle(context, context.shuffled()) +
+                avoidIdentityShuffle(autoplay, autoplay.shuffled())
     }
 
-    /**
-     * A permutation that puts restored upcoming rows back in their sections.
-     */
     fun sectionedOrder(restored: List<Int>, upcoming: List<QueueTier>): List<Int> =
         restored.filter { upcoming[it] == QueueTier.USER_QUEUE } +
-            restored.filter { upcoming[it] == QueueTier.CONTEXT }
+                restored.filter { upcoming[it] == QueueTier.CONTEXT } +
+                restored.filter { upcoming[it] == QueueTier.AUTOPLAY }
 
-    /**
-     * Never returns a section's unchanged order when at least two tracks can move.
-     */
     fun avoidIdentityShuffle(original: List<Int>, shuffled: List<Int>): List<Int> {
         if (original.size <= 1 || shuffled != original) return shuffled
         return shuffled.drop(1) + shuffled.first()
