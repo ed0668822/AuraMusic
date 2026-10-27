@@ -91,7 +91,7 @@ object LocalGroups {
 fun LocalSong.matchesSearch(query: String): Boolean =
     title.contains(query, ignoreCase = true) ||
         artist.contains(query, ignoreCase = true) ||
-        album.contains(query, ignoreCase = true)
+        album?.contains(query, ignoreCase = true) == true
 
 fun List<LocalSong>.sortedForLibrary(order: LocalMusicSort): List<LocalSong> = when (order) {
     LocalMusicSort.TITLE_ASC -> sortedByTitle()
