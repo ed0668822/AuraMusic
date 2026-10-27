@@ -7,8 +7,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -59,17 +59,22 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.Velocity
+import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.music.aura.R
 import com.music.aura.data.model.LocalSong
+import com.music.aura.data.model.QueueTier
 import com.music.aura.ui.components.thumbnailBorder
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
+/**
+ * Swallows whatever scroll the queue list itself didn't use.
+ */
 internal fun keepScrollInList(listState: LazyListState) = object : NestedScrollConnection {
     override fun onPostScroll(
         consumed: Offset,
@@ -83,8 +88,13 @@ internal fun keepScrollInList(listState: LazyListState) = object : NestedScrollC
     override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity = available
 }
 
+/**
+ * How a queue row moves when the running order changes under it.
+ * Placement only — no fades.
+ */
 private val QUEUE_ROW_MOTION = tween<IntOffset>(durationMillis = 200, easing = FastOutSlowInEasing)
 
+/** Softens the list where it meets the header and the scrubber. */
 internal fun Modifier.fadingEdges(): Modifier = this
     .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
     .drawWithContent {
@@ -108,21 +118,74 @@ internal fun Modifier.fadingEdges(): Modifier = this
         )
     }
 
+/** One track in [InlineQueue], and where it sits in the player's timeline. */
 internal data class QueueTrack(val timelineIndex: Int, val song: LocalSong, val key: String)
 
+/** The groups a queue row can be dragged within. */
+internal enum class QueueSection { USER, CONTEXT }
+
+/** The queue as [InlineQueue] lists it. */
+internal class QueueTracks(
+    val nowPlaying: QueueTrack?,
+    val user: List<QueueTrack>,
+    val context: List<QueueTrack>,
+) {
+    operator fun get(section: QueueSection): List<QueueTrack> = when (section) {
+        QueueSection.USER -> user
+        QueueSection.CONTEXT -> context
+    }
+
+    companion object {
+        val EMPTY = QueueTracks(null, emptyList(), emptyList())
+    }
+}
+
+internal fun splitQueue(queue: List<LocalSong>, currentIndex: Int): QueueTracks {
+    if (currentIndex !in queue.indices) return QueueTracks.EMPTY
+    val seen = HashMap<String, Int>()
+    val occurrence = IntArray(queue.size) { i ->
+        val id = queue[i].id.toString()
+        seen.getOrDefault(id, 0).also { seen[id] = it + 1 }
+    }
+    val usedKeys = HashSet<String>()
+    fun track(index: Int, prefix: String): QueueTrack {
+        val song = queue[index]
+        val base = prefix + "_" + (song.queueEntryId ?: "${song.id}#${occurrence[index]}")
+        var key = base
+        var repeat = 1
+        while (!usedKeys.add(key)) key = base + "~" + repeat++
+        return QueueTrack(index, song, key)
+    }
+    val user = ArrayList<QueueTrack>()
+    val context = ArrayList<QueueTrack>()
+    for (index in currentIndex + 1 until queue.size) {
+        when (queue[index].queueTier) {
+            QueueTier.USER_QUEUE -> user += track(index, "user")
+            QueueTier.CONTEXT -> context += track(index, "context")
+        }
+    }
+    return QueueTracks(track(currentIndex, "np"), user, context)
+}
+
+/** Placement-only item motion. */
 private fun LazyItemScope.queueMotion(): Modifier =
     Modifier.animateItem(fadeInSpec = null, fadeOutSpec = null, placementSpec = QUEUE_ROW_MOTION)
 
+/** The live queue, in the player itself. */
 @Composable
 internal fun InlineQueue(
     queue: List<LocalSong>,
     currentIndex: Int,
+    controlsLocked: Boolean = false,
     onJumpTo: (Int) -> Unit,
     onRemove: (Int) -> Unit,
     onMove: (Int, Int) -> Unit,
     onClear: () -> Unit,
     onScrollingChange: (Boolean) -> Unit = {},
     onDragActiveChange: (Boolean) -> Unit = {},
+    collapsePlayerOnScroll: Boolean = false,
+    onRevealPlayer: () -> Unit = {},
+    onHidePlayer: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
@@ -130,26 +193,25 @@ internal fun InlineQueue(
         snapshotFlow { listState.isScrollInProgress }.collect(onScrollingChange)
     }
     val keepScroll = remember(listState) { keepScrollInList(listState) }
-
-    val tracks = remember(queue, currentIndex) {
-        if (currentIndex !in queue.indices) {
-            emptyList<QueueTrack>()
-        } else {
-            (currentIndex + 1 until queue.size).map { index ->
-                QueueTrack(index, queue[index], "q_$index")
-            }
-        }
-    }
-    val nowPlaying = if (currentIndex in queue.indices) {
-        QueueTrack(currentIndex, queue[currentIndex], "np_$currentIndex")
-    } else null
-
+    val controlsOnScroll = rememberPlayerControlsOnScroll(
+        enabled = collapsePlayerOnScroll,
+        onReveal = onRevealPlayer,
+        onHide = onHidePlayer,
+    )
+    val tracks = remember(queue, currentIndex) { splitQueue(queue, currentIndex) }
     val drag = rememberQueueDrag(listState, tracks, onMove, onDragActiveChange)
+    val nowPlaying = tracks.nowPlaying
+    val contextSong = tracks.context.firstOrNull()?.song
+    val contextTitle = contextSong?.playbackSource?.takeIf { it.isNotBlank() }
+        ?: contextSong?.album?.takeIf { it.isNotBlank() }
+        ?: nowPlaying?.song?.playbackSource?.takeIf { it.isNotBlank() }
+        ?: nowPlaying?.song?.album?.takeIf { it.isNotBlank() }
 
     var hasScrolledOnce by remember { mutableStateOf(false) }
-    LaunchedEffect(currentIndex) {
-        val nowPlayingRow = 1
-        val scrolledAway = listState.firstVisibleItemIndex != nowPlayingRow || listState.firstVisibleItemScrollOffset != 0
+    LaunchedEffect(currentIndex, nowPlaying?.key) {
+        val nowPlayingRow = 0
+        val scrolledAway = listState.firstVisibleItemIndex != nowPlayingRow ||
+            listState.firstVisibleItemScrollOffset != 0
         if (drag.held == null && nowPlaying != null && scrolledAway) {
             if (hasScrolledOnce) {
                 listState.animateScrollToItem(nowPlayingRow)
@@ -171,22 +233,27 @@ internal fun InlineQueue(
                 color = Color.White,
                 modifier = Modifier.weight(1f),
             )
-            if (tracks.isNotEmpty()) {
-                QueueClearButton(MaterialTheme.typography.titleMedium, onClear)
+            if (tracks.user.isNotEmpty()) {
+                QueueClearButton(MaterialTheme.typography.titleMedium, controlsLocked, onClear)
             }
         }
         Spacer(Modifier.height(4.dp))
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .bleedHorizontally(PLAYER_GUTTER)
                 .fadingEdges(),
         ) {
             LazyColumn(
                 state = listState,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .nestedScroll(keepScroll),
-                contentPadding = PaddingValues(horizontal = 16.dp),
+                    .nestedScroll(keepScroll)
+                    .then(
+                        if (collapsePlayerOnScroll) Modifier.nestedScroll(controlsOnScroll)
+                        else Modifier,
+                    ),
+                contentPadding = PaddingValues(horizontal = PLAYER_GUTTER),
             ) {
                 if (nowPlaying != null) {
                     item(key = "header-now-playing") {
@@ -201,40 +268,38 @@ internal fun InlineQueue(
                             isCurrent = true,
                             onClick = { onJumpTo(nowPlaying.timelineIndex) },
                             onRemove = { onRemove(nowPlaying.timelineIndex) },
+                            locked = controlsLocked,
                             modifier = queueMotion(),
                         )
                     }
                 }
-                if (tracks.isNotEmpty()) {
-                    item(key = "header-next") {
+                if (tracks.user.isNotEmpty()) {
+                    item(key = "header-user-queue") {
                         QueueHeading(
                             title = stringResource(R.string.next_in_queue),
                             modifier = Modifier.padding(top = 16.dp, bottom = 6.dp).then(queueMotion()),
                         ) {
-                            QueueClearButton(MaterialTheme.typography.labelLarge, onClear)
+                            QueueClearButton(MaterialTheme.typography.labelLarge, controlsLocked, onClear)
                         }
                     }
-                    items(tracks, key = { it.key }) { track ->
-                        val held = drag.held?.key == track.key
-                        if (held) {
-                            DisposableEffect(Unit) { onDispose { drag.end(track.key) } }
-                        }
-                        InlineQueueRow(
-                            song = track.song,
-                            isCurrent = false,
-                            onClick = { onJumpTo(track.timelineIndex) },
-                            onRemove = { onRemove(track.timelineIndex) },
-                            draggable = true,
-                            onDragStart = { drag.start(track.key) },
-                            onDrag = drag::drag,
-                            onDragEnd = { drag.end(track.key) },
-                            modifier = if (held) Modifier.alpha(0f) else queueMotion(),
+                    queueSection(tracks.user, QueueSection.USER, drag, controlsLocked, onJumpTo, onRemove)
+                }
+                if (tracks.context.isNotEmpty()) {
+                    item(key = "header-context") {
+                        QueueHeading(
+                            title = if (contextTitle != null) {
+                                stringResource(R.string.next_from, contextTitle)
+                            } else {
+                                stringResource(R.string.queue)
+                            },
+                            modifier = Modifier.padding(top = 16.dp, bottom = 6.dp).then(queueMotion()),
                         )
                     }
+                    queueSection(tracks.context, QueueSection.CONTEXT, drag, controlsLocked, onJumpTo, onRemove)
                 }
             }
             drag.held?.let { held ->
-                Box(Modifier.matchParentSize().padding(horizontal = 16.dp)) {
+                Box(Modifier.matchParentSize().padding(horizontal = PLAYER_GUTTER)) {
                     InlineQueueRow(
                         song = held.song,
                         isCurrent = false,
@@ -247,6 +312,34 @@ internal fun InlineQueue(
                 }
             }
         }
+    }
+}
+
+private fun LazyListScope.queueSection(
+    rows: List<QueueTrack>,
+    section: QueueSection,
+    drag: QueueDrag,
+    locked: Boolean,
+    onJumpTo: (Int) -> Unit,
+    onRemove: (Int) -> Unit,
+) {
+    items(rows, key = { it.key }) { track ->
+        val held = drag.held?.key == track.key
+        if (held) {
+            DisposableEffect(Unit) { onDispose { drag.end(track.key) } }
+        }
+        InlineQueueRow(
+            song = track.song,
+            isCurrent = false,
+            onClick = { onJumpTo(track.timelineIndex) },
+            onRemove = { onRemove(track.timelineIndex) },
+            locked = locked,
+            draggable = !locked,
+            onDragStart = { drag.start(track.key, section) },
+            onDrag = drag::drag,
+            onDragEnd = { drag.end(track.key) },
+            modifier = if (held) Modifier.alpha(0f) else queueMotion(),
+        )
     }
 }
 
@@ -268,14 +361,14 @@ private fun QueueHeading(
 }
 
 @Composable
-private fun QueueClearButton(style: androidx.compose.ui.text.TextStyle, onClear: () -> Unit) {
+private fun QueueClearButton(style: TextStyle, locked: Boolean, onClear: () -> Unit) {
     Text(
         text = stringResource(R.string.clear),
         style = style,
-        color = Color.White.copy(alpha = 0.75f),
+        color = Color.White.copy(alpha = if (locked) 0.25f else 0.75f),
         modifier = Modifier
             .clip(RoundedCornerShape(percent = 50))
-            .clickable(onClick = onClear)
+            .clickable(enabled = !locked, onClick = onClear)
             .padding(horizontal = 8.dp, vertical = 4.dp),
     )
 }
@@ -306,7 +399,7 @@ fun edgeScrollSpeed(
 @Composable
 private fun rememberQueueDrag(
     listState: LazyListState,
-    tracks: List<QueueTrack>,
+    tracks: QueueTracks,
     onMove: (Int, Int) -> Unit,
     onActiveChange: (Boolean) -> Unit,
 ): QueueDrag {
@@ -336,7 +429,7 @@ private fun rememberQueueDrag(
 }
 
 private class QueueDrag(private val listState: LazyListState) {
-    var tracks: List<QueueTrack> = emptyList()
+    var tracks = QueueTracks.EMPTY
     var onMove: (Int, Int) -> Unit = { _, _ -> }
     var onActiveChange: (Boolean) -> Unit = {}
     var edgeZone = 0f
@@ -344,23 +437,22 @@ private class QueueDrag(private val listState: LazyListState) {
 
     var held by mutableStateOf<QueueTrack?>(null)
         private set
-
     var heldTop by mutableFloatStateOf(0f)
         private set
-
     var autoScrollDir by mutableIntStateOf(0)
         private set
-
     var autoScrollSpeed = 0f
         private set
 
+    private var section = QueueSection.USER
     private var heldCenter = 0f
     private var heldSize = 0
     private var awaiting: Int? = null
 
-    fun start(key: String) {
-        val track = tracks.firstOrNull { it.key == key } ?: return
+    fun start(key: String, section: QueueSection) {
+        val track = tracks[section].firstOrNull { it.key == key } ?: return
         val item = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == key } ?: return
+        this.section = section
         heldSize = item.size
         heldCenter = item.offset + item.size / 2f
         heldTop = item.offset.toFloat()
@@ -383,15 +475,16 @@ private class QueueDrag(private val listState: LazyListState) {
 
     private fun settle(deltaY: Float) {
         val key = held?.key ?: return
+        val rows = tracks[section]
         val info = listState.layoutInfo
         val items = info.visibleItemsInfo
         val half = heldSize / 2f
 
         var center = heldCenter + deltaY
-        tracks.firstOrNull()?.let { first ->
+        rows.firstOrNull()?.let { first ->
             items.firstOrNull { it.key == first.key }?.let { center = center.coerceAtLeast(it.offset + half) }
         }
-        tracks.lastOrNull()?.let { last ->
+        rows.lastOrNull()?.let { last ->
             items.firstOrNull { it.key == last.key }?.let { center = center.coerceAtMost(it.offset + it.size - half) }
         }
         heldCenter = center
@@ -400,25 +493,25 @@ private class QueueDrag(private val listState: LazyListState) {
         heldTop = top.coerceIn(minTop, (info.viewportEndOffset - heldSize).toFloat().coerceAtLeast(minTop))
 
         val dragged = items.firstOrNull { it.key == key } ?: return setAutoScroll(0f)
-        aimAutoScroll(top, key)
+        aimAutoScroll(top, key, rows)
 
         awaiting?.let {
             if (dragged.index != it) return
             awaiting = null
         }
         val target = items
-            .filter { item -> item.key != key && tracks.any { it.key == item.key } }
+            .filter { item -> item.key != key && rows.any { it.key == item.key } }
             .minByOrNull { abs(it.offset + it.size / 2f - center) }
             ?: return
         if (abs(center - (target.offset + target.size / 2f)) > target.size / 2f) return
         if (target.index == listState.firstVisibleItemIndex && listState.canScrollBackward) return
-        val from = tracks.firstOrNull { it.key == key }?.timelineIndex ?: return
-        val to = tracks.firstOrNull { it.key == target.key }?.timelineIndex ?: return
+        val from = rows.firstOrNull { it.key == key }?.timelineIndex ?: return
+        val to = rows.firstOrNull { it.key == target.key }?.timelineIndex ?: return
         onMove(from, to)
         awaiting = target.index
     }
 
-    private fun aimAutoScroll(top: Float, key: String) {
+    private fun aimAutoScroll(top: Float, key: String, rows: List<QueueTrack>) {
         val info = listState.layoutInfo
         val speed = edgeScrollSpeed(
             top = top,
@@ -429,8 +522,8 @@ private class QueueDrag(private val listState: LazyListState) {
             speed = edgeSpeed,
         )
         val blocked = when {
-            speed < 0f -> tracks.firstOrNull()?.key == key || !listState.canScrollBackward
-            speed > 0f -> tracks.lastOrNull()?.key == key || !listState.canScrollForward
+            speed < 0f -> rows.firstOrNull()?.key == key || !listState.canScrollBackward
+            speed > 0f -> rows.lastOrNull()?.key == key || !listState.canScrollForward
             else -> true
         }
         setAutoScroll(if (blocked) 0f else speed)
@@ -454,6 +547,7 @@ private fun InlineQueueRow(
     onClick: () -> Unit,
     onRemove: () -> Unit,
     modifier: Modifier = Modifier,
+    locked: Boolean = false,
     draggable: Boolean = false,
     lifted: Boolean = false,
     onDragStart: () -> Unit = {},
@@ -465,7 +559,7 @@ private fun InlineQueueRow(
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .background(if (lifted) Color.White.copy(alpha = 0.06f) else Color.Transparent)
-            .clickable(onClick = onClick)
+            .clickable(enabled = !locked, onClick = onClick)
             .padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -526,19 +620,59 @@ private fun InlineQueueRow(
             )
             Spacer(Modifier.width(10.dp))
         }
-        Box(
-            modifier = Modifier
-                .size(32.dp)
-                .clip(CircleShape)
-                .clickable(onClick = onRemove),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                Icons.Rounded.Close,
-                contentDescription = stringResource(R.string.remove_from_queue),
-                tint = Color.White.copy(alpha = 0.55f),
-                modifier = Modifier.size(18.dp),
-            )
+        if (!locked) {
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .clickable(onClick = onRemove),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    Icons.Rounded.Close,
+                    contentDescription = stringResource(R.string.remove_from_queue),
+                    tint = Color.White.copy(alpha = 0.55f),
+                    modifier = Modifier.size(18.dp),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Extends content horizontally past the player gutter for full-bleed scrolling.
+ */
+internal fun Modifier.bleedHorizontally(gutter: androidx.compose.ui.unit.Dp): Modifier =
+    this.padding(horizontal = -gutter)
+
+/**
+ * Nested scroll connection that reveals/hides the player controls on scroll direction.
+ */
+@Composable
+internal fun rememberPlayerControlsOnScroll(
+    enabled: Boolean,
+    onReveal: () -> Unit,
+    onHide: () -> Unit,
+): NestedScrollConnection {
+    return remember(enabled) {
+        object : NestedScrollConnection {
+            private var accumulated = 0f
+            override fun onPostScroll(
+                consumed: Offset,
+                available: Offset,
+                source: NestedScrollSource,
+            ): Offset {
+                if (!enabled || source != NestedScrollSource.UserInput) return Offset.Zero
+                accumulated += consumed.y
+                if (accumulated < -80f) {
+                    onHide()
+                    accumulated = 0f
+                } else if (accumulated > 80f) {
+                    onReveal()
+                    accumulated = 0f
+                }
+                return Offset.Zero
+            }
         }
     }
 }
