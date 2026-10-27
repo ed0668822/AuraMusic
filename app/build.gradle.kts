@@ -21,23 +21,24 @@ android {
         versionName = autoVersionName
         buildConfigField("String", "UPDATE_APK_PREFIX", "\"app-\"")
 
-        ndk {
-            abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
-        }
-
-        externalNativeBuild {
-            cmake {
-                cppFlags += "-std=c++17"
-            }
-        }
+        // ❌ DESACTIVADO: NDK y CMake fallan porque los archivos .cpp no existen en el repo.
+        // ndk {
+        //     abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
+        // }
+        // externalNativeBuild {
+        //     cmake {
+        //         cppFlags += "-std=c++17"
+        //     }
+        // }
     }
 
-    externalNativeBuild {
-        cmake {
-            path = file("src/main/cpp/CMakeLists.txt")
-            version = "3.22.1"
-        }
-    }
+    // ❌ DESACTIVADO: Evita que Gradle invoque a CMake.
+    // externalNativeBuild {
+    //     cmake {
+    //         path = file("src/main/cpp/CMakeLists.txt")
+    //         version = "3.22.1"
+    //     }
+    // }
 
     signingConfigs {
         create("release") {
