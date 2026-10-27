@@ -8,36 +8,38 @@ import androidx.palette.graphics.Palette
 import coil3.Image
 import coil3.request.ImageRequest
 import coil3.request.allowHardware
+import coil3.toBitmap
 
-fun ImageBitmap.argbPixels(): IntArray {
-    val bitmap = asAndroidBitmap()
-    val pixels = IntArray(width * height)
-    bitmap.getPixels(pixels, 0, width, 0, 0, width, height)
-    return pixels
-}
+/**
+ * Pixel access to artwork, for the backdrops and palettes that read covers back
+ * colour by colour.
+ */
 
+/** Every pixel of the image, packed ARGB, row by row. */
+fun ImageBitmap.argbPixels(): IntArray =
+    IntArray(width * height).also { readPixels(it) }
+
+/** Asks Coil for a bitmap the CPU can read — a software bitmap on Android. */
 fun ImageRequest.Builder.forPixelAccess(): ImageRequest.Builder =
-    this.allowHardware(false)
+    allowHardware(false)
 
-fun imageBitmapOf(pixels: IntArray, width: Int, height: Int): ImageBitmap {
-    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-    bitmap.setPixels(pixels, 0, width, 0, 0, width, height)
-    return bitmap.asImageBitmap()
-}
+/** An ARGB_8888 bitmap of [width] x [height] from packed ARGB [pixels]. */
+fun imageBitmapOf(pixels: IntArray, width: Int, height: Int): ImageBitmap =
+    Bitmap.createBitmap(pixels, width, height, Bitmap.Config.ARGB_8888).asImageBitmap()
 
-fun Image.toImageBitmap(): ImageBitmap {
-    return (this as coil3.BitmapImage).bitmap.asImageBitmap()
-}
+/** The decoded Coil image as a Compose bitmap. */
+fun Image.toImageBitmap(): ImageBitmap = toBitmap().asImageBitmap()
 
-fun paletteSwatches(bitmap: ImageBitmap, maxSwatches: Int, clearFilters: Boolean): List<Palette.Swatch> {
-    val androidBitmap = try {
-        bitmap.asAndroidBitmap()
-    } catch (e: Exception) {
-        return emptyList()
-    }
-    val builder = Palette.from(androidBitmap).maximumColorCount(maxSwatches * 4)
-    if (clearFilters) {
-        builder.clearFilters()
-    }
-    return builder.generate().swatches.take(maxSwatches)
+/** One colour the palette found, and how much of the image it covers. */
+class Swatch(val rgb: Int, val population: Int)
+
+/**
+ * The colours androidx Palette would find in [image]: up to [maxColors]
+ * swatches, with its default filter (near-black, near-white, the red I-line)
+ * unless [clearFilters].
+ */
+fun paletteSwatches(image: ImageBitmap, maxColors: Int, clearFilters: Boolean): List<Swatch> {
+    val builder = Palette.from(image.asAndroidBitmap()).maximumColorCount(maxColors)
+    if (clearFilters) builder.clearFilters()
+    return builder.generate().swatches.map { Swatch(it.rgb, it.population) }
 }
