@@ -240,4 +240,275 @@ class TransitionFilterProcessor : BaseAudioProcessor() {
     }
 
     override fun queueInput(inputBuffer: java.nio.ByteBuffer) {
-        val
+        val bytesPerFrame = BYTES_PER_SAMPLE * channelCount
+        if (bytesPerFrame == 0) return
+        val frameCount = inputBuffer.remaining() / bytesPerFrame
+        if (frameCount == 0) return
+        val outputBuffer = replaceOutputBuffer(frameCount * bytesPerFrame)
+
+        val targetLow = targetLowPassHz
+        val targetHigh = targetHighPassHz
+        val parked = targetLow >= OPEN_HZ && targetHigh <= OFF_HZ &&
+            currentLowPassHz >= OPEN_HZ - SETTLED_HZ && currentHighPassHz <= OFF_HZ + SETTLED_HZ
+        if (parked) {
+            clearStateIfNeeded()
+            outputBuffer.put(inputBuffer)
+            outputBuffer.flip()
+            return
+        }
+        filterStateDirty = true
+
+        inputBuffer.order(ByteOrder.nativeOrder())
+        outputBuffer.order(ByteOrder.nativeOrder())
+
+        val invScale = 1.0f / 32768.0f
+        var remaining = frameCount
+        while (remaining > 0) {
+            val subBlock = min(remaining, GLIDE_FRAMES)
+            currentLowPassHz = glide(currentLowPassHz, targetLow)
+            currentHighPassHz = glide(currentHighPassHz, targetHigh)
+            val lowOn = currentLowPassHz < OPEN_HZ - SETTLED_HZ
+            val highOn = currentHighPassHz > OFF_HZ + SETTLED_HZ
+            if (lowOn) updateLowCoefficients()
+            if (highOn) updateHighCoefficients()
+
+            repeat(subBlock) {
+                for (channel in 0 until channelCount) {
+                    var sample = inputBuffer.short.toFloat() * invScale
+                    if (lowOn) sample = lowPass(channel, sample)
+                    if (highOn) sample = highPass(channel, sample)
+                    outputBuffer.putShort(PcmBoundary.clamp16FromFloat(sample))
+                }
+            }
+            remaining -= subBlock
+        }
+        outputBuffer.flip()
+    }
+
+    /**
+     * Forgets the integrators once the filter parks.
+     */
+    private fun clearStateIfNeeded() {
+        if (!filterStateDirty) return
+        lowState.fill(0f)
+        highState.fill(0f)
+        filterStateDirty = false
+    }
+
+    // ---- Echo ----------------------------------------------------------------
+
+    private fun echo(block: AudioBlock, frameCount: Int) {
+        if (echoSeenGeneration != echoGeneration) startEcho()
+        val channels = channelCount
+        val delay = echoDelayFrames
+        val ring = echoRing
+        val samples = block.samples
+        val targetSend = echoTargetSend
+        val targetDry = echoTargetDry
+        val sendStep = (targetSend - echoSend) / frameCount
+        val dryStep = (targetDry - echoDry) / frameCount
+        var send = echoSend
+        var dry = echoDry
+        if (delay <= 0) {
+            for (f in 0 until frameCount) {
+                dry += dryStep
+                val base = f * channels
+                for (c in 0 until channels) samples[base + c] *= dry
+            }
+            echoSend = targetSend
+            echoDry = targetDry
+            return
+        }
+        val lowCoefficient = echoLowCoefficient
+        val highCoefficient = echoHighCoefficient
+        val low = echoLow
+        val high = echoHigh
+        var position = echoPosition
+        for (f in 0 until frameCount) {
+            send += sendStep
+            dry += dryStep
+            val base = f * channels
+            val ringBase = position * channels
+            for (c in 0 until channels) {
+                val input = samples[base + c]
+                val delayed = ring[ringBase + c]
+                val darker = low[c] + lowCoefficient * (delayed - low[c])
+                low[c] = darker
+                val rumble = high[c] + highCoefficient * (darker - high[c])
+                high[c] = rumble
+                ring[ringBase + c] = input * send + (darker - rumble) * ECHO_FEEDBACK
+                samples[base + c] = input * dry + delayed * ECHO_WET
+            }
+            if (++position == delay) position = 0
+        }
+        echoPosition = position
+        echoSend = targetSend
+        echoDry = targetDry
+    }
+
+    /** A new echo, on the audio thread: adopt any ring waiting for it and clear what it will use. */
+    private fun startEcho() {
+        echoSeenGeneration = echoGeneration
+        pendingEchoRing?.let {
+            echoRing = it
+            pendingEchoRing = null
+        }
+        val channels = channelCount.coerceAtLeast(1)
+        echoDelayFrames = (echoSeconds * sampleRate).toInt().coerceIn(0, echoRing.size / channels)
+        echoRing.fill(0f, 0, echoDelayFrames * channels)
+        echoLow.fill(0f)
+        echoHigh.fill(0f)
+        echoPosition = 0
+        echoSend = 0f
+        echoDry = 1f
+    }
+
+    // ---- Filter ------------------------------------------------------------
+
+    private fun glide(current: Float, target: Float): Float {
+        val from = ln(current.coerceAtLeast(MIN_HZ))
+        val to = ln(target.coerceAtLeast(MIN_HZ))
+        return exp(from + (to - from) * GLIDE_RATE)
+    }
+
+    private fun usableCutoff(hz: Float): Float =
+        hz.coerceIn(MIN_HZ, sampleRate * MAX_CUTOFF_FRACTION)
+
+    private fun updateLowCoefficients() {
+        if (sampleRate <= 0) return
+        val g = tan(Math.PI * usableCutoff(currentLowPassHz) / sampleRate).toFloat()
+        for (stage in 0 until STAGES) {
+            val k = 1f / BUTTERWORTH_Q[stage]
+            val a1 = 1f / (1f + g * (g + k))
+            lowA1[stage] = a1
+            lowA2[stage] = g * a1
+            lowA3[stage] = g * (g * a1)
+        }
+    }
+
+    private fun updateHighCoefficients() {
+        if (sampleRate <= 0) return
+        val g = tan(Math.PI * usableCutoff(currentHighPassHz) / sampleRate).toFloat()
+        for (stage in 0 until STAGES) {
+            val k = 1f / BUTTERWORTH_Q[stage]
+            val a1 = 1f / (1f + g * (g + k))
+            highA1[stage] = a1
+            highA2[stage] = g * a1
+            highA3[stage] = g * (g * a1)
+            highK[stage] = k
+        }
+    }
+
+    private fun lowPass(channel: Int, input: Float): Float {
+        var value = input
+        for (stage in 0 until STAGES) {
+            val i = (channel * STAGES + stage) * 2
+            val ic1 = lowState[i]
+            val ic2 = lowState[i + 1]
+            val v3 = value - ic2
+            val v1 = lowA1[stage] * ic1 + lowA2[stage] * v3
+            val v2 = ic2 + lowA2[stage] * ic1 + lowA3[stage] * v3
+            lowState[i] = 2f * v1 - ic1
+            lowState[i + 1] = 2f * v2 - ic2
+            value = v2
+        }
+        return value
+    }
+
+    private fun highPass(channel: Int, input: Float): Float {
+        var value = input
+        for (stage in 0 until STAGES) {
+            val i = (channel * STAGES + stage) * 2
+            val ic1 = highState[i]
+            val ic2 = highState[i + 1]
+            val v3 = value - ic2
+            val v1 = highA1[stage] * ic1 + highA2[stage] * v3
+            val v2 = ic2 + highA2[stage] * ic1 + highA3[stage] * v3
+            highState[i] = 2f * v1 - ic1
+            highState[i + 1] = 2f * v2 - ic2
+            value -= highK[stage] * v1 + v2
+        }
+        return value
+    }
+
+    companion object {
+        private const val TAG = "AuraTransitionFilter"
+
+        /** A low-pass at or above this is doing nothing audible, so it counts as off. */
+        const val OPEN_HZ = 20_000f
+
+        /** A high-pass at or below this is doing nothing audible, so it counts as off. */
+        const val OFF_HZ = 20f
+
+        /** Nothing musical wants the low end lifted above this, and a typo shouldn't be able to. */
+        const val MAX_HIGH_PASS_HZ = 2_000f
+
+        private const val MIN_HZ = 10f
+        private const val BYTES_PER_SAMPLE = 2
+
+        /** Two cascaded second-order sections: 24 dB/octave, the usual DJ-filter slope. */
+        private const val STAGES = 2
+
+        /** Section Qs for a maximally flat (Butterworth) fourth-order response. */
+        private val BUTTERWORTH_Q = floatArrayOf(0.54120f, 1.30656f)
+
+        /** Frames between coefficient updates. ~1.5 ms at 44.1 kHz. */
+        private const val GLIDE_FRAMES = 64
+
+        /** Per-sub-block glide fraction. ~30 ms time constant, just under one fade tick. */
+        private const val GLIDE_RATE = 0.05f
+
+        /** How close to a parked value counts as parked, so a glide terminates. */
+        private const val SETTLED_HZ = 1f
+
+        /** Keeps `tan` away from its pole at Nyquist. */
+        private const val MAX_CUTOFF_FRACTION = 0.45f
+
+        private const val ECHO_FEEDBACK = 0.4f
+        private const val ECHO_WET = 0.5f
+        private const val ECHO_LOW_PASS_HZ = 3_500f
+        private const val ECHO_HIGH_PASS_HZ = 250f
+        private const val MAX_ECHO_SECONDS = 1f
+
+        private fun onePole(hz: Float, sampleRate: Int): Float =
+            if (sampleRate <= 0) 0f else (1.0 - exp(-2.0 * Math.PI * hz / sampleRate)).toFloat()
+    }
+}
+
+/**
+ * The two filters a transition rides: one over the track arriving, one over the
+ * track leaving.
+ */
+interface TransitionFilters {
+    /** The track fading up. */
+    fun incoming(lowPassHz: Float, highPassHz: Float)
+
+    /** The track fading out. */
+    fun outgoing(lowPassHz: Float, highPassHz: Float)
+
+    /**
+     * How far ahead of the speaker each side's filter is running, in that
+     * track's media milliseconds.
+     */
+    fun incomingLeadMs(): Long = 0L
+    fun outgoingLeadMs(): Long = 0L
+
+    /** Echo out on each side's sink. */
+    fun incomingEcho(delaySeconds: Float, send: Float, dry: Float) = Unit
+    fun outgoingEcho(delaySeconds: Float, send: Float, dry: Float) = Unit
+
+    /** Drops any echo on either sink. */
+    fun parkEchoes() = Unit
+
+    /** Parks both. Called whenever a transition ends, however it ended. */
+    fun open() {
+        incoming(TransitionFilterProcessor.OPEN_HZ, TransitionFilterProcessor.OFF_HZ)
+        outgoing(TransitionFilterProcessor.OPEN_HZ, TransitionFilterProcessor.OFF_HZ)
+    }
+
+    /** For callers with no audio sink to filter — tests, and the default wiring. */
+    object None : TransitionFilters {
+        override fun incoming(lowPassHz: Float, highPassHz: Float) = Unit
+        override fun outgoing(lowPassHz: Float, highPassHz: Float) = Unit
+    }
+}
