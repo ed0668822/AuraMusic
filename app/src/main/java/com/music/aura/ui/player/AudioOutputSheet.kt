@@ -15,12 +15,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.rounded.VolumeOff
 import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.Bluetooth
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.DirectionsCar
 import androidx.compose.material.icons.rounded.Earbuds
+import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.Headphones
 import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.Speaker
@@ -47,27 +49,30 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.music.aura.R
-import com.music.aura.ui.components.ThinSlider
 import com.music.aura.ui.haptics.Haptic
 import com.music.aura.ui.haptics.rememberHaptics
 import dev.chrisbanes.haze.HazeState
 import kotlinx.coroutines.delay
 
+/**
+ * Where the music is coming out, and how loud.
+ * Simplified for Aura: no Cast, no Watch.
+ */
 @Composable
 internal fun AudioOutputSheet(
     hazeState: HazeState,
-    outputs: List<AudioOutputDevice>,
-    onSelectOutput: (Int) -> Unit,
+    accountName: String?,
     onDismiss: () -> Unit,
+    onOpenPipeline: () -> Unit,
     modifier: Modifier = Modifier,
-    reduceDynamicBlur: Boolean = false,
 ) {
+    val outputs = rememberAudioOutputs()
+
     PlayerDrawer(
         hazeState = hazeState,
         title = stringResource(R.string.audio_output),
         onDismiss = onDismiss,
         modifier = modifier,
-        reduceDynamicBlur = reduceDynamicBlur,
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -76,19 +81,75 @@ internal fun AudioOutputSheet(
             outputs.forEach { device ->
                 OutputRow(
                     device = device,
-                    onSelect = { onSelectOutput(device.id) },
+                    accountName = accountName,
+                    onSelect = { AuraPlayerPlatform.host.selectAudioOutput(device.id) },
                 )
             }
         }
 
         Spacer(Modifier.height(10.dp))
-        VolumeRow(outputs = outputs)
+        OutputVolumeRow(routeKey = outputs)
+
+        Spacer(Modifier.height(6.dp))
+        AudioPipelineRow(onClick = onOpenPipeline)
+    }
+}
+
+@Composable
+private fun AudioPipelineRow(onClick: () -> Unit) {
+    val haptics = rememberHaptics()
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(ROW_SHAPE)
+            .background(Color.White.copy(alpha = 0.05f))
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+            ) {
+                haptics.play(Haptic.Select)
+                onClick()
+            }
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(Color.White.copy(alpha = 0.08f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.GraphicEq,
+                contentDescription = null,
+                tint = Color.White.copy(alpha = 0.7f),
+                modifier = Modifier.size(20.dp),
+            )
+        }
+        Spacer(Modifier.width(13.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                text = stringResource(R.string.audio_pipeline),
+                style = MaterialTheme.typography.bodyLarge,
+                color = Color.White.copy(alpha = 0.85f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Icon(
+            imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+            contentDescription = null,
+            tint = Color.White.copy(alpha = 0.35f),
+            modifier = Modifier.size(20.dp),
+        )
     }
 }
 
 @Composable
 private fun OutputRow(
     device: AudioOutputDevice,
+    accountName: String?,
     onSelect: () -> Unit,
 ) {
     val haptics = rememberHaptics()
@@ -126,7 +187,7 @@ private fun OutputRow(
         Spacer(Modifier.width(13.dp))
         Column(Modifier.weight(1f)) {
             Text(
-                text = outputLabel(device),
+                text = outputLabel(device, accountName),
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal,
                 ),
@@ -155,9 +216,23 @@ private fun OutputRow(
 }
 
 @Composable
-private fun VolumeRow(outputs: List<AudioOutputDevice>) {
-    // El volumen del sistema se lee y escribe a través de AudioManager.
-    // Se conecta con el SystemVolume de AuraPlayerHost.
+private fun OutputVolumeRow(routeKey: Any) {
+    val system = AuraPlayerPlatform.host.volume
+    val systemLevel by system.level.collectAsStateWithLifecycle()
+    var level by remember(system) { mutableFloatStateOf(systemLevel) }
+    var dragging by remember { mutableStateOf(false) }
+
+    LaunchedEffect(systemLevel) {
+        if (!dragging) level = systemLevel
+    }
+
+    LaunchedEffect(routeKey) {
+        repeat(VOLUME_REREADS) {
+            if (!dragging) system.refresh()
+            delay(VOLUME_REREAD_GAP_MS)
+        }
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -167,15 +242,20 @@ private fun VolumeRow(outputs: List<AudioOutputDevice>) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
-            imageVector = Icons.AutoMirrored.Rounded.VolumeUp,
+            imageVector = if (level > 0f) Icons.AutoMirrored.Rounded.VolumeUp else Icons.AutoMirrored.Rounded.VolumeOff,
             contentDescription = null,
             tint = Color.White.copy(alpha = 0.6f),
             modifier = Modifier.size(20.dp),
         )
         Spacer(Modifier.width(12.dp))
         ThinSlider(
-            value = 0.5f,
-            onValueChange = {},
+            value = level,
+            onValueChange = {
+                dragging = true
+                level = it
+                system.set(it)
+            },
+            onValueChangeFinished = { dragging = false },
             idleHeight = 6.dp,
             activeHeight = 10.dp,
             modifier = Modifier.weight(1f),
@@ -197,3 +277,6 @@ private fun iconFor(device: AudioOutputDevice): ImageVector = when (device.kind)
     AudioOutputKind.HDMI -> Icons.Rounded.Tv
     AudioOutputKind.OTHER -> Icons.Rounded.Speaker
 }
+
+private const val VOLUME_REREADS = 4
+private const val VOLUME_REREAD_GAP_MS = 250L
