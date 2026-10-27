@@ -39,6 +39,20 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            val keystorePath = System.getenv("KEYSTORE_PATH") ?: "aura-release.jks"
+            val storeFile = rootProject.file(keystorePath)
+            
+            if (storeFile.exists()) {
+                this.storeFile = storeFile
+                this.storePassword = System.getenv("KEYSTORE_PASSWORD")
+                this.keyAlias = System.getenv("KEY_ALIAS")
+                this.keyPassword = System.getenv("KEYSTORE_PASSWORD")
+            }
+        }
+    }
+
     buildFeatures {
         compose = true
         buildConfig = true
@@ -46,12 +60,12 @@ android {
 
     buildTypes {
         debug {
-            signingConfig = null
+            signingConfig = signingConfigs.findByName("release")
         }
 
         release {
             isMinifyEnabled = false
-            signingConfig = null
+            signingConfig = signingConfigs.findByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
