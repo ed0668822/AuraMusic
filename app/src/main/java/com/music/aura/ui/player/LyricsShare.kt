@@ -47,6 +47,7 @@ data class LyricsShareLine(
 
 data class LyricsShareRequest(
     val song: LocalSong,
+    val artworkUri: String?,
     val lines: List<LyricsShareLine>,
 )
 
@@ -54,6 +55,9 @@ const val SHARE_CARD_CHAR_BUDGET = 250
 
 fun fitsOnCard(taken: Int, text: String?): Boolean =
     taken + (text?.length ?: 0) <= SHARE_CARD_CHAR_BUDGET
+
+val lyricsShareAvailable: Boolean
+    get() = AuraPlayerPlatform.host.lyricsShareAvailable
 
 internal class LyricsPicker(
     val picking: Boolean,
@@ -70,11 +74,12 @@ internal class LyricsPicker(
 internal fun rememberLyricsPicker(
     song: LocalSong,
     lines: List<LyricLine>?,
+    subLines: List<LyricLine>?,
+    artworkUri: String?,
     haptics: Haptics,
     onCard: (LyricsShareRequest) -> Unit,
 ): LyricsPicker {
     val cardFullMessage = stringResource(R.string.lyrics_share_pick_limit)
-
     var picking by remember { mutableStateOf(false) }
     var picks by remember { mutableStateOf<Set<Int>>(emptySet()) }
     var overBudget by remember { mutableStateOf(false) }
@@ -101,6 +106,7 @@ internal fun rememberLyricsPicker(
             }
             else -> {
                 overBudget = true
+                AuraPlayerPlatform.host.showMessage(cardFullMessage)
             }
         }
     }
@@ -137,11 +143,17 @@ internal fun rememberLyricsPicker(
                     add(LyricsShareLine(text = "", subText = null, isGap = true))
                 }
                 val line = source.getOrNull(index) ?: return@forEachIndexed
-                add(LyricsShareLine(text = line.text, subText = null))
+                val sub = subLines?.getOrNull(index)?.text
+                add(
+                    LyricsShareLine(
+                        text = line.text,
+                        subText = sub?.takeIf { it.isNotBlank() && it != line.text },
+                    ),
+                )
             }
         }.filter { it.isGap || it.text.isNotBlank() }
         if (picked.isNotEmpty()) {
-            onCard(LyricsShareRequest(song = song, lines = picked))
+            onCard(LyricsShareRequest(song = song, artworkUri = artworkUri, lines = picked))
         }
         cancel()
     }
