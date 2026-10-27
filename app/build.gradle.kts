@@ -11,7 +11,7 @@ val autoVersionCode = if (runNumber > 0) 10000 + runNumber else (System.currentT
 
 android {
     namespace = "com.music.aura"
-    compileSdk = 36
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.music.aura"
@@ -21,7 +21,6 @@ android {
         versionName = autoVersionName
         buildConfigField("String", "UPDATE_APK_PREFIX", "\"app-\"")
 
-        // ✅ NUEVO: NDK para Automix analysis
         ndk {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
         }
@@ -32,7 +31,6 @@ android {
         }
     }
 
-    // ✅ NUEVO: CMake
     externalNativeBuild {
         cmake {
             path = file("src/main/cpp/CMakeLists.txt")
@@ -65,7 +63,7 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
         debug {
-            signingConfig = signingConfigs.findByName("release")
+            signingConfig = null
         }
     }
 
@@ -110,6 +108,5 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
-    // ✅ NUEVO: ONNX Runtime para BeatTracker y VocalTracker
     implementation("com.microsoft.onnxruntime:onnxruntime-android:1.17.0")
 }
