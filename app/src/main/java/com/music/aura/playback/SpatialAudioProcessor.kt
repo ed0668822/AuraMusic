@@ -9,33 +9,15 @@ import com.music.aura.playback.audio.PcmBoundary
 import java.nio.ByteOrder
 import kotlin.math.roundToInt
 
-/**
- * Cheap stand-in for "spatial audio": widens the mid/side image and mixes in
- * a short, low-passed cross-feed between channels — the same trick most
- * consumer virtual-surround plugins use. O(1) per sample, no FFT or
- * convolution, so it costs nothing worth measuring on a phone CPU.
- *
- * Exists because the platform [android.media.audiofx.Virtualizer] produced no
- * audible difference on the reference device — likely swallowed by the OEM's
- * own audio effect chain — so this runs inside ExoPlayer's own audio
- * processor pipeline instead, where nothing else can intercept it.
- */
 @UnstableApi
 class SpatialAudioProcessor : BaseAudioProcessor() {
 
     @Volatile
     var enabled: Boolean = false
 
-    /** How much wider the stereo image gets. 1.0 = untouched. */
     private val widthGain = 2.5f
-
-    /** Makeup attenuation after widening, so the wider side energy doesn't clip. */
     private val outputGain = 0.82f
-
-    /** How much of the delayed, low-passed opposite channel gets mixed back in. */
     private val crossfeedGain = 0.2f
-
-    /** One-pole lowpass factor applied to the cross-fed signal — dulls it, like a far ear would. */
     private val lowpassCoeff = 0.3f
 
     private var sampleRate: Int = 0
@@ -47,9 +29,6 @@ class SpatialAudioProcessor : BaseAudioProcessor() {
     private var lowpassLeft = 0f
     private var lowpassRight = 0f
 
-    /**
-     * Configures the Float32 DSP engine for [sampleRate] and [channelCount].
-     */
     fun configure(sampleRate: Int, channelCount: Int) {
         this.sampleRate = sampleRate
         this.channelCount = channelCount
@@ -71,13 +50,9 @@ class SpatialAudioProcessor : BaseAudioProcessor() {
         onFlush()
     }
 
-    /**
-     * Processes interleaved Float32 audio samples in [block] in-place.
-     * Preserves dynamic headroom without clamping to [-1.0f, +1.0f].
-     */
     fun process(block: AudioBlock) {
         if (!enabled || block.frameCount == 0) return
-        if (block.channelCount != 2) return // Spatial widening only applies to stereo
+        if (block.channelCount != 2) return
 
         val delaySize = delayLeft.size
         if (delaySize == 0) return
@@ -108,7 +83,6 @@ class SpatialAudioProcessor : BaseAudioProcessor() {
             delayRight[dIdx] = right
             dIdx = (dIdx + 1) % delaySize
 
-            // Headroom is preserved: no clamping to [-1.0f, +1.0f]
             block.samples[idx] = widenedLeft * outputGain
             block.samples[idx + 1] = widenedRight * outputGain
             idx += 2
@@ -119,15 +93,6 @@ class SpatialAudioProcessor : BaseAudioProcessor() {
         lowpassRight = lpR
     }
 
-    /**
-     * Stereo 16-bit only: the widening is written in terms of a left and a
-     * right sample, and there is no mid/side of a mono voice note or of a 5.1
-     * mix to widen.
-     *
-     * Bowing out with [AudioProcessor.AudioFormat.NOT_SET] rather than an
-     * [AudioProcessor.UnhandledAudioFormatException] is what keeps those
-     * tracks playable at all.
-     */
     override fun onConfigure(inputAudioFormat: AudioProcessor.AudioFormat): AudioProcessor.AudioFormat {
         if (inputAudioFormat.encoding != C.ENCODING_PCM_16BIT || inputAudioFormat.channelCount != 2) {
             return AudioProcessor.AudioFormat.NOT_SET
@@ -211,7 +176,7 @@ class SpatialAudioProcessor : BaseAudioProcessor() {
     }
 
     private companion object {
-        const val BYTES_PER_FRAME = 4 // stereo, 16-bit
+        const val BYTES_PER_FRAME = 4
         const val DELAY_MS = 15
     }
 }
