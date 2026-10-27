@@ -2,9 +2,7 @@ package com.music.aura.ui.theme
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -29,8 +27,8 @@ import kotlin.math.sin
 
 @Composable
 fun MeshGradient(
-    colors: ArtworkColors,
-    isPlaying: Boolean,
+    colors: ArtworkColors = ArtworkColors(),
+    isPlaying: Boolean = false,
     modifier: Modifier = Modifier,
     blurRadius: Dp = 64.dp,
 ) {
@@ -40,7 +38,7 @@ fun MeshGradient(
         colors.primaryContainer.copy(alpha = 0.70f),
         colors.secondaryContainer.copy(alpha = 0.65f)
     )
-    
+
     val animatedColors = tuned.mapIndexed { index, color ->
         animateColorAsState(color, tween(1400), label = "meshColor$index").value
     }
