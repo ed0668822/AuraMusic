@@ -2,6 +2,9 @@ package com.music.aura.ui.player
 
 import androidx.compose.ui.graphics.ImageBitmap
 
+/**
+ * Heuristic to reject a frame that is almost certainly black/near-black.
+ */
 internal fun isLikelyBlackFrame(bitmap: ImageBitmap): Boolean {
     val w = bitmap.width
     val h = bitmap.height
