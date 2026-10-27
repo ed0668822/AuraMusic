@@ -35,12 +35,14 @@ internal fun AudioOutputSheet(
     onSelectOutput: (Int) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    reduceDynamicBlur: Boolean = false,
 ) {
     PlayerDrawer(
         hazeState = hazeState,
         title = stringResource(R.string.audio_output),
         onDismiss = onDismiss,
         modifier = modifier,
+        reduceDynamicBlur = reduceDynamicBlur,
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
