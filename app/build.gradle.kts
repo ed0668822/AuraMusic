@@ -20,15 +20,30 @@ android {
         versionCode = autoVersionCode
         versionName = autoVersionName
         buildConfigField("String", "UPDATE_APK_PREFIX", "\"app-\"")
+
+        // ✅ NUEVO: NDK para Automix analysis
+        ndk {
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
+        }
+        externalNativeBuild {
+            cmake {
+                cppFlags += "-std=c++17"
+            }
+        }
     }
 
-    // FIRMA PARA ACTUALIZACIONES
+    // ✅ NUEVO: CMake
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1"
+        }
+    }
+
     signingConfigs {
         create("release") {
             val keystorePath = System.getenv("KEYSTORE_PATH") ?: "aura-release.jks"
-            // ✅ CORREGIDO: usar project.rootProject.file() para acceder a la raíz del proyecto
             val storeFile = project.rootProject.file(keystorePath)
-            
             if (storeFile.exists()) {
                 this.storeFile = storeFile
                 this.storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "aura12345"
@@ -53,7 +68,7 @@ android {
             signingConfig = signingConfigs.findByName("release")
         }
     }
-    
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -75,7 +90,6 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.palette:palette-ktx:1.0.0")
-    // ✅ CORREGIDO: Eliminada la línea implementation("androidx.compose.foundation:foundation:1.10.0") para evitar conflictos con el BOM
     implementation("androidx.activity:activity-compose:1.9.3")
     implementation("androidx.navigation:navigation-compose:2.8.5")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
@@ -92,8 +106,10 @@ dependencies {
     implementation("io.coil-kt.coil3:coil-compose:3.0.4")
     implementation("dev.chrisbanes.haze:haze:1.3.1")
     implementation("dev.chrisbanes.haze:haze-materials:1.3.1")
-    implementation("androidx.palette:palette-ktx:1.0.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.9.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    // ✅ NUEVO: ONNX Runtime para BeatTracker y VocalTracker
+    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.17.0")
 }
