@@ -1,15 +1,5 @@
 package com.music.aura.data.model
 
-enum class QueueTier {
-    USER_QUEUE,
-    CONTEXT,
-    AUTOPLAY,
-}
-
-enum class PlaybackSourceType {
-    HOME, SEARCH, HISTORY, REPLAY, EXPLORE, BROWSE, SHARED_LINK, QUEUE,
-}
-
 data class LocalSong(
     val id: String,
     val title: String,
@@ -23,15 +13,12 @@ data class LocalSong(
     val year: Int?,
     val dateAddedMs: Long = 0L,
     val sizeBytes: Long = 0L,
-
-    // --- Campos para la Cola (Portados de BitChord) ---
     val queueTier: QueueTier = QueueTier.CONTEXT,
     val queueEntryId: String? = null,
     val playbackSource: String? = null,
     val playbackSourceType: PlaybackSourceType? = null,
     val playbackSourceId: String? = null,
 ) {
-    // Alias para que el código de BitChord funcione sin cambios drásticos
     val videoId: String get() = id
     val thumbnailUrl: String? get() = artworkUri
     val albumName: String? get() = album
