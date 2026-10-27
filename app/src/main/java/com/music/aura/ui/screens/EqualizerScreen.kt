@@ -617,4 +617,164 @@ private fun BalanceControl(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(KNOB_RADIUS * 2 + 8.dp)
-                .pointer
+                .pointerInput(enabled) {
+                    if (!enabled) return@pointerInput
+                    awaitEachGesture {
+                        val down = awaitFirstDown(requireUnconsumed = false)
+                        down.consume()
+                        var last = latest
+                        fun report(offset: Offset) {
+                            val inset = KNOB_RADIUS.toPx()
+                            val usable = (size.width - inset * 2).coerceAtLeast(1f)
+                            val fraction = ((offset.x - inset) / usable).coerceIn(0f, 1f)
+                            val raw = fraction * 2f - 1f
+                            val snapped = if (abs(raw) < BALANCE_DETENT) 0f else raw
+                            if (abs(snapped - last) > 0.004f) {
+                                if (snapped == 0f && last != 0f) haptics.play(Haptic.Tick)
+                                last = snapped
+                                currentOnChange(snapped)
+                            }
+                        }
+                        report(down.position)
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                            if (!change.pressed) {
+                                change.consume()
+                                break
+                            }
+                            if (change.positionChanged()) {
+                                change.consume()
+                                report(change.position)
+                            }
+                        }
+                    }
+                },
+        ) {
+            val inset = KNOB_RADIUS.toPx()
+            val usable = size.width - inset * 2
+            val centreY = size.height / 2
+            val centreX = inset + usable / 2
+            val trackHeight = TRACK_WIDTH.toPx()
+            val knobX = inset + usable * (balance + 1f) / 2f
+
+            drawRoundRect(
+                color = trackColor,
+                topLeft = Offset(inset, centreY - trackHeight / 2),
+                size = Size(usable, trackHeight),
+                cornerRadius = CornerRadius(trackHeight / 2),
+            )
+            if (abs(balance) > 0.004f) {
+                drawRoundRect(
+                    color = fillColor,
+                    topLeft = Offset(minOf(centreX, knobX), centreY - trackHeight / 2),
+                    size = Size(abs(centreX - knobX), trackHeight),
+                    cornerRadius = CornerRadius(trackHeight / 2),
+                )
+            }
+            drawCircle(
+                color = Color.Black.copy(alpha = 0.18f),
+                radius = inset + 1.5f,
+                center = Offset(knobX, centreY + 1.5f),
+            )
+            drawCircle(color = knobColor, radius = inset, center = Offset(knobX, centreY))
+        }
+    }
+}
+
+// ---- Presets ---------------------------------------------------------------
+
+@Composable
+private fun PresetSheet(selected: EqualizerPreset, onSelect: (EqualizerPreset) -> Unit) {
+    val haptics = rememberHaptics()
+    Column(Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
+        Text(
+            text = stringResource(R.string.equalizer_preset),
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.padding(start = 22.dp, end = 22.dp, bottom = 14.dp),
+        )
+        HorizontalDivider(
+            thickness = 0.5.dp,
+            color = MaterialTheme.colorScheme.outline,
+        )
+        Column(
+            modifier = Modifier
+                .weight(1f, fill = false)
+                .verticalScroll(rememberScrollState()),
+        ) {
+            EqualizerPreset.entries.forEach { preset ->
+                if (preset == EqualizerPreset.CUSTOM && selected != EqualizerPreset.CUSTOM) {
+                    return@forEach
+                }
+                val chosen = preset == selected
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(enabled = preset != EqualizerPreset.CUSTOM) {
+                            haptics.play(Haptic.Select)
+                            onSelect(preset)
+                        }
+                        .padding(horizontal = 22.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = preset.localizedLabel(),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.weight(1f),
+                    )
+                    if (chosen) {
+                        Icon(
+                            Icons.Rounded.Check,
+                            contentDescription = stringResource(R.string.selected),
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(22.dp),
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EqualizerMode.localizedLabel(): String = stringResource(
+    when (this) {
+        EqualizerMode.DYNAMIC -> R.string.equalizer_dynamic
+        EqualizerMode.MANUAL -> R.string.equalizer_manual
+    },
+)
+
+@Composable
+private fun EqualizerPreset.localizedLabel(): String = stringResource(
+    when (this) {
+        EqualizerPreset.FLAT -> R.string.eq_preset_flat
+        EqualizerPreset.ACOUSTIC -> R.string.eq_preset_acoustic
+        EqualizerPreset.BASS_BOOST -> R.string.eq_preset_bass_boost
+        EqualizerPreset.BASS_CUT -> R.string.eq_preset_bass_cut
+        EqualizerPreset.VOCAL -> R.string.eq_preset_vocal
+        EqualizerPreset.TREBLE_BOOST -> R.string.eq_preset_treble_boost
+        EqualizerPreset.TREBLE_CUT -> R.string.eq_preset_treble_cut
+        EqualizerPreset.LOUDNESS -> R.string.eq_preset_loudness
+        EqualizerPreset.SPOKEN_WORD -> R.string.eq_preset_spoken_word
+        EqualizerPreset.ELECTRONIC -> R.string.eq_preset_electronic
+        EqualizerPreset.ROCK -> R.string.eq_preset_rock
+        EqualizerPreset.HIP_HOP -> R.string.eq_preset_hip_hop
+        EqualizerPreset.JAZZ -> R.string.eq_preset_jazz
+        EqualizerPreset.CLASSICAL -> R.string.eq_preset_classical
+        EqualizerPreset.SMALL_SPEAKERS -> R.string.eq_preset_small_speakers
+        EqualizerPreset.LATE_NIGHT -> R.string.eq_preset_late_night
+        EqualizerPreset.CUSTOM -> R.string.eq_preset_custom
+    },
+)
+
+private val PAD_HEIGHT = 230.dp
+private val PUCK_RADIUS = 19.dp
+private val DOT_RADIUS = 2.5.dp
+private val FADER_HEIGHT = 150.dp
+private val FADER_WIDTH = 34.dp
+private val TRACK_WIDTH = 5.dp
+private val KNOB_RADIUS = 10.dp
+private const val ZERO_DETENT_DB = 0.6f
+private const val BALANCE_DETENT = 0.04f
