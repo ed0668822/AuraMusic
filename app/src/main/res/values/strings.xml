@@ -1,19 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Aura Music</string>
-    <!-- ... (tus textos existentes) ... -->
-    
-    <string name="search_hint">Buscar canciones, artistas, álbumes…</string>
+
+    <!-- Search -->
     <string name="search">Buscar</string>
+    <string name="search_hint">Buscar canciones, artistas, álbumes…</string>
     <string name="clear_search">Borrar búsqueda</string>
-    <string name="library">Library</string>
-    <string name="listen_now">Listen Now</string>
+    <string name="search_empty">Busca canciones, artistas o álbumes</string>
+    <string name="search_library_empty">No hay canciones que coincidan</string>
+    <string name="search_library_no_results">Sin resultados para «%1$s»</string>
+    <string name="recent_searches">Búsquedas recientes</string>
+
+    <!-- Library / Home -->
+    <string name="library">Biblioteca</string>
+    <string name="home">Inicio</string>
+    <string name="explore">Explorar</string>
+    <string name="listen_now">Escuchar ahora</string>
     <string name="recently_added">Añadido recientemente</string>
+    <string name="recently_played">Reproducido recientemente</string>
+    <string name="most_played">Más escuchado</string>
     <string name="albums">Álbumes</string>
     <string name="artists">Artistas</string>
     <string name="songs">Canciones</string>
-    <string name="local_music">Local Music</string>
+    <string name="local_music">Música local</string>
     <string name="on_device">En el dispositivo</string>
-    <string name="play">Play</string>
-    <string name="shuffle">Shuffle</string>
+    <string name="show_all">Ver todo</string>
+    <string name="album">Álbum</string>
+    <string name="artist">Artista</string>
+    <string name="playlist">Lista</string>
+    <string name="open">Abrir</string>
+    <string name="open_album">Abrir álbum</string>
+    <string name="open_artist">Abrir artista</string>
+    <string name="open_playlist">Abrir lista</string>
+    <string name="history_empty">Aún no has escuchado nada</string>
+
+    <!-- Playback -->
+    <string name="play">Reproducir</string>
+    <string name="shuffle">Aleatorio</string>
+    <string name="play_next">Reproducir después</string>
+    <string name="add_to_queue">Añadir a la cola</string>
+    <string name="queue">Cola</string>
+    <string name="now_playing">Sonando ahora</string>
+    <string name="next_in_queue">Siguiente</string>
+    <string name="remove_from_queue">Quitar de la cola</string>
+    <string name="drag_to_reorder">Arrastra para reordenar</string>
+    <string name="clear">Limpiar</string>
     <string name="more">Más</string>
+    <string name="sleep_timer">Temporizador</string>
+    <string name="one_hour">1 hora</string>
+
+    <!-- Song actions / info -->
+    <string name="song_info">Información de la canción</string>
+    <string name="song_info_album">Álbum</string>
+    <string name="song_info_artist">Artista</string>
+    <string name="song_info_year">Año</string>
+    <string name="song_info_duration">Duración</string>
+    <string name="song_info_size">Tamaño</string>
+    <string name="song_info_path">Ruta</string>
+    <string name="done">Hecho</string>
+    <string name="back">Atrás</string>
+    <string name="cancel">Cancelar</string>
+    <string name="share">Compartir</string>
+    <string name="save">Guardar</string>
+    <string name="saved_bang">¡Guardado!</string>
+
+    <!-- Playlists -->
+    <string name="add_to_playlist">Añadir a lista</string>
+    <string name="your_playlists">Tus listas</string>
+    <string name="new_playlist">Nueva lista</string>
+    <string name="no_playlists_yet">Aún no hay listas</string>
+    <string name="saved_locally">Guardada en el dispositivo</string>
+    <string name="playlist_name">Nombre de la lista</string>
+    <string name="clear_name">Borrar nombre</string>
+    <string name="create_playlist">Crear lista</string>
+    <string name="remove_from_playlist">Quitar de la lista</string>
+    <string name="rename">Renombrar</string>
+    <string name="delete_playlist">Borrar lista</string>
+    <string name="delete_playlist_confirmation">¿Borrar «%1$s»?</string>
+    <string name="reorder_songs">Reordenar canciones</string>
+    <string name="save_order">Guardar orden</string>
+
+    <!-- Lyrics -->
+    <string name="lyrics_offset">Ajuste de letras</string>
+    <string name="lyrics_offset_description">Desplaza las letras para sincronizarlas con el audio.</string>
+    <string name="lyrics_offset_reset">Restablecer</string>
+    <string name="decrease_lyrics_offset">Reducir desplazamiento</string>
+    <string name="increase_lyrics_offset">Aumentar desplazamiento</string>
+    <string name="choose_lyrics_provider">Fuente de letras</string>
+    <string name="lyrics_provider_current">Actual</string>
+    <string name="lyrics_provider_found">Encontradas</string>
+    <string name="lyrics_provider_not_found">No encontradas</string>
+    <string name="lyrics_provider_fetching">Buscando…</string>
+    <string name="lyrics_provider_not_fetched">Sin probar</string>
+    <string name="lyrics_share_title">Compartir letra</string>
+    <string name="your_lyrics_card">Tu tarjeta de letras</string>
+    <string name="couldnt_draw_picture">No se pudo generar la imagen</string>
+    <string name="lyrics_share_pick_limit">Elige menos líneas para compartir</string>
+
+    <!-- Audio output -->
+    <string name="audio_output">Salida de audio</string>
+    <string name="audio_output_playing">Reproduciendo aquí</string>
+    <string name="wired_headphones">Auriculares con cable</string>
+    <string name="usb_audio">Audio USB</string>
+    <string name="hdmi_output">HDMI</string>
+    <string name="this_phone">Este teléfono</string>
+
+    <!-- Replay -->
+    <string name="replay">Replay</string>
+    <string name="not_enough_listening">Aún no hay suficientes datos</string>
+    <string name="top_songs">Canciones más escuchadas</string>
+    <string name="top_artists">Artistas más escuchados</string>
+    <string name="top_song">Canción top</string>
+    <string name="top_artist">Artista top</string>
+    <string name="top_album">Álbum top</string>
+    <string name="listening_shape">Tu forma de escuchar</string>
+    <string name="minutes_listened">Minutos escuchados</string>
+    <string name="your_listening_experience">Tu experiencia</string>
+    <string name="default_replay_holder">Aura</string>
+    <string name="member_since">Desde</string>
+    <string name="midnight">Medianoche</string>
+    <string name="midday">Mediodía</string>
+    <string name="this_month">Este mes</string>
+    <string name="this_year">Este año</string>
+    <string name="all_time">Todo el tiempo</string>
+    <string name="replay_this_week">Esta semana</string>
+    <string name="replay_period_weekly">Semanal</string>
+    <string name="replay_period_monthly">Mensual</string>
+    <string name="replay_period_yearly">Anual</string>
+    <string name="replay_period_lifetime">Histórico</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_welcome_title">Aura Music</string>
+    <string name="onboarding_welcome_body">Tu música local, con un reproductor que se siente como en casa.</string>
+    <string name="onboarding_next">Continuar</string>
+    <string name="onboarding_permission_title">Acceso a tu música</string>
+    <string name="onboarding_permission_body">Necesitamos permiso para leer tus archivos de audio.</string>
+    <string name="onboarding_grant_permission">Conceder permiso</string>
+    <string name="onboarding_start">Empezar</string>
+    <string name="onboarding_skip">Omitir</string>
+    <string name="onboarding_back">Atrás</string>
+
+    <!-- Widgets -->
+    <string name="widget_artwork">Carátula</string>
+    <string name="widget_previous">Anterior</string>
+    <string name="widget_play">Reproducir / Pausar</string>
+    <string name="widget_next">Siguiente</string>
+    <string name="widget_nothing_played">Nada en reproducción</string>
+    <string name="widget_square_description">Aura Music — widget compacto</string>
+    <string name="widget_wide_description">Aura Music — widget ancho</string>
+
+    <!-- Plurals -->
+    <plurals name="minute_count">
+        <item quantity="one">%d minuto</item>
+        <item quantity="other">%d minutos</item>
+    </plurals>
+    <plurals name="add_to_playlists_count">
+        <item quantity="one">Añadir a %d lista</item>
+        <item quantity="other">Añadir a %d listas</item>
+    </plurals>
 </resources>
