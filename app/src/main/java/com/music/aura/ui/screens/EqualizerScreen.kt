@@ -1,45 +1,27 @@
 package com.music.aura.ui.screens
 
+import android.content.Context
+import android.content.Intent
+import android.media.audiofx.AudioEffect
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ShowChart
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.GraphicEq
-import androidx.compose.material.icons.automirrored.rounded.ShowChart
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.Waves
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -47,9 +29,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -60,6 +42,7 @@ import com.music.aura.data.EqualizerMode
 import com.music.aura.data.SettingsRepository
 import com.music.aura.playback.EqLayout
 import com.music.aura.playback.EqualizerPreset
+import com.music.aura.ui.components.*
 import com.music.aura.ui.haptics.Haptic
 import com.music.aura.ui.haptics.rememberHaptics
 import java.util.Locale
@@ -69,9 +52,10 @@ import kotlin.math.roundToInt
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EqualizerScreen(
-    contentPadding: PaddingValues,
+    onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
     val enabled by SettingsRepository.equalizerEnabled.collectAsStateWithLifecycle()
     val mode by SettingsRepository.equalizerMode.collectAsStateWithLifecycle()
     val toneX by SettingsRepository.equalizerToneX.collectAsStateWithLifecycle()
@@ -86,10 +70,25 @@ fun EqualizerScreen(
 
     Column(
         modifier = modifier
-            .fillMaxWidth()
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
-            .padding(contentPadding),
+            .padding(bottom = 32.dp),
     ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(top = 40.dp, start = 8.dp, end = 8.dp, bottom = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onBackClick) {
+                Icon(androidx.compose.material.icons.Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
+            }
+            Text(
+                text = stringResource(R.string.equalizer),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(start = 8.dp)
+            )
+        }
+
         SettingsGroup(
             footer = stringResource(R.string.equalizer_footer),
             topSpacing = 8.dp,
@@ -128,7 +127,6 @@ fun EqualizerScreen(
                 options = EqualizerMode.entries.map { it.localizedLabel() },
                 selectedIndex = EqualizerMode.entries.indexOf(mode),
                 onSelect = { SettingsRepository.setEqualizerMode(EqualizerMode.entries[it]) },
-                enabled = enabled,
                 modifier = Modifier.padding(horizontal = GROUP_INSET),
             )
 
@@ -207,7 +205,14 @@ fun EqualizerScreen(
             }
         }
 
-        Spacer(Modifier.height(32.dp))
+        SettingsGroup(footer = stringResource(R.string.system_equalizer_footer)) {
+            SettingsRow(
+                icon = Icons.Rounded.GraphicEq,
+                title = stringResource(R.string.system_equalizer),
+                subtitle = stringResource(R.string.system_equalizer_subtitle),
+                onClick = { openEqualizer(context) },
+            )
+        }
     }
 
     if (pickingPreset) {
@@ -226,7 +231,35 @@ fun EqualizerScreen(
     }
 }
 
-// ---- Tone pad --------------------------------------------------------------
+// Añadido porque no estaba en SettingsComponents de AuraMusic
+@Composable
+fun DestructiveRow(label: String, enabled: Boolean = true, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(horizontal = ROW_INSET, vertical = 15.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.error,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+private fun openEqualizer(context: Context) {
+    val intent = Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL).apply {
+        putExtra(AudioEffect.EXTRA_PACKAGE_NAME, context.packageName)
+        putExtra(AudioEffect.EXTRA_AUDIO_SESSION, 0)
+        putExtra(AudioEffect.EXTRA_CONTENT_TYPE, AudioEffect.CONTENT_TYPE_MUSIC)
+    }
+    if (intent.resolveActivity(context.packageManager) != null) {
+        context.startActivity(intent)
+    }
+}
 
 @Composable
 private fun TonePad(
@@ -414,8 +447,6 @@ private fun ChoiceRow(
     }
 }
 
-// ---- Manual bands ----------------------------------------------------------
-
 @Composable
 private fun BandSliders(
     bands: List<Float>,
@@ -577,8 +608,6 @@ private fun formatFrequency(hz: Float): String = when {
     else -> String.format(Locale.getDefault(), "%.1fk", hz / 1_000f)
 }
 
-// ---- Balance ---------------------------------------------------------------
-
 @Composable
 private fun BalanceControl(
     balance: Float,
@@ -682,8 +711,6 @@ private fun BalanceControl(
     }
 }
 
-// ---- Presets ---------------------------------------------------------------
-
 @Composable
 private fun PresetSheet(selected: EqualizerPreset, onSelect: (EqualizerPreset) -> Unit) {
     val haptics = rememberHaptics()
@@ -776,5 +803,6 @@ private val FADER_HEIGHT = 150.dp
 private val FADER_WIDTH = 34.dp
 private val TRACK_WIDTH = 5.dp
 private val KNOB_RADIUS = 10.dp
+
 private const val ZERO_DETENT_DB = 0.6f
 private const val BALANCE_DETENT = 0.04f
