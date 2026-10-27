@@ -25,12 +25,26 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import kotlinx.coroutines.flow.StateFlow
 
-/**
- * Detecta las salidas de audio disponibles.
- * Adaptado de BitChord: sin AudioRouting/AudioOutputStatus,
- * lectura directa de AudioManager.
- */
+enum class AudioOutputKind { PHONE, WIRED, BLUETOOTH, USB, HDMI, OTHER }
+
+enum class BluetoothForm { UNKNOWN, BUDS, HEADPHONES, SPEAKER, CAR }
+
+data class AudioOutputDevice(
+    val id: Int,
+    val name: String,
+    val kind: AudioOutputKind,
+    val isActive: Boolean,
+    val form: BluetoothForm = BluetoothForm.UNKNOWN,
+)
+
+interface SystemVolume {
+    val level: StateFlow<Float>
+    fun set(level: Float)
+    fun refresh()
+}
+
 @Composable
 internal fun rememberAndroidAudioOutputs(): List<AudioOutputDevice> {
     val context = LocalContext.current
@@ -100,7 +114,6 @@ private fun readOutputs(manager: AudioManager): List<AudioOutputDevice> {
 
     val result = mutableListOf<AudioOutputDevice>()
 
-    // El altavoz del teléfono siempre está presente.
     result.add(
         AudioOutputDevice(
             id = 0,
@@ -165,9 +178,6 @@ private fun bluetoothFormOf(name: String): BluetoothForm {
 
 private val SETTLE_MS = longArrayOf(350L, 1_200L, 2_500L)
 
-/**
- * Abre el selector de salidas, pidiendo permiso Bluetooth la primera vez.
- */
 @Composable
 internal fun rememberAndroidOutputPicker(onOpen: () -> Unit): () -> Unit {
     val context = LocalContext.current
