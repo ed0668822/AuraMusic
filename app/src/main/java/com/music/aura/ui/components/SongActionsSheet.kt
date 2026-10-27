@@ -80,6 +80,7 @@ fun SongActionsSheet(
         SongInfoDialog(song) { showingSongInfo = false }
     }
 
+    // Convertimos el artwork de String? a Uri? para rememberArtworkPalette
     val songArtUri: Uri? = song.artworkUri?.let { runCatching { Uri.parse(it) }.getOrNull() }
 
     val palette = if (menu) {
