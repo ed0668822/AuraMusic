@@ -13,24 +13,11 @@ import kotlin.math.ln
 import kotlin.math.min
 import kotlin.math.tan
 
-/**
- * The filter a track rides through an Automix transition: a low-pass that can
- * close over the outgoing track, and a high-pass that can lift the low end out
- * of one side of a blend.
- *
- * ## The filter
- *
- * A topology-preserving (trapezoidal-integrator) state-variable filter, two
- * second-order sections cascaded to a 24 dB/octave Butterworth response.
- */
 @UnstableApi
 class TransitionFilterProcessor : BaseAudioProcessor() {
 
-    @Volatile
-    private var targetLowPassHz: Float = OPEN_HZ
-
-    @Volatile
-    private var targetHighPassHz: Float = OFF_HZ
+    @Volatile private var targetLowPassHz: Float = OPEN_HZ
+    @Volatile private var targetHighPassHz: Float = OFF_HZ
 
     private var channelCount = 0
     private var sampleRate = 0
@@ -38,7 +25,6 @@ class TransitionFilterProcessor : BaseAudioProcessor() {
     private var currentLowPassHz = OPEN_HZ
     private var currentHighPassHz = OFF_HZ
 
-    /** Two integrator states per second-order section, per channel. */
     private var lowState = FloatArray(0)
     private var highState = FloatArray(0)
 
@@ -50,31 +36,16 @@ class TransitionFilterProcessor : BaseAudioProcessor() {
     private val highA3 = FloatArray(STAGES)
     private val highK = FloatArray(STAGES)
 
-    /** Whether the integrators hold anything since they were last cleared. */
     private var filterStateDirty = false
 
-    /**
-     * How far ahead of the speaker this filter is running, in media
-     * microseconds; written by the sink, 0 when it has nothing to say.
-     */
-    @Volatile
-    var leadUs: Long = 0L
+    @Volatile var leadUs: Long = 0L
 
-    // ---- Echo out ------------------------------------------------------------
-
-    /** Written by the controller; read once per block on the audio thread. */
     @Volatile private var echoEngaged = false
     @Volatile private var echoTargetSend = 0f
     @Volatile private var echoTargetDry = 1f
     @Volatile private var echoSeconds = 0f
-
-    /** Bumped for every new echo; the audio thread clears its ring when it sees a new one. */
     @Volatile private var echoGeneration = 0
-
-    /** A ring allocated off the audio thread, waiting to be adopted by it. */
     @Volatile private var pendingEchoRing: FloatArray? = null
-
-    /** The format as last configured, readable from the controller's thread for sizing the ring. */
     @Volatile private var echoFormatRate = 0
     @Volatile private var echoFormatChannels = 0
 
@@ -89,28 +60,17 @@ class TransitionFilterProcessor : BaseAudioProcessor() {
     private var echoLowCoefficient = 0f
     private var echoHighCoefficient = 0f
 
-    /**
-     * Aims the filter. [lowPassHz] at or above [OPEN_HZ] and [highPassHz] at or
-     * below [OFF_HZ] mean "not filtering", which is the state this returns to
-     * between transitions.
-     */
     fun setCutoffs(lowPassHz: Float, highPassHz: Float) {
         targetLowPassHz = lowPassHz.coerceIn(MIN_HZ, OPEN_HZ)
         targetHighPassHz = highPassHz.coerceIn(OFF_HZ, MAX_HIGH_PASS_HZ)
     }
 
-    /** Parks both filters. Glided, not snapped. */
     fun open() = setCutoffs(OPEN_HZ, OFF_HZ)
 
     val isFiltering: Boolean
         get() = targetLowPassHz < OPEN_HZ || targetHighPassHz > OFF_HZ ||
             currentLowPassHz < OPEN_HZ - SETTLED_HZ || currentHighPassHz > OFF_HZ + SETTLED_HZ
 
-    /**
-     * Engages the echo out, or moves it: [delaySeconds] between repeats, [send]
-     * how much of the signal is fed into the delay, [dry] how much of it is
-     * passed through. Both glide across the next block rather than stepping.
-     */
     fun setEcho(delaySeconds: Float, send: Float, dry: Float) {
         if (delaySeconds != echoSeconds || !echoEngaged) {
             val frames = (delaySeconds.coerceIn(0f, MAX_ECHO_SECONDS) * echoFormatRate).toInt()
@@ -124,18 +84,12 @@ class TransitionFilterProcessor : BaseAudioProcessor() {
         echoEngaged = true
     }
 
-    /**
-     * Drops the echo and puts the dry signal back.
-     */
     fun parkEcho() {
         echoEngaged = false
         echoTargetSend = 0f
         echoTargetDry = 1f
     }
 
-    /**
-     * Configures the Float32 DSP engine for [sampleRate] and [channelCount].
-     */
     fun configure(sampleRate: Int, channelCount: Int) {
         this.sampleRate = sampleRate
         this.channelCount = channelCount
@@ -157,10 +111,6 @@ class TransitionFilterProcessor : BaseAudioProcessor() {
         echoSeenGeneration = echoGeneration - 1
     }
 
-    /**
-     * Processes interleaved Float32 audio samples in [block] in-place.
-     * Preserves dynamic headroom without clamping to [-1.0f, +1.0f].
-     */
     fun process(block: AudioBlock) {
         val frameCount = block.frameCount
         if (frameCount == 0 || channelCount < 1 || sampleRate <= 0) return
@@ -204,16 +154,8 @@ class TransitionFilterProcessor : BaseAudioProcessor() {
         }
     }
 
-    /**
-     * 16-bit PCM only.
-     */
     override fun onConfigure(inputAudioFormat: AudioProcessor.AudioFormat): AudioProcessor.AudioFormat {
         if (inputAudioFormat.encoding != C.ENCODING_PCM_16BIT || inputAudioFormat.channelCount < 1) {
-            Log.w(
-                TAG,
-                "Transition filtering inactive: encoding=${inputAudioFormat.encoding} " +
-                    "channels=${inputAudioFormat.channelCount} is not 16-bit PCM",
-            )
             return AudioProcessor.AudioFormat.NOT_SET
         }
         configure(inputAudioFormat.sampleRate, inputAudioFormat.channelCount)
@@ -285,17 +227,12 @@ class TransitionFilterProcessor : BaseAudioProcessor() {
         outputBuffer.flip()
     }
 
-    /**
-     * Forgets the integrators once the filter parks.
-     */
     private fun clearStateIfNeeded() {
         if (!filterStateDirty) return
         lowState.fill(0f)
         highState.fill(0f)
         filterStateDirty = false
     }
-
-    // ---- Echo ----------------------------------------------------------------
 
     private fun echo(block: AudioBlock, frameCount: Int) {
         if (echoSeenGeneration != echoGeneration) startEcho()
@@ -346,7 +283,6 @@ class TransitionFilterProcessor : BaseAudioProcessor() {
         echoDry = targetDry
     }
 
-    /** A new echo, on the audio thread: adopt any ring waiting for it and clear what it will use. */
     private fun startEcho() {
         echoSeenGeneration = echoGeneration
         pendingEchoRing?.let {
@@ -362,8 +298,6 @@ class TransitionFilterProcessor : BaseAudioProcessor() {
         echoSend = 0f
         echoDry = 1f
     }
-
-    // ---- Filter ------------------------------------------------------------
 
     private fun glide(current: Float, target: Float): Float {
         val from = ln(current.coerceAtLeast(MIN_HZ))
@@ -432,38 +366,17 @@ class TransitionFilterProcessor : BaseAudioProcessor() {
     }
 
     companion object {
-        private const val TAG = "AuraTransitionFilter"
-
-        /** A low-pass at or above this is doing nothing audible, so it counts as off. */
         const val OPEN_HZ = 20_000f
-
-        /** A high-pass at or below this is doing nothing audible, so it counts as off. */
         const val OFF_HZ = 20f
-
-        /** Nothing musical wants the low end lifted above this, and a typo shouldn't be able to. */
         const val MAX_HIGH_PASS_HZ = 2_000f
-
         private const val MIN_HZ = 10f
         private const val BYTES_PER_SAMPLE = 2
-
-        /** Two cascaded second-order sections: 24 dB/octave, the usual DJ-filter slope. */
         private const val STAGES = 2
-
-        /** Section Qs for a maximally flat (Butterworth) fourth-order response. */
         private val BUTTERWORTH_Q = floatArrayOf(0.54120f, 1.30656f)
-
-        /** Frames between coefficient updates. ~1.5 ms at 44.1 kHz. */
         private const val GLIDE_FRAMES = 64
-
-        /** Per-sub-block glide fraction. ~30 ms time constant, just under one fade tick. */
         private const val GLIDE_RATE = 0.05f
-
-        /** How close to a parked value counts as parked, so a glide terminates. */
         private const val SETTLED_HZ = 1f
-
-        /** Keeps `tan` away from its pole at Nyquist. */
         private const val MAX_CUTOFF_FRACTION = 0.45f
-
         private const val ECHO_FEEDBACK = 0.4f
         private const val ECHO_WET = 0.5f
         private const val ECHO_LOW_PASS_HZ = 3_500f
@@ -475,38 +388,18 @@ class TransitionFilterProcessor : BaseAudioProcessor() {
     }
 }
 
-/**
- * The two filters a transition rides: one over the track arriving, one over the
- * track leaving.
- */
 interface TransitionFilters {
-    /** The track fading up. */
     fun incoming(lowPassHz: Float, highPassHz: Float)
-
-    /** The track fading out. */
     fun outgoing(lowPassHz: Float, highPassHz: Float)
-
-    /**
-     * How far ahead of the speaker each side's filter is running, in that
-     * track's media milliseconds.
-     */
     fun incomingLeadMs(): Long = 0L
     fun outgoingLeadMs(): Long = 0L
-
-    /** Echo out on each side's sink. */
     fun incomingEcho(delaySeconds: Float, send: Float, dry: Float) = Unit
     fun outgoingEcho(delaySeconds: Float, send: Float, dry: Float) = Unit
-
-    /** Drops any echo on either sink. */
     fun parkEchoes() = Unit
-
-    /** Parks both. Called whenever a transition ends, however it ended. */
     fun open() {
         incoming(TransitionFilterProcessor.OPEN_HZ, TransitionFilterProcessor.OFF_HZ)
         outgoing(TransitionFilterProcessor.OPEN_HZ, TransitionFilterProcessor.OFF_HZ)
     }
-
-    /** For callers with no audio sink to filter — tests, and the default wiring. */
     object None : TransitionFilters {
         override fun incoming(lowPassHz: Float, highPassHz: Float) = Unit
         override fun outgoing(lowPassHz: Float, highPassHz: Float) = Unit
