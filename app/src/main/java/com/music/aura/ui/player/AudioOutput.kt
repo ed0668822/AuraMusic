@@ -1,17 +1,14 @@
 package com.music.aura.ui.player
 
-import android.Manifest
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.pm.PackageManager
 import android.media.AudioDeviceCallback
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.os.Build
-import android.os.Handler
-import android.os.Looper
+import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
@@ -25,38 +22,29 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import kotlinx.coroutines.flow.StateFlow
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.music.aura.playback.AudioRouting
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 
-enum class AudioOutputKind { PHONE, WIRED, BLUETOOTH, USB, HDMI, OTHER }
-
-enum class BluetoothForm { UNKNOWN, BUDS, HEADPHONES, SPEAKER, CAR }
-
-data class AudioOutputDevice(
-    val id: Int,
-    val name: String,
-    val kind: AudioOutputKind,
-    val isActive: Boolean,
-    val form: BluetoothForm = BluetoothForm.UNKNOWN,
-)
-
-interface SystemVolume {
-    val level: StateFlow<Float>
-    fun set(level: Float)
-    fun refresh()
-}
-
+/**
+ * The outputs this phone can play music through, kept current while on screen.
+ *
+ * Simplified for Aura: no Cast, no Watch. Only local device outputs.
+ */
 @Composable
 internal fun rememberAndroidAudioOutputs(): List<AudioOutputDevice> {
     val context = LocalContext.current
     val manager = remember(context) {
         context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     }
-    var outputs by remember(manager) { mutableStateOf(readOutputs(manager)) }
+    val selectedId by AudioRouting.selectedId.collectAsStateWithLifecycle()
+    var outputs by remember(manager) { mutableStateOf(AudioRouting.outputs(manager)) }
 
     val lifecycle = LocalLifecycleOwner.current.lifecycle
-    DisposableEffect(manager, lifecycle) {
+    DisposableEffect(manager, selectedId, lifecycle) {
         fun refresh() {
-            outputs = readOutputs(manager)
+            outputs = AudioRouting.outputs(manager)
         }
         refresh()
 
@@ -65,7 +53,7 @@ internal fun rememberAndroidAudioOutputs(): List<AudioOutputDevice> {
         }
         lifecycle.addObserver(resumeObserver)
 
-        val handler = Handler(Looper.getMainLooper())
+        val handler = android.os.Handler(android.os.Looper.getMainLooper())
         fun refreshSoon() {
             refresh()
             SETTLE_MS.forEach { delay -> handler.postDelayed(::refresh, delay) }
@@ -102,82 +90,37 @@ internal fun rememberAndroidAudioOutputs(): List<AudioOutputDevice> {
         }
     }
 
-    return outputs
-}
-
-private fun readOutputs(manager: AudioManager): List<AudioOutputDevice> {
-    val devices = if (Build.VERSION.SDK_INT >= 23) {
-        manager.getDevices(AudioManager.GET_DEVICES_OUTPUTS).toList()
-    } else {
-        emptyList()
-    }
-
-    val result = mutableListOf<AudioOutputDevice>()
-
-    result.add(
-        AudioOutputDevice(
-            id = 0,
-            name = "",
-            kind = AudioOutputKind.PHONE,
-            isActive = true,
-        )
-    )
-
-    devices.forEach { device ->
-        val kind = when (device.type) {
-            AudioDeviceInfo.TYPE_WIRED_HEADSET,
-            AudioDeviceInfo.TYPE_WIRED_HEADPHONES,
-            AudioDeviceInfo.TYPE_USB_HEADSET -> AudioOutputKind.WIRED
-
-            AudioDeviceInfo.TYPE_BLUETOOTH_A2DP,
-            AudioDeviceInfo.TYPE_BLUETOOTH_SCO -> AudioOutputKind.BLUETOOTH
-
-            AudioDeviceInfo.TYPE_USB_DEVICE,
-            AudioDeviceInfo.TYPE_USB_ACCESSORY -> AudioOutputKind.USB
-
-            AudioDeviceInfo.TYPE_HDMI,
-            AudioDeviceInfo.TYPE_HDMI_ARC,
-            AudioDeviceInfo.TYPE_HDMI_EARC -> AudioOutputKind.HDMI
-
-            AudioDeviceInfo.TYPE_BUILTIN_SPEAKER,
-            AudioDeviceInfo.TYPE_BUILTIN_EARPIECE -> return@forEach
-
-            else -> AudioOutputKind.OTHER
-        }
-
-        val form = if (kind == AudioOutputKind.BLUETOOTH) {
-            bluetoothFormOf(device.productName?.toString() ?: "")
-        } else {
-            BluetoothForm.UNKNOWN
-        }
-
-        result.add(
-            AudioOutputDevice(
-                id = device.id,
-                name = device.productName?.toString() ?: "",
-                kind = kind,
-                isActive = false,
-                form = form,
-            )
-        )
-    }
-
-    return result
-}
-
-private fun bluetoothFormOf(name: String): BluetoothForm {
-    val lower = name.lowercase()
-    return when {
-        lower.contains("buds") || lower.contains("earbuds") || lower.contains("airpods") -> BluetoothForm.BUDS
-        lower.contains("headphone") || lower.contains("over-ear") || lower.contains("wh-") -> BluetoothForm.HEADPHONES
-        lower.contains("car") || lower.contains("auto") -> BluetoothForm.CAR
-        lower.contains("speaker") || lower.contains("soundbar") -> BluetoothForm.SPEAKER
-        else -> BluetoothForm.UNKNOWN
+    return remember(outputs) {
+        outputs.map { it.toOutputDevice() }
     }
 }
+
+private fun AudioRouting.Device.toOutputDevice() = AudioOutputDevice(
+    id = id,
+    name = name,
+    kind = when (kind) {
+        AudioRouting.Kind.PHONE -> AudioOutputKind.PHONE
+        AudioRouting.Kind.WIRED -> AudioOutputKind.WIRED
+        AudioRouting.Kind.USB -> AudioOutputKind.USB
+        AudioRouting.Kind.BLUETOOTH -> AudioOutputKind.BLUETOOTH
+        AudioRouting.Kind.HDMI -> AudioOutputKind.HDMI
+        AudioRouting.Kind.OTHER -> AudioOutputKind.OTHER
+    },
+    isActive = isActive,
+    form = when (form) {
+        AudioRouting.Form.UNKNOWN -> BluetoothForm.UNKNOWN
+        AudioRouting.Form.BUDS -> BluetoothForm.BUDS
+        AudioRouting.Form.HEADPHONES -> BluetoothForm.HEADPHONES
+        AudioRouting.Form.SPEAKER -> BluetoothForm.SPEAKER
+        AudioRouting.Form.CAR -> BluetoothForm.CAR
+    },
+)
 
 private val SETTLE_MS = longArrayOf(350L, 1_200L, 2_500L)
 
+/**
+ * Opens the output picker, asking for the Bluetooth permission the first time.
+ */
 @Composable
 internal fun rememberAndroidOutputPicker(onOpen: () -> Unit): () -> Unit {
     val context = LocalContext.current
@@ -193,4 +136,4 @@ private fun bluetoothNamesAllowed(context: Context): Boolean =
     Build.VERSION.SDK_INT < 31 ||
         ContextCompat.checkSelfPermission(context, BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
 
-private const val BLUETOOTH_CONNECT = Manifest.permission.BLUETOOTH_CONNECT
+private const val BLUETOOTH_CONNECT = "android.permission.BLUETOOTH_CONNECT"
