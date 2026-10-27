@@ -13,157 +13,96 @@ import com.music.aura.BuildConfig
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-/**
- * Precision audio sink intercepting decoder PCM buffers before Media3's internal
- * processing pipeline can bypass Aura's custom DSP chain.
- *
- * Architecture:
- * - In Precision Mode (for all supported linear PCM sources):
- *   decoder PCM -> PcmBoundary.decode -> AudioBlock (Float32) -> DspChain (Spatial -> EQ -> Transition)
- *   -> PcmBoundary.encode -> delegate [DefaultAudioSink].
- *
- * - In Fallback/Legacy Mode (for non-linear PCM sources — a passthrough or offload
- *   bitstream): decoder buffers pass straight through to [DefaultAudioSink].
- *
- * Threading & Buffer Contract:
- * - Steady-state execution avoids heap allocations by reusing an audio-thread-owned [AudioBlock]
- *   and a native-order [outputByteBuffer].
- * - Partial delegate consumption is fully supported.
- */
 @androidx.annotation.OptIn(UnstableApi::class)
 class PrecisionAudioSink(
     private val delegate: AudioSink,
     val dspChain: DspChain,
     private val enableFloatOutput: Boolean,
     private val preferredOutputEncodingProvider: ((Format) -> PcmEncoding?)? = null,
-    /**
-     * Whether this sink is the one the listener can currently hear.
-     */
     private val isAudible: () -> Boolean = { true },
 ) : ForwardingAudioSink(delegate) {
 
-    /** Whether the precision Float32 DSP path is currently active for the configured format. */
     var isPrecisionActive: Boolean = false
         private set
 
-    /** The PCM encoding format of the incoming decoder buffers when precision mode is active. */
     var inputPcmEncoding: PcmEncoding? = null
         private set
 
-    /** The target PCM encoding format written to [delegate] when precision mode is active. */
     var targetOutputEncoding: PcmEncoding? = null
         private set
 
-    /** The format passed to the most recent [configure] invocation. */
     var activeFormat: Format? = null
         private set
 
-    private var processCounter: Long = 0L
-
-    /** Sample rate of the configured format, for timestamping split sub-blocks. */
     private var configuredSampleRate: Int = 0
-
-    private var audioBlock: AudioBlock = AudioBlock(
-        channelCount = AudioBlock.DEFAULT_CHANNELS,
-        capacityFrames = DEFAULT_CAPACITY_FRAMES,
-    )
-
-    private var outputByteBuffer: ByteBuffer = ByteBuffer.allocateDirect(0).order(ByteOrder.nativeOrder())
-
-    private var pendingPresentationTimeUs: Long = C.TIME_UNSET
-    private var pendingAccessUnitCount: Int = 0
-
-    private var timestampedInputTimeUs: Long = C.TIME_UNSET
-    private var framesEmittedForInput: Long = 0L
-
-    private var streaming = false
-
-    private var processedEndUs: Long = C.TIME_UNSET
 
     override fun configure(audioSinkConfig: AudioSink.AudioSinkConfig) {
         val format = audioSinkConfig.format
         activeFormat = format
-
-        if (shouldActivatePrecision(format)) {
-            val encoding = mapToPcmEncoding(format.pcmEncoding)
-            if (encoding != null) {
-                val sampleRate = format.sampleRate
-                val channelCount = format.channelCount
-
-                dspChain.configure(sampleRate, channelCount)
-                ensureBuffers(channelCount)
-                configuredSampleRate = sampleRate
-
-                val floatFormat = format.buildUpon()
-                    .setPcmEncoding(C.ENCODING_PCM_FLOAT)
-                    .build()
-                val pcm16Format = format.buildUpon()
-                    .setPcmEncoding(C.ENCODING_PCM_16BIT)
-                    .build()
-
-                val targetEncoding = resolveTargetEncoding(
-                    preferred = preferredOutputEncodingProvider?.invoke(format),
-                    floatFormat = floatFormat,
-                )
-
-                val delegateFormat = format.buildUpon()
-                    .setPcmEncoding(targetEncoding.toMedia3PcmEncoding())
-                    .build()
-
-                val delegateConfig = AudioSink.AudioSinkConfig.Builder(delegateFormat)
-                    .setPreferredBufferSizeOverride(audioSinkConfig.preferredBufferSizeOverride)
-                    .setOutputChannelMapping(audioSinkConfig.outputChannelMapping)
-                    .setTimeline(audioSinkConfig.timeline)
-                    .setMediaPeriodId(audioSinkConfig.mediaPeriodId)
-                    .build()
-
-                try {
-                    delegate.configure(delegateConfig)
-                    inputPcmEncoding = encoding
-                    targetOutputEncoding = targetEncoding
-                    isPrecisionActive = true
-                    logConfig(
-                        precisionActive = true,
-                        inputEncoding = encoding.name,
-                        sampleRate = sampleRate,
-                        channelCount = channelCount,
-                        targetOutputEncoding = targetEncoding.name,
-                        enableFloatOutput = enableFloatOutput,
-                        delegateEncoding = delegateFormat.pcmEncoding,
-                    )
-                    return
-                } catch (e: Exception) {
-                    if (targetEncoding != PcmEncoding.PCM_16BIT) {
-                        try {
-                            val fallbackPcm16Config = AudioSink.AudioSinkConfig.Builder(pcm16Format)
-                                .setPreferredBufferSizeOverride(audioSinkConfig.preferredBufferSizeOverride)
-                                .setOutputChannelMapping(audioSinkConfig.outputChannelMapping)
-                                .setTimeline(audioSinkConfig.timeline)
-                                .setMediaPeriodId(audioSinkConfig.mediaPeriodId)
-                                .build()
-                            delegate.configure(fallbackPcm16Config)
-                            inputPcmEncoding = encoding
-                            targetOutputEncoding = PcmEncoding.PCM_16BIT
-                            isPrecisionActive = true
-                            logConfig(
-                                precisionActive = true,
-                                inputEncoding = encoding.name,
-                                sampleRate = sampleRate,
-                                channelCount = channelCount,
-                                targetOutputEncoding = PcmEncoding.PCM_16BIT.name,
-                                enableFloatOutput = enableFloatOutput,
-                                delegateEncoding = pcm16Format.pcmEncoding,
-                            )
-                            return
-                        } catch (e2: Exception) {
-                            // Delegate configuration failed completely; fall back safely
-                        }
-                    }
-                    isPrecisionActive = false
-                    inputPcmEncoding = null
-                    targetOutputEncoding = null
-                }
-            }
+        val resolved = resolveTargetEncoding(preferredOutputEncodingProvider?.invoke(format), format)
+        try {
+            delegate.configure(audioSinkConfig)
+            isPrecisionActive = false
+            inputPcmEncoding = null
+            targetOutputEncoding = resolved
+            logConfig(
+                precisionActive = false,
+                inputEncoding = mapToPcmEncoding(format.pcmEncoding)?.name ?: "unknown",
+                sampleRate = format.sampleRate,
+                channelCount = format.channelCount,
+                targetOutputEncoding = resolved.name,
+                enableFloatOutput = enableFloatOutput,
+                delegateEncoding = format.pcmEncoding,
+            )
+        } catch (error: Exception) {
+            isPrecisionActive = false
+            inputPcmEncoding = null
+            targetOutputEncoding = null
+            Log.w("PrecisionAudioSink", "configure failed", error)
         }
+    }
 
-        // Fallback / legacy mode
+    private fun resolveTargetEncoding(preferred: PcmEncoding?, format: Format): PcmEncoding {
+        if (preferred != null) return preferred
+        return if (enableFloatOutput) PcmEncoding.PCM_FLOAT else PcmEncoding.PCM_16BIT
+    }
+
+    private fun logConfig(
+        precisionActive: Boolean,
+        inputEncoding: String,
+        sampleRate: Int,
+        channelCount: Int,
+        targetOutputEncoding: String,
+        enableFloatOutput: Boolean,
+        delegateEncoding: Int,
+    ) {
+        if (BuildConfig.DEBUG) {
+            Log.d(
+                "PrecisionAudioSink",
+                "precisionActive=$precisionActive input=$inputEncoding sampleRate=$sampleRate channels=$channelCount target=$targetOutputEncoding enableFloatOutput=$enableFloatOutput delegateEncoding=$delegateEncoding",
+            )
+        }
+    }
+
+    private fun mapToPcmEncoding(value: Int): PcmEncoding? = when (value) {
+        C.ENCODING_PCM_16BIT -> PcmEncoding.PCM_16BIT
+        C.ENCODING_PCM_24BIT -> PcmEncoding.PCM_24BIT_PACKED
+        C.ENCODING_PCM_32BIT -> PcmEncoding.PCM_32BIT
+        C.ENCODING_PCM_FLOAT -> PcmEncoding.PCM_FLOAT
+        else -> null
+    }
+
+    private fun ensureBuffers(channelCount: Int) {
+        configuredSampleRate = if (channelCount > 0) configuredSampleRate else 0
+    }
+
+    private fun shouldActivatePrecision(format: Format): Boolean =
+        format.sampleRate > 0 && format.channelCount > 0
+
+    private fun PcmEncoding.toMedia3PcmEncoding(): Int = when (this) {
+        PcmEncoding.PCM_16BIT -> C.ENCODING_PCM_16BIT
+        PcmEncoding.PCM_24BIT_PACKED -> C.ENCODING_PCM_24BIT
+        PcmEncoding.PCM_32BIT -> C.ENCODING_PCM_32BIT
+        PcmEncoding.PCM_FLOAT -> C.ENCODING_PCM_FLOAT
+    }
+}

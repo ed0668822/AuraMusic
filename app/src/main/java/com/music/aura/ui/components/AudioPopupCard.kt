@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -36,9 +37,6 @@ private val POPUP_SCRIM_COLOR = Color.Black.copy(alpha = 0.4f)
 private val POPUP_WIDTH = 320.dp
 private val POPUP_CONTENT_MAX_HEIGHT = 420.dp
 
-/**
- * The frosted card the output drawer's popups open into.
- */
 @OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable
 internal fun AudioPopupCard(
@@ -77,7 +75,7 @@ internal fun AudioPopupCard(
                                 style = HazeMaterials.regular(Color(0xFF141414)),
                             )
                             .background(Color(0xFF121212).copy(alpha = 0.9f))
-                    }
+                    },
                 )
                 .clickable(
                     indication = null,
@@ -119,8 +117,35 @@ internal fun AudioPopupCard(
                 content = content,
             )
 
-            PipelineRule(Modifier)
+            PipelineRule()
             PipelineDoneAction(label = doneLabel, onClick = onDismiss)
         }
     }
+}
+
+@Composable
+private fun PipelineRule(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(1.dp)
+            .background(Color.White.copy(alpha = 0.12f)),
+    )
+}
+
+@Composable
+private fun PipelineDoneAction(
+    label: String,
+    onClick: () -> Unit,
+) {
+    Text(
+        text = label,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 12.dp),
+        textAlign = TextAlign.Center,
+        color = Color.White.copy(alpha = 0.92f),
+        fontWeight = FontWeight.Medium,
+    )
 }
