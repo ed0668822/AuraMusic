@@ -2,13 +2,24 @@ package com.music.aura.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
 import com.music.aura.data.SettingsRepository
+
+// Apple Music's signature red. No longer the primary accent, but kept for the
+// spots (Replay's rank badge) that want that specific red regardless of theme.
+val AccentRed = Color(0xFFFA2D48)
 
 private val DarkColorScheme = darkColorScheme(
     primary = Color(0xFFB4A7F5),
@@ -56,6 +67,23 @@ private val LightColorScheme = lightColorScheme(
     outlineVariant = Color(0xFFC8C4D4),
 )
 
+/**
+ * Heavy, tight typography — the backbone of the Apple Music look. Bitchord
+ * ships SF Pro Display; Aura uses the system default font family with the same
+ * weights and letter-spacing so the layout reads identically.
+ */
+private val AuraTypography = Typography(
+    displayLarge = TextStyle(fontWeight = FontWeight.W800, fontSize = 34.sp, letterSpacing = (-0.8).sp),
+    headlineLarge = TextStyle(fontWeight = FontWeight.W800, fontSize = 30.sp, letterSpacing = (-0.7).sp),
+    headlineMedium = TextStyle(fontWeight = FontWeight.W700, fontSize = 22.sp, letterSpacing = (-0.4).sp),
+    titleLarge = TextStyle(fontWeight = FontWeight.W700, fontSize = 20.sp, letterSpacing = (-0.3).sp),
+    titleMedium = TextStyle(fontWeight = FontWeight.W600, fontSize = 16.sp, letterSpacing = (-0.2).sp),
+    bodyLarge = TextStyle(fontWeight = FontWeight.W400, fontSize = 16.sp),
+    bodyMedium = TextStyle(fontWeight = FontWeight.W400, fontSize = 14.sp),
+    labelMedium = TextStyle(fontWeight = FontWeight.W600, fontSize = 12.sp),
+    labelSmall = TextStyle(fontWeight = FontWeight.W600, fontSize = 11.sp),
+)
+
 @Composable
 fun AuraTheme(
     content: @Composable () -> Unit,
@@ -68,10 +96,31 @@ fun AuraTheme(
         else -> true
     }
 
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
-
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme,
+        typography = AuraTypography,
         content = content,
     )
+}
+
+/**
+ * Draws the status and navigation bar glyphs dark or light.
+ *
+ * `enableEdgeToEdge()` decides this from the *system* dark-mode setting, which
+ * is the wrong input the moment the in-app theme disagrees with it. The bars
+ * have to follow the content the app is actually painting. The player supplies
+ * its own stable light-icon value and paints contrast behind it; every other
+ * surface follows the theme. Hence a parameter rather than reading it here.
+ */
+@Composable
+fun SystemBarIcons(dark: Boolean) {
+    val view = LocalView.current
+    if (view.isInEditMode) return
+    val window = findWindow(view) ?: return
+    SideEffect {
+        WindowCompat.getInsetsController(window, view).apply {
+            isAppearanceLightStatusBars = dark
+            isAppearanceLightNavigationBars = dark
+        }
+    }
 }
