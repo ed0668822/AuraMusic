@@ -80,7 +80,6 @@ internal fun LyricsOffsetSheet(
     onOffsetChange: (Int) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
-    reduceDynamicBlur: Boolean = false,
 ) {
     val haptics = rememberHaptics()
     var drag by remember { mutableFloatStateOf(0f) }
@@ -122,18 +121,11 @@ internal fun LyricsOffsetSheet(
                     .onSizeChanged { height = it.height }
                     .offset { IntOffset(0, drawerOffset.roundToInt()) }
                     .clip(DrawerShape)
-                    .then(
-                        if (reduceDynamicBlur) {
-                            Modifier.background(Color(0xFF121212))
-                        } else {
-                            Modifier
-                                .optimizedHazeEffect(
-                                    state = hazeState,
-                                    style = HazeMaterials.regular(Color(0xFF141414)),
-                                )
-                                .background(Color(0xFF121212).copy(alpha = 0.9f))
-                        },
+                    .optimizedHazeEffect(
+                        state = hazeState,
+                        style = HazeMaterials.regular(Color(0xFF141414)),
                     )
+                    .background(Color(0xFF121212).copy(alpha = 0.9f))
                     .clickable(
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() },
