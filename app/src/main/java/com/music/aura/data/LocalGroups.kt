@@ -27,7 +27,6 @@ object LocalGroups {
     private const val ARTIST = "artist"
 
     fun albumPageId(folderId: String, name: String): String = pageId(ALBUM, folderId, name)
-
     fun artistPageId(folderId: String, name: String): String = pageId(ARTIST, folderId, name)
 
     private fun pageId(kind: String, folderId: String, name: String) =
@@ -67,7 +66,7 @@ object LocalGroups {
                     browseId = albumPageId(folderId, name),
                     title = name,
                     subtitle = group.firstOrNull()?.artist.orEmpty(),
-                    artworkUri = group.firstNotNullOfOrNull { it.artworkUri },
+                    artworkUri = group.firstNotNullOfOrNull { it.artworkUri }?.let { android.net.Uri.parse(it) },
                     type = LocalBrowseType.ALBUM,
                     songs = group.sortedForAlbum(),
                 )
@@ -98,11 +97,11 @@ fun List<LocalSong>.sortedForLibrary(order: LocalMusicSort): List<LocalSong> = w
     LocalMusicSort.TITLE_ASC -> sortedByTitle()
     LocalMusicSort.TITLE_DESC -> sortedWith(compareByDescending<LocalSong> { it.title.lowercase(Locale.ROOT) })
     LocalMusicSort.DATE_ADDED -> sortedWith(
-        compareByDescending<LocalSong> { it.dateAdded }
+        compareByDescending<LocalSong> { it.dateAddedMs }
             .thenBy(String.CASE_INSENSITIVE_ORDER) { it.title },
     )
     LocalMusicSort.DATE_MODIFIED -> sortedWith(
-        compareByDescending<LocalSong> { it.dateModified }
+        compareByDescending<LocalSong> { it.dateAddedMs }
             .thenBy(String.CASE_INSENSITIVE_ORDER) { it.title },
     )
 }
