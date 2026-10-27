@@ -11,7 +11,6 @@ val autoVersionCode = if (runNumber > 0) 10000 + runNumber else (System.currentT
 
 android {
     namespace = "com.music.aura"
-    // ✅ IMPORTANTE: Debe ser 36 por las librerías de Media3
     compileSdk = 36
 
     defaultConfig {
@@ -21,10 +20,8 @@ android {
         versionCode = autoVersionCode
         versionName = autoVersionName
         buildConfigField("String", "UPDATE_APK_PREFIX", "\"app-\"")
-        
-        // ✅ NUEVO: Configuración de NDK y CMake
+
         ndk {
-            // Incluye 64 y 32 bits. (x86_64 para emuladores, si lo necesitas).
             abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
         }
         externalNativeBuild {
@@ -34,7 +31,6 @@ android {
         }
     }
 
-    // ✅ NUEVO: Ruta al archivo CMakeLists.txt
     externalNativeBuild {
         cmake {
             path = file("src/main/cpp/CMakeLists.txt")
@@ -46,7 +42,7 @@ android {
         create("release") {
             val keystorePath = System.getenv("KEYSTORE_PATH") ?: "aura-release.jks"
             val storeFile = rootProject.file(keystorePath)
-            
+
             if (storeFile.exists()) {
                 this.storeFile = storeFile
                 this.storePassword = System.getenv("KEYSTORE_PASSWORD")
@@ -122,4 +118,10 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
     implementation("com.microsoft.onnxruntime:onnxruntime-android:1.17.0")
+
+    // Requerido por los .java vendorizados de Media3 (androidx/media3/decoder/ffmpeg):
+    //   FfmpegAudioDecoder.java  → com.google.common.base.Preconditions.checkNotNull
+    //   FfmpegLibrary.java       → org.checkerframework.checker.nullness.qual.MonotonicNonNull
+    implementation("com.google.guava:guava:33.3.1-android")
+    implementation("org.checkerframework:checker-qual:3.48.3")
 }
