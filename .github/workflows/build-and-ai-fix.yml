@@ -44,34 +44,28 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
-          # 1. Obtener las últimas líneas del log limpio
           ERROR_LOG=$(tail -n 100 build_log.txt | tr -d '\r')
 
-          # 2. Construir el payload de la IA de forma segura con jq
           PROMPT="Eres un desarrollador experto. El proceso de compilación ha fallado con el siguiente log de error. Analiza la causa y explica brevemente cómo corregirlo:\n\n$ERROR_LOG"
           
           AI_PAYLOAD=$(jq -n --arg text "$PROMPT" '{contents: [{parts: [{text: $text}]}]}')
 
-          # 3. Llamada a la API de Google Gemini
           RESPONSE=$(curl -s -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}" \
             -H 'Content-Type: application/json' \
             -d "$AI_PAYLOAD")
 
-          # 4. Extraer el análisis correctamente
           AI_ANALYSIS=$(echo "$RESPONSE" | jq -r '.candidates[0].content.parts[0].text // empty')
           
           if [ -z "$AI_ANALYSIS" ] || [ "$AI_ANALYSIS" = "null" ]; then
             AI_ANALYSIS="No se pudo procesar la respuesta de la IA. Revisa los logs de GitHub Actions."
           fi
 
-          # 5. Enviar el mensaje formateado a Discord de forma limpia
           DISCORD_MESSAGE="🚨 **Error de compilación detectado**%0A%0A**Análisis y Solución de la IA:**%0A%0A$AI_ANALYSIS"
           
-          # Recortar si excede el límite de Discord y enviar
           DISCORD_PAYLOAD=$(jq -n --arg content "${DISCORD_MESSAGE:0:1900}" '{content: $content}')
           
           curl -H "Content-Type: application/json" -X POST -d "$DISCORD_PAYLOAD" "$DISCORD_WEBHOOK_URL"
 
       - name: Fallar el job si la compilación falló
         if: steps.gradle_build.outcome == 'failure'
-        exit 1
+        run: exit 1
