@@ -6,6 +6,7 @@ import androidx.annotation.OptIn
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.MediaSession
@@ -25,7 +26,10 @@ class AuraPlaybackService : MediaSessionService() {
         val renderersFactory = NextRenderersFactory(this)
             .setEnableDecoderFallback(true)
 
-        val mediaSourceFactory = DefaultMediaSourceFactory(DsdExtractorsFactory())
+        val mediaSourceFactory = DefaultMediaSourceFactory(
+            DefaultDataSource.Factory(this),
+            DsdExtractorsFactory(),
+        )
 
         val player = ExoPlayer.Builder(this, renderersFactory)
             .setAudioAttributes(
@@ -43,10 +47,10 @@ class AuraPlaybackService : MediaSessionService() {
         val sessionActivityIntent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
-        
+
         val sessionActivity = PendingIntent.getActivity(
-            this, 
-            0, 
+            this,
+            0,
             sessionActivityIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
