@@ -4,32 +4,21 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 /**
- * High-performance, zero-allocation boundary layer converting raw PCM byte buffers
- * to and from canonical [AudioBlock] Float32 representations.
- *
- * All conversions assume Little-Endian byte order matching Android AudioTrack, Linux ALSA,
- * and Media3 standards.
- *
- * Normalization mappings:
- * - 16-bit: normalized by 1 / 32768.0f (range: -1.0f .. +0.9999695f)
- * - 24-bit: normalized by 1 / 8388608.0f (range: -1.0f .. +0.99999988f)
- * - 32-bit integer: normalized by 1 / 2147483648.0 (range: -1.0f .. +1.0f)
- * - 32-bit float: direct mapping with defensive sanitization for NaN / Infinity
+ * Raw PCM sample formats that [PcmBoundary] can decode/encode.
  */
+enum class PcmEncoding(val bytesPerSample: Int) {
+    PCM_16BIT(2),
+    PCM_24BIT_PACKED(3),
+    PCM_32BIT(4),
+    PCM_FLOAT(4),
+    ;
+
+    fun bytesPerFrame(channelCount: Int): Int =
+        if (channelCount <= 0) 0 else bytesPerSample * channelCount
+}
+
 object PcmBoundary {
 
-    /**
-     * Decodes PCM bytes from [inputBuffer] into [destinationBlock].
-     *
-     * Incomplete trailing bytes (less than a complete frame) are left unconsumed in
-     * [inputBuffer], allowing streaming decoders to prepend them to subsequent reads.
-     *
-     * @param inputBuffer ByteBuffer containing incoming PCM bytes (assumed Little-Endian).
-     * @param encoding Raw PCM sample format in [inputBuffer].
-     * @param destinationBlock AudioBlock receiving the normalized Float32 samples.
-     * @param maxFrames Maximum number of frames to decode in this pass.
-     * @return Number of full audio frames decoded into [destinationBlock].
-     */
     fun decode(
         inputBuffer: ByteBuffer,
         encoding: PcmEncoding,
@@ -65,7 +54,7 @@ object PcmBoundary {
                 for (i in 0 until totalSamples) {
                     val b0 = inputBuffer.get().toInt() and 0xFF
                     val b1 = inputBuffer.get().toInt() and 0xFF
-                    val b2 = inputBuffer.get().toInt() // sign-extended
+                    val b2 = inputBuffer.get().toInt()
                     val sample24 = (b2 shl 16) or (b1 shl 8) or b0
                     destinationBlock.samples[dstIdx++] = sample24.toFloat() * inv
                 }
@@ -87,18 +76,6 @@ object PcmBoundary {
         return framesToRead
     }
 
-    /**
-     * Encodes Float32 samples from [sourceBlock] into [outputBuffer] in the target [encoding].
-     *
-     * Samples are clamped defensively to prevent integer overflow wrapping.
-     *
-     * @param sourceBlock AudioBlock providing normalized Float32 samples.
-     * @param encoding Desired target PCM encoding.
-     * @param outputBuffer ByteBuffer to receive the encoded bytes (assumed Little-Endian).
-     * @param startFrame Index of first frame in [sourceBlock] to encode.
-     * @param framesToEncode Maximum number of frames to encode from [sourceBlock].
-     * @return Number of full audio frames successfully written into [outputBuffer].
-     */
     fun encode(
         sourceBlock: AudioBlock,
         encoding: PcmEncoding,
@@ -151,9 +128,6 @@ object PcmBoundary {
         return framesToWrite
     }
 
-    /**
-     * Clamps and quantizes a normalized Float32 sample to a signed 16-bit Short.
-     */
     fun clamp16FromFloat(f: Float): Short {
         if (f.isNaN()) return 0
         val scaled = f * 32768.0f
@@ -162,9 +136,6 @@ object PcmBoundary {
         return Math.round(scaled).toShort()
     }
 
-    /**
-     * Clamps and quantizes a normalized Float32 sample to a signed 24-bit Int (-8388608..8388607).
-     */
     fun clamp24FromFloat(f: Float): Int {
         if (f.isNaN()) return 0
         val scaled = f * 8388608.0f
@@ -173,9 +144,6 @@ object PcmBoundary {
         return Math.round(scaled)
     }
 
-    /**
-     * Clamps and quantizes a normalized Float32 sample to a signed 32-bit Int.
-     */
     fun clamp32FromFloat(f: Float): Int {
         if (f.isNaN()) return 0
         val scaled = f.toDouble() * 2147483648.0
@@ -184,9 +152,6 @@ object PcmBoundary {
         return Math.round(scaled).toInt()
     }
 
-    /**
-     * Sanitizes floating point samples, converting NaN to 0.0f and clamping infinities to +/-1.0f.
-     */
     fun sanitizeFloat(f: Float): Float {
         if (f.isNaN()) return 0.0f
         if (f == Float.POSITIVE_INFINITY) return 1.0f
