@@ -1,5 +1,6 @@
 package com.music.aura.ui.player
 
+import android.net.Uri
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -20,46 +21,27 @@ import coil3.PlatformContext
 import coil3.compose.AsyncImagePainter
 import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
-import com.music.aura.data.model.LocalSong
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
-/** How many further goes a cover that failed to load gets. */
+internal const val ART_PX = 1200
 internal const val ART_RETRIES = 3
-
-/** How long to leave it before trying a failed cover again. */
 internal const val ART_RETRY_DELAY_MS = 1_500L
-
-/**
- * How close the player's reported position has to get to a released scrub
- * handle before the handle stops being drawn where it was dropped.
- */
-internal const val SEEK_SETTLE_TOLERANCE_MS = 1_500L
-
-/**
- * How long that handle is held at the drop point regardless.
- */
+internal const val SEEK_SETTLE_TOLERANCE_MS = 500L
 internal const val SEEK_SETTLE_TIMEOUT_MS = 4_000L
 
-/**
- * The player's cover: the one request every surface draws it from, whether it
- * has loaded, and the bounded retries after a failure.
- */
 @Stable
-internal class PlayerArtwork(private val context: PlatformContext) {
+internal class PlayerArtwork(val uri: Uri?, private val context: PlatformContext) {
     var loaded by mutableStateOf(false)
-        private set
+        internal set
 
     var attempt by mutableIntStateOf(0)
         private set
 
     internal var failed by mutableStateOf(false)
-
-    /** The URI to load, set per track. */
-    var uri: String? by mutableStateOf(null)
 
     val request: ImageRequest by derivedStateOf {
         val attempt = attempt
@@ -82,31 +64,18 @@ internal class PlayerArtwork(private val context: PlatformContext) {
     }
 }
 
-/** Artwork pixel size for the player. */
-internal const val ART_PX = 512
-
 @Composable
-internal fun rememberPlayerArtwork(song: LocalSong): PlayerArtwork {
+internal fun rememberPlayerArtwork(artworkUri: Uri?): PlayerArtwork {
     val context = LocalPlatformContext.current
-    val art = remember { PlayerArtwork(context) }
-    val artUri = song.artworkUri?.toString()
-    LaunchedEffect(artUri) {
-        art.uri = artUri
-        art.loaded = false
-        art.failed = false
-    }
-    LaunchedEffect(artUri, art.failed) {
-        if (artUri == null || !art.failed || art.attempt >= ART_RETRIES) return@LaunchedEffect
+    val art = remember(artworkUri) { PlayerArtwork(artworkUri, context) }
+    LaunchedEffect(artworkUri, art.failed) {
+        if (artworkUri == null || !art.failed || art.attempt >= ART_RETRIES) return@LaunchedEffect
         delay(ART_RETRY_DELAY_MS)
         art.retry()
     }
     return art
 }
 
-/**
- * The seek bar's own state: a drag in progress, and where the handle was
- * dropped until the player's position catches up with it.
- */
 @Stable
 internal class PlayerScrub {
     var scrubbing by mutableStateOf(false)
@@ -164,10 +133,6 @@ internal fun rememberPlayerScrub(
     return scrub
 }
 
-/**
- * The volume bar's state: the system output level, tweened to whatever the
- * system reports, and followed exactly under a finger.
- */
 @Stable
 internal class PlayerVolume(
     private val system: SystemVolume,
@@ -192,11 +157,11 @@ internal class PlayerVolume(
 internal fun rememberPlayerVolume(systemVolume: SystemVolume): PlayerVolume {
     val scope = rememberCoroutineScope()
     val volume = remember(systemVolume) { PlayerVolume(systemVolume, scope) }
-    val systemLevel by systemVolume.level.collectAsStateWithLifecycle()
+    val level by systemVolume.level.collectAsStateWithLifecycle()
 
-    LaunchedEffect(systemLevel) {
+    LaunchedEffect(level) {
         if (!volume.dragging) {
-            volume.level.animateTo(systemLevel, tween(durationMillis = 220, easing = FastOutSlowInEasing))
+            volume.level.animateTo(level, tween(durationMillis = 220, easing = FastOutSlowInEasing))
         }
     }
 
