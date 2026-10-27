@@ -26,7 +26,6 @@ import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.Album
 import androidx.compose.material.icons.rounded.Bedtime
 import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.PlaylistRemove
@@ -59,13 +58,6 @@ import com.music.aura.data.model.LocalSong
 import com.music.aura.ui.theme.ArtworkPalette
 import com.music.aura.ui.theme.rememberArtworkPalette
 
-/**
- * Menú de acciones para una canción local.
- *
- * Adaptado de BitChord: se eliminan todas las acciones de streaming
- * (like/dislike, descarga, WebDAV, radio, share, version switching).
- * Se conservan las acciones locales: cola, playlist, info, sleep timer.
- */
 @Composable
 fun SongActionsSheet(
     song: LocalSong,
@@ -88,10 +80,12 @@ fun SongActionsSheet(
         SongInfoDialog(song) { showingSongInfo = false }
     }
 
+    val songArtUri: Uri? = song.artworkUri?.let { runCatching { Uri.parse(it) }.getOrNull() }
+
     val palette = if (menu) {
         neutralMenuPalette()
     } else {
-        rememberArtworkPalette(song.artworkUri)
+        rememberArtworkPalette(songArtUri)
     }
 
     val rows: @Composable ColumnScope.() -> Unit = {
@@ -159,7 +153,7 @@ fun SongActionsSheet(
         return
     }
 
-    TintedSheet(palette = palette, artworkUri = song.artworkUri, modifier = modifier) {
+    TintedSheet(palette = palette, artworkUri = songArtUri, modifier = modifier) {
         if (pickingSleepTimer) {
             SleepTimerPicker(palette = palette, onBack = { pickingSleepTimer = false })
             return@TintedSheet
@@ -263,8 +257,6 @@ private val SHEET_SHAPE = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
 
 @Composable
 private fun SleepTimerPicker(palette: ArtworkPalette, onBack: () -> Unit) {
-    // TODO: Conectar con el SleepTimer de Aura cuando se implemente.
-    // Por ahora, estructura visual idéntica a BitChord.
     Column(Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
@@ -300,7 +292,6 @@ private fun SleepTimerPicker(palette: ArtworkPalette, onBack: () -> Unit) {
                 selected = false,
                 accent = palette.accent,
             ) {
-                // TODO: SleepTimer.start(minutes)
                 onBack()
             }
         }
