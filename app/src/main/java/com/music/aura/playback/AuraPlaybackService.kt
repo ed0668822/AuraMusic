@@ -6,10 +6,14 @@ import androidx.annotation.OptIn
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.audio.AudioSink
+import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import com.music.aura.MainActivity
+import com.music.aura.playback.dsd.DsdExtractorsFactory
 import io.github.anilbeesetti.nextlib.media3ext.ffdecoder.NextRenderersFactory
 
 @OptIn(UnstableApi::class)
@@ -20,11 +24,12 @@ class AuraPlaybackService : MediaSessionService() {
     override fun onCreate() {
         super.onCreate()
 
-        // 1. Configurar el decodificador FFmpeg (para Dolby Atmos, ALAC, etc.)
+        // 1. Configurar el decodificador FFmpeg (Nextlib) + FFmpeg personalizado
         val renderersFactory = NextRenderersFactory(this)
             .setEnableDecoderFallback(true)
+            .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
 
-        // 2. Construir el ExoPlayer con AudioAttributes
+        // 2. Construir el ExoPlayer con AudioAttributes y el ExtractorFactory para DSD
         val player = ExoPlayer.Builder(this, renderersFactory)
             .setAudioAttributes(
                 AudioAttributes.Builder()
@@ -35,6 +40,8 @@ class AuraPlaybackService : MediaSessionService() {
             )
             .setHandleAudioBecomingNoisy(true)
             .setWakeMode(C.WAKE_MODE_LOCAL)
+            // ✅ INYECTAR EL EXTRACTOR DSD Y OTROS FORMATOS AQUÍ
+            .setExtractorsFactory(DsdExtractorsFactory())
             .build()
 
         // 3. Configurar la sesión (para la notificación y controles de pantalla de bloqueo)
@@ -60,7 +67,6 @@ class AuraPlaybackService : MediaSessionService() {
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         val player = mediaSession?.player
-        // Si el usuario cierra la app desde los recientes y no está reproduciendo, detenemos el servicio
         if (player == null || !player.playWhenReady || player.mediaItemCount == 0) {
             stopSelf()
         }
