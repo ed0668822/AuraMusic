@@ -4,62 +4,20 @@ import com.music.aura.playback.audio.AudioBlock
 import kotlin.math.abs
 import kotlin.math.exp
 
-/**
- * Loudness normalization, applied inside one player's own DSP chain, plus the
- * peak limiter that keeps the result — and a crossfade built on it — from
- * clipping.
- *
- * ## Why per player, not a session effect
- *
- * This used to be a single platform `LoudnessEnhancer` on the audio session
- * both players share. One effect means one gain, so at every crossfade the
- * outgoing track was re-levelled to the *incoming* track's figure the moment
- * the blend began. Here each player carries its own track's gain, so the two
- * sides of a blend are each levelled for the song they are actually playing.
- *
- * ## Which track
- *
- * The gain is read lazily through [gainFor] on the audio thread rather than
- * pushed in as a number. A lazy read picks it up on the next block, glided
- * rather than stepped.
- *
- * [mediaId] is the track this chain is processing. At a gapless boundary the
- * sink calls [onStreamBoundary], which promotes [nextMediaId] at the exact
- * sample the new track begins.
- *
- * ## The limiter
- *
- * Only engages when a positive normalization gain could push a track past
- * full scale, or while [holdLimiter] says an earlier stage — the equaliser —
- * could have. Instant attack, a smooth release, no lookahead.
- *
- * ## Blend trim
- *
- * [setBlendTrim] is what the crossfade drives, and it is a plain gain, not a
- * lower limiter ceiling.
- */
 class LoudnessProcessor {
 
-    /** Linear gain for a media id: 1 when unknown or normalization is off. Must be thread-safe. */
     @Volatile
     var gainFor: (String) -> Float = { 1f }
 
-    /** The track this chain is currently processing. */
     @Volatile
     var mediaId: String? = null
 
-    /** The track that follows [mediaId] gaplessly on this player, if any. */
     @Volatile
     var nextMediaId: String? = null
 
     @Volatile
     private var trimTarget = 1f
 
-    /**
-     * Keeps the limiter running even with no gain of this stage's own to
-     * apply. Set by [com.music.aura.playback.audio.DspChain] before every
-     * block, on the audio thread, from whether the equaliser is shaping it.
-     */
     var holdLimiter = false
 
     private var sampleRate = 0
@@ -70,20 +28,14 @@ class LoudnessProcessor {
     private var glideCoef = 1f
     private var releaseCoef = 1f
 
-    /** Set by anything that breaks continuity, so the next block jumps rather than glides. */
     @Volatile
     private var snap = true
 
-    /** Points this chain at a track, and the one after it. Called from the app thread. */
     fun track(mediaId: String?, nextMediaId: String?) {
         this.mediaId = mediaId
         this.nextMediaId = nextMediaId
     }
 
-    /**
-     * Headroom taken off this track while it overlaps another: 1 between
-     * transitions, a little lower during one. Glided on the audio thread.
-     */
     fun setBlendTrim(value: Float) {
         trimTarget = value.coerceIn(MIN_TRIM, 1f)
     }
@@ -125,7 +77,7 @@ class LoudnessProcessor {
             currentTrim = targetTrim
             snap = false
         }
-
+        
         if (!holdLimiter && targetGain == 1f && targetTrim >= 1f &&
             abs(currentGain - 1f) < SETTLED && currentTrim >= 1f - SETTLED && reduction >= PARK_REDUCTION
         ) {
@@ -169,21 +121,11 @@ class LoudnessProcessor {
         if (rate <= 0) 1f else (1.0 - exp(-1.0 / (seconds * rate))).toFloat()
 
     companion object {
-        /** Just under full scale, so float and 16-bit outputs round the same way. */
         private const val LIMIT = 0.985f
-
-        /** Never let a trim request take more than 6 dB off a track. */
         private const val MIN_TRIM = 0.5f
-
-        /** Time constant for gain and trim changes: long enough not to zipper. */
         private const val GLIDE_SECONDS = 0.04
-
-        /** How quickly the limiter lets go after a peak. */
         private const val RELEASE_SECONDS = 0.08
-
         private const val SETTLED = 1e-4f
-
-        /** Little enough reduction left (about 0.25 dB) to drop it outright when parking. */
         private const val PARK_REDUCTION = 0.97f
     }
 }
