@@ -7,28 +7,6 @@ import com.music.aura.playback.LoudnessProcessor
 import com.music.aura.playback.SpatialAudioProcessor
 import com.music.aura.playback.TransitionFilterProcessor
 
-/**
- * Composite DSP chain executing Aura Music's custom audio processors in their canonical sequence:
- *
- * AudioBlock(Float32) -> SpatialAudioProcessor -> EqualizerProcessor
- *   -> TransitionFilterProcessor -> LoudnessProcessor -> AudioBlock(Float32)
- *
- * Operates purely on in-place Float32 audio blocks without intermediate fixed-point quantization,
- * preserving full dynamic range and headroom.
- *
- * Loudness normalization is the last stage, and per sink on purpose: each
- * player levels the track *it* is playing, so the two sides of a crossfade are
- * each levelled for their own song. Last because its limiter has to see the
- * signal every other stage has finished shaping. That limiter is also the
- * equaliser's: [EqualizerProcessor] only takes back half of a boost, and while
- * it is shaping the signal the limiter stays on.
- *
- * ## Staying out of the way
- *
- * Every stage here self-bypasses when its own setting is off, returning before
- * it reads a single sample rather than multiplying through by unity. With all
- * three idle the block leaves this class byte-identical to how it arrived.
- */
 class DspChain(
     val spatial: SpatialAudioProcessor = SpatialAudioProcessor(),
     val equalizer: EqualizerProcessor = EqualizerProcessor(),
@@ -47,7 +25,6 @@ class DspChain(
         loudness.configure(sampleRate, channelCount)
     }
 
-    /** A new track has begun gaplessly on this sink; see [LoudnessProcessor.onStreamBoundary]. */
     fun onStreamBoundary() {
         loudness.onStreamBoundary()
     }
@@ -82,7 +59,6 @@ class DspChain(
         loudness.process(block)
     }
 
-    @Suppress("DEPRECATION")
     override fun flush() {
         spatial.flush()
         equalizer.flush()
