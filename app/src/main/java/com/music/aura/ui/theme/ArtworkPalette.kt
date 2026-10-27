@@ -1,218 +1,290 @@
 package com.music.aura.ui.theme
 
-import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.tween
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
-import androidx.palette.graphics.Palette
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.toArgb
+import coil3.SingletonImageLoader
+import coil3.compose.LocalPlatformContext
+import coil3.request.ImageRequest
+import coil3.request.SuccessResult
+import com.music.aura.ui.graphics.ColorUtils
+import com.music.aura.ui.graphics.paletteSwatches
+import com.music.aura.ui.graphics.toImageBitmap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlin.math.pow
+import kotlin.math.sqrt
 
-/**
- * Colores extraídos del artwork de una canción.
- * Se usan para generar el tema dinámico del reproductor.
- */
-data class ArtworkColors(
-    val primary: Color = Color(0xFFB4A7F5),
-    val onPrimary: Color = Color(0xFF1F1147),
-    val primaryContainer: Color = Color(0xFF3B2D6B),
-    val onPrimaryContainer: Color = Color(0xFFE8DEFF),
-    val secondary: Color = Color(0xFF8ECFF5),
-    val onSecondary: Color = Color(0xFF00344B),
-    val secondaryContainer: Color = Color(0xFF004C6B),
-    val onSecondaryContainer: Color = Color(0xFFC8E9FF),
-    val background: Color = Color(0xFF0E0E14),
-    val onBackground: Color = Color(0xFFE4E1EC),
-    val surface: Color = Color(0xFF0E0E14),
-    val onSurface: Color = Color(0xFFE4E1EC),
-    val surfaceVariant: Color = Color(0xFF2A2833),
-    val onSurfaceVariant: Color = Color(0xFFC8C4D4),
+@Immutable
+data class ArtworkPalette(
+    val background: Color,
+    val wash: Color,
+    val elevated: Color,
+    val accent: Color,
+    val onBackground: Color,
+    val onBackgroundVariant: Color,
+    val divider: Color,
 )
 
-/**
- * Extrae colores de un artwork usando la librería Palette de AndroidX.
- *
- * Proceso:
- * 1. Carga el bitmap desde la URI content:// (local, sin red).
- * 2. Lo escala a un tamaño manejable para Palette.
- * 3. Genera el Palette y extrae los swatches.
- * 4. Construye ArtworkColors con fallbacks seguros.
- */
-object ArtworkPalette {
+/** Tinte del player para texto secundario. Blanco por defecto. */
+val LocalPlayerTint = staticCompositionLocalOf { Color.White }
 
-    /** Tamaño máximo para el bitmap antes de pasarlo a Palette. */
-    private const val MAX_DIMENSION = 128
+@Composable
+fun rememberArtworkPalette(
+    artworkUri: Uri?,
+    dark: Boolean = MaterialTheme.colorScheme.background.luminance() < 0.5f,
+    reduceAnimation: Boolean = false,
+): ArtworkPalette {
+    val scheme = MaterialTheme.colorScheme
+    val seed = rememberArtworkSeed(artworkUri)
+    val knownUpFront = remember(artworkUri) { seed != null }
 
-    /**
-     * Extrae colores del artwork en [artworkUri].
-     * Devuelve null si la URI es nula o no se puede decodificar.
-     */
-    suspend fun extractColors(
-        context: Context,
-        artworkUri: String?
-    ): ArtworkColors? = withContext(Dispatchers.IO) {
-        if (artworkUri.isNullOrBlank()) return@withContext null
+    val target = seed?.toPalette(dark) ?: ArtworkPalette(
+        background = scheme.background,
+        wash = scheme.background,
+        elevated = scheme.surfaceVariant,
+        accent = scheme.primary,
+        onBackground = scheme.onBackground,
+        onBackgroundVariant = scheme.onSurfaceVariant,
+        divider = scheme.outline,
+    )
 
-        try {
-            val uri = Uri.parse(artworkUri)
-            val inputStream = context.contentResolver.openInputStream(uri)
-                ?: return@withContext null
+    val spec: AnimationSpec<Color> = if (reduceAnimation || knownUpFront) snap() else tween(TINT_FADE_MS)
+    return ArtworkPalette(
+        background = animateColorAsState(target.background, spec, label = "tintBackground").value,
+        wash = animateColorAsState(target.wash, spec, label = "tintWash").value,
+        elevated = animateColorAsState(target.elevated, spec, label = "tintElevated").value,
+        accent = animateColorAsState(target.accent, spec, label = "tintAccent").value,
+        onBackground = animateColorAsState(target.onBackground, spec, label = "tintOn").value,
+        onBackgroundVariant = animateColorAsState(target.onBackgroundVariant, spec, label = "tintOnVariant").value,
+        divider = animateColorAsState(target.divider, spec, label = "tintDivider").value,
+    )
+}
 
-            // Decodificar con tamaño reducido para Palette
-            val options = BitmapFactory.Options().apply {
-                inJustDecodeBounds = true
-            }
-            BitmapFactory.decodeStream(inputStream, null, options)
-            inputStream.close()
+@Composable
+fun rememberArtworkTopBandLuminance(artworkUri: Uri?): Float? =
+    rememberArtworkSeed(artworkUri)?.topBandLuminance
 
-            val width = options.outWidth
-            val height = options.outHeight
-            if (width <= 0 || height <= 0) return@withContext null
+@Composable
+fun rememberPlayerTint(artworkUri: Uri?): Color? {
+    val seed = rememberArtworkSeed(artworkUri)
+    return remember(seed) { seed?.playerTint() }
+}
 
-            // Calcular inSampleSize para no cargar el bitmap completo
-            val sampleSize = calculateSampleSize(width, height, MAX_DIMENSION)
+private fun Seed.playerTint(): Color? {
+    val source = listOf(dominant, vibrant).firstOrNull { it.chroma() >= TINT_MIN_CHROMA } ?: return null
+    return source.withHsl(
+        saturation = { adaptedArtworkSaturation(it, minimum = 0.18f, maximum = PLAYER_TINT_MAX_SATURATION) },
+        lightness = { PLAYER_TINT_LIGHTNESS },
+    )
+}
 
-            val decodeOptions = BitmapFactory.Options().apply {
-                inSampleSize = sampleSize
-                inPreferredConfig = Bitmap.Config.ARGB_8888
-            }
+private const val PLAYER_TINT_LIGHTNESS = 0.88f
+private const val PLAYER_TINT_MAX_SATURATION = 0.40f
 
-            val inputStream2 = context.contentResolver.openInputStream(uri)
-                ?: return@withContext null
-            val bitmap = BitmapFactory.decodeStream(inputStream2, null, decodeOptions)
-            inputStream2.close()
+private fun Color.chroma(): Float = maxOf(red, green, blue) - minOf(red, green, blue)
 
-            if (bitmap == null) return@withContext null
+private const val TINT_MIN_CHROMA = 0.08f
 
-            // Generar Palette
-            val palette = Palette.from(bitmap).generate()
-            bitmap.recycle()
+@Composable
+private fun rememberArtworkSeed(artworkUri: Uri?): Seed? {
+    val context = LocalPlatformContext.current
+    var seed by remember(artworkUri) { mutableStateOf(artworkUri?.let { seedCache[it.toString()] }) }
 
-            buildColorsFromPalette(palette)
-        } catch (e: Exception) {
-            null
-        }
+    LaunchedEffect(artworkUri) {
+        if (artworkUri == null || seed != null) return@LaunchedEffect
+        val request = ImageRequest.Builder(context)
+            .data(artworkUri)
+            .size(PALETTE_PX)
+            .build()
+        val result = runCatching {
+            SingletonImageLoader.get(context).execute(request)
+        }.getOrNull()
+        val bitmap = (result as? SuccessResult)?.image?.toImageBitmap() ?: return@LaunchedEffect
+        val found = withContext(Dispatchers.Default) { seedOf(bitmap) } ?: return@LaunchedEffect
+        seedCache[artworkUri.toString()] = found
+        seed = found
     }
+    return seed
+}
 
-    /**
-     * Calcula el inSampleSize para reducir el bitmap.
-     */
-    private fun calculateSampleSize(width: Int, height: Int, maxDim: Int): Int {
-        var sampleSize = 1
-        if (width > maxDim || height > maxDim) {
-            val halfWidth = width / 2
-            val halfHeight = height / 2
-            while ((halfWidth / sampleSize) >= maxDim &&
-                   (halfHeight / sampleSize) >= maxDim) {
-                sampleSize *= 2
-            }
-        }
-        return sampleSize
+private val seedCache = object : LinkedHashMap<String, Seed>(0, 0.75f, true) {
+    override fun removeEldestEntry(eldest: Map.Entry<String, Seed>) = size > SEED_CACHE_ENTRIES
+}
+
+private const val SEED_CACHE_ENTRIES = 128
+private const val PALETTE_PX = 128
+private const val TINT_FADE_MS = 260
+
+private data class Seed(
+    val dominant: Color,
+    val vibrant: Color,
+    val edge: Color,
+    val topBandLuminance: Float,
+)
+
+private fun seedOf(bitmap: ImageBitmap): Seed? {
+    fun swatches(clearFilters: Boolean) = paletteSwatches(bitmap, SWATCH_COUNT, clearFilters)
+
+    val all = swatches(clearFilters = true)
+    if (all.isEmpty()) return null
+    val accentCandidates = swatches(clearFilters = false).ifEmpty { all }
+
+    val dominant = all.maxBy { it.population }
+    val vibrant = accentCandidates.maxBy { swatch ->
+        val hsl = FloatArray(3).also { ColorUtils.colorToHSL(swatch.rgb, it) }
+        hsl[1] * sqrt(swatch.population.toFloat())
     }
+    return Seed(
+        dominant = Color(dominant.rgb),
+        vibrant = Color(vibrant.rgb),
+        edge = bitmap.bottomEdgeColor(),
+        topBandLuminance = bitmap.topBandRelativeLuminance(),
+    )
+}
 
-    /**
-     * Construye ArtworkColors desde un Palette generado.
-     * Usa los swatches más vibrantes y dominantes con fallbacks.
-     */
-    private fun buildColorsFromPalette(palette: Palette): ArtworkColors {
-        // Swatch principal: el más vibrante o dominante
-        val dominantSwatch = palette.dominantSwatch
-            ?: palette.vibrantSwatch
-            ?: palette.mutedSwatch
+private const val SWATCH_COUNT = 24
 
-        val vibrantSwatch = palette.vibrantSwatch
-            ?: palette.darkVibrantSwatch
-            ?: dominantSwatch
+private fun ImageBitmap.bottomEdgeColor(): Color {
+    val band = (height * EDGE_BAND).toInt().coerceIn(1, height)
+    val pixels = IntArray(width * band)
+    readPixels(pixels, startX = 0, startY = height - band, width = width, height = band)
 
-        val mutedSwatch = palette.mutedSwatch
-            ?: palette.darkMutedSwatch
-            ?: dominantSwatch
-
-        // Colores base extraídos
-        val primaryRgb = vibrantSwatch?.rgb ?: 0xFFB4A7F5.toInt()
-        val secondaryRgb = mutedSwatch?.rgb ?: 0xFF8ECFF5.toInt()
-        val bgRgb = dominantSwatch?.rgb ?: 0xFF0E0E14.toInt()
-
-        // Oscurecer el fondo para que sea usable como background
-        val darkBg = darkenColor(bgRgb, 0.15f)
-        val darkSurface = darkenColor(bgRgb, 0.20f)
-        val surfaceVariant = lightenColor(darkBg, 0.08f)
-
-        // Generar colores complementarios para texto
-        val onPrimary = if (isColorDark(primaryRgb)) 0xFFFFFFFF.toInt() else 0xFF000000.toInt()
-        val onSecondary = if (isColorDark(secondaryRgb)) 0xFFFFFFFF.toInt() else 0xFF000000.toInt()
-        val onBackground = if (isColorDark(darkBg)) 0xFFE4E1EC.toInt() else 0xFF1A1B20.toInt()
-        val onSurface = onBackground
-        val onSurfaceVariant = if (isColorDark(surfaceVariant)) 0xFFC8C4D4.toInt() else 0xFF47454F.toInt()
-
-        // Contenedores: versiones más suaves
-        val primaryContainer = blendColors(primaryRgb, darkBg, 0.35f)
-        val onPrimaryContainer = if (isColorDark(primaryContainer)) 0xFFE8DEFF.toInt() else 0xFF1F1147.toInt()
-        val secondaryContainer = blendColors(secondaryRgb, darkBg, 0.35f)
-        val onSecondaryContainer = if (isColorDark(secondaryContainer)) 0xFFC8E9FF.toInt() else 0xFF001E2C.toInt()
-
-        return ArtworkColors(
-            primary = Color(primaryRgb),
-            onPrimary = Color(onPrimary),
-            primaryContainer = Color(primaryContainer),
-            onPrimaryContainer = Color(onPrimaryContainer),
-            secondary = Color(secondaryRgb),
-            onSecondary = Color(onSecondary),
-            secondaryContainer = Color(secondaryContainer),
-            onSecondaryContainer = Color(onSecondaryContainer),
-            background = Color(darkBg),
-            onBackground = Color(onBackground),
-            surface = Color(darkSurface),
-            onSurface = Color(onSurface),
-            surfaceVariant = Color(surfaceVariant),
-            onSurfaceVariant = Color(onSurfaceVariant),
-        )
+    var red = 0L
+    var green = 0L
+    var blue = 0L
+    pixels.forEach { pixel ->
+        red += (pixel shr 16) and 0xFF
+        green += (pixel shr 8) and 0xFF
+        blue += pixel and 0xFF
     }
+    val count = pixels.size.coerceAtLeast(1)
+    return Color(
+        red = (red / count).toInt(),
+        green = (green / count).toInt(),
+        blue = (blue / count).toInt(),
+    )
+}
 
-    /**
-     * Oscurece un color multiplicando sus canales RGB por [factor].
-     */
-    private fun darkenColor(color: Int, factor: Float): Int {
-        val a = (color shr 24) and 0xFF
-        val r = ((color shr 16) and 0xFF) * factor
-        val g = ((color shr 8) and 0xFF) * factor
-        val b = (color and 0xFF) * factor
-        return (a shl 24) or (r.toInt() shl 16) or (g.toInt() shl 8) or b.toInt()
+private const val EDGE_BAND = 0.18f
+private const val TOP_BAND = 0.10f
+
+private fun ImageBitmap.topBandRelativeLuminance(): Float {
+    val band = (height * TOP_BAND).toInt().coerceIn(1, height)
+    val pixels = IntArray(width * band)
+    readPixels(pixels, startX = 0, startY = 0, width = width, height = band)
+    return averageRelativeLuminance(pixels)
+}
+
+internal fun averageRelativeLuminance(pixels: IntArray): Float {
+    if (pixels.isEmpty()) return 0f
+    return pixels.sumOf { relativeLuminance(it).toDouble() }.div(pixels.size).toFloat()
+}
+
+internal fun relativeLuminance(argb: Int): Float {
+    fun linear(channel: Int): Float {
+        val srgb = channel / 255f
+        return if (srgb <= 0.04045f) srgb / 12.9f else ((srgb + 0.055f) / 1.055f).toDouble().pow(2.4).toFloat()
     }
+    return 0.2126f * linear((argb shr 16) and 0xFF) +
+        0.7152f * linear((argb shr 8) and 0xFF) +
+        0.0722f * linear(argb and 0xFF)
+}
 
-    /**
-     * Aclara un color mezclándolo con blanco.
-     */
-    private fun lightenColor(color: Int, factor: Float): Int {
-        val a = (color shr 24) and 0xFF
-        val r = ((color shr 16) and 0xFF) + ((255 - ((color shr 16) and 0xFF)) * factor).toInt()
-        val g = ((color shr 8) and 0xFF) + ((255 - ((color shr 8) and 0xFF)) * factor).toInt()
-        val b = (color and 0xFF) + ((255 - (color and 0xFF)) * factor).toInt()
-        return (a shl 24) or (r.coerceIn(0, 255) shl 16) or (g.coerceIn(0, 255) shl 8) or b.coerceIn(0, 255)
-    }
+internal fun topBandScrimAlpha(artworkLuminance: Float?): Float {
+    val luminance = artworkLuminance?.coerceIn(0f, 1f) ?: 0f
+    return PLAYER_STATUS_SCRIM_MIN_ALPHA +
+        (PLAYER_STATUS_SCRIM_MAX_ALPHA - PLAYER_STATUS_SCRIM_MIN_ALPHA) * luminance
+}
 
-    /**
-     * Mezcla dos colores con un ratio.
-     */
-    private fun blendColors(color1: Int, color2: Int, ratio: Float): Int {
-        val invRatio = 1f - ratio
-        val a = ((color1 shr 24) and 0xFF) * ratio + ((color2 shr 24) and 0xFF) * invRatio
-        val r = ((color1 shr 16) and 0xFF) * ratio + ((color2 shr 16) and 0xFF) * invRatio
-        val g = ((color1 shr 8) and 0xFF) * ratio + ((color2 shr 8) and 0xFF) * invRatio
-        val b = (color1 and 0xFF) * ratio + (color2 and 0xFF) * invRatio
-        return (a.toInt() shl 24) or (r.toInt() shl 16) or (g.toInt() shl 8) or b.toInt()
-    }
+private const val PLAYER_STATUS_SCRIM_MIN_ALPHA = 0.16f
+private const val PLAYER_STATUS_SCRIM_MAX_ALPHA = 0.65f
 
-    /**
-     * Determina si un color es oscuro (para elegir texto claro u oscuro encima).
-     */
-    private fun isColorDark(color: Int): Boolean {
-        val r = (color shr 16) and 0xFF
-        val g = (color shr 8) and 0xFF
-        val b = color and 0xFF
-        // Fórmula de luminancia percibida
-        val luminance = 0.299 * r + 0.587 * g + 0.114 * b
-        return luminance < 128
+private fun Seed.toPalette(dark: Boolean): ArtworkPalette = if (dark) {
+    ArtworkPalette(
+        background = dominant.withHsl(
+            saturation = { adaptedArtworkSaturation(it, minimum = 0.20f, maximum = 0.62f) },
+            lightness = { 0.13f },
+        ),
+        wash = edge.withHsl(
+            saturation = { adaptedArtworkSaturation(it, minimum = 0.18f, maximum = 0.58f) },
+            lightness = { it.coerceIn(0.14f, 0.24f) },
+        ),
+        elevated = dominant.withHsl(
+            saturation = { adaptedArtworkSaturation(it, minimum = 0.20f, maximum = 0.62f) },
+            lightness = { 0.22f },
+        ),
+        accent = vibrant.withHsl(
+            saturation = { adaptedArtworkSaturation(it, minimum = 0.55f, maximum = 1f) },
+            lightness = { it.coerceIn(0.62f, 0.78f) },
+        ),
+        onBackground = Color.White,
+        onBackgroundVariant = dominant.withHsl(
+            saturation = { adaptedArtworkSaturation(it, minimum = 0.22f, maximum = 0.50f) },
+            lightness = { 0.80f },
+        ),
+        divider = Color.White.copy(alpha = 0.12f),
+    )
+} else {
+    ArtworkPalette(
+        background = dominant.withHsl(
+            saturation = { adaptedArtworkSaturation(it, minimum = 0.14f, maximum = 0.50f) },
+            lightness = { 0.91f },
+        ),
+        wash = edge.withHsl(
+            saturation = { adaptedArtworkSaturation(it, minimum = 0.12f, maximum = 0.46f) },
+            lightness = { it.coerceIn(0.78f, 0.90f) },
+        ),
+        elevated = dominant.withHsl(
+            saturation = { adaptedArtworkSaturation(it, minimum = 0.14f, maximum = 0.50f) },
+            lightness = { 0.83f },
+        ),
+        accent = vibrant.withHsl(
+            saturation = { adaptedArtworkSaturation(it, minimum = 0.55f, maximum = 1f) },
+            lightness = { it.coerceIn(0.30f, 0.44f) },
+        ),
+        onBackground = Color.Black,
+        onBackgroundVariant = dominant.withHsl(
+            saturation = { adaptedArtworkSaturation(it, minimum = 0.22f, maximum = 0.55f) },
+            lightness = { 0.34f },
+        ),
+        divider = Color.Black.copy(alpha = 0.10f),
+    )
+}
+
+internal fun adaptedArtworkSaturation(source: Float, minimum: Float, maximum: Float): Float {
+    val saturation = source.coerceIn(0f, 1f)
+    return if (saturation < CHROMATIC_SATURATION_THRESHOLD) {
+        saturation
+    } else {
+        saturation.coerceIn(minimum, maximum)
     }
 }
+
+private const val CHROMATIC_SATURATION_THRESHOLD = 0.12f
+
+private fun Color.withHsl(
+    saturation: (Float) -> Float = { it },
+    lightness: (Float) -> Float = { it },
+): Color {
+    val hsl = FloatArray(3).also { ColorUtils.colorToHSL(toArgb(), it) }
+    hsl[1] = saturation(hsl[1]).coerceIn(0f, 1f)
+    hsl[2] = lightness(hsl[2]).coerceIn(0f, 1f)
+    return Color(ColorUtils.HSLToColor(hsl))
+}
+
+fun Color.luminance(): Float = ColorUtils.calculateLuminance(toArgb()).toFloat()
