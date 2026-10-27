@@ -8,15 +8,18 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.IosShare
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,6 +36,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.music.aura.R
@@ -41,10 +45,6 @@ import com.music.aura.ui.haptics.rememberHaptics
 import dev.chrisbanes.haze.HazeState
 import kotlinx.coroutines.launch
 
-/**
- * Sheet para compartir/guardar la tarjeta de letras.
- * Adaptado de BitChord: sin modo "story", simplificado.
- */
 @Composable
 internal fun AndroidLyricsShareSheet(
     hazeState: HazeState,
@@ -65,8 +65,6 @@ internal fun AndroidLyricsShareSheet(
         image = null
         failed = false
         saved = false
-        // TODO: Implementar renderLyricsShareCard para Aura
-        // image = renderLyricsShareCard(context, request)
     }
 
     PlayerDrawer(
@@ -121,7 +119,6 @@ internal fun AndroidLyricsShareSheet(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                // Save button
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -131,22 +128,21 @@ internal fun AndroidLyricsShareSheet(
                     contentAlignment = Alignment.Center,
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        androidx.compose.material3.Icon(
+                        Icon(
                             imageVector = Icons.Rounded.Download,
                             contentDescription = null,
                             tint = Color.White.copy(alpha = if (image != null) 0.85f else 0.4f),
                             modifier = Modifier.size(19.dp),
                         )
-                        androidx.compose.foundation.layout.Spacer(Modifier.width(10.dp))
+                        Spacer(Modifier.width(10.dp))
                         Text(
                             text = if (saved) stringResource(R.string.saved_bang) else stringResource(R.string.save),
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.W700,
+                            fontWeight = FontWeight.W700,
                             color = Color.White.copy(alpha = if (image != null) 0.85f else 0.4f),
                         )
                     }
                 }
-                // Share button
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -156,17 +152,17 @@ internal fun AndroidLyricsShareSheet(
                     contentAlignment = Alignment.Center,
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        androidx.compose.material3.Icon(
+                        Icon(
                             imageVector = Icons.Rounded.IosShare,
                             contentDescription = null,
                             tint = Color(0xFF121212).copy(alpha = if (image != null) 1f else 0.4f),
                             modifier = Modifier.size(19.dp),
                         )
-                        androidx.compose.foundation.layout.Spacer(Modifier.width(10.dp))
+                        Spacer(Modifier.width(10.dp))
                         Text(
                             text = stringResource(R.string.share),
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.W700,
+                            fontWeight = FontWeight.W700,
                             color = Color(0xFF121212).copy(alpha = if (image != null) 1f else 0.4f),
                         )
                     }
@@ -175,6 +171,3 @@ internal fun AndroidLyricsShareSheet(
         }
     }
 }
-
-private const val LYRICS_FILE_NAME = "lyrics.png"
-private const val LYRICS_FILE_PREFIX = "aura-lyrics"
