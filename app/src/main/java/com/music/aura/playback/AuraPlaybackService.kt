@@ -22,14 +22,11 @@ class AuraPlaybackService : MediaSessionService() {
     override fun onCreate() {
         super.onCreate()
 
-        // 1. Configurar el decodificador FFmpeg (Nextlib)
         val renderersFactory = NextRenderersFactory(this)
             .setEnableDecoderFallback(true)
 
-        // 2. Configurar el Extractor para DSD
         val mediaSourceFactory = DefaultMediaSourceFactory(DsdExtractorsFactory())
 
-        // 3. Construir el ExoPlayer
         val player = ExoPlayer.Builder(this, renderersFactory)
             .setAudioAttributes(
                 AudioAttributes.Builder()
@@ -40,10 +37,9 @@ class AuraPlaybackService : MediaSessionService() {
             )
             .setHandleAudioBecomingNoisy(true)
             .setWakeMode(C.WAKE_MODE_LOCAL)
-            .setMediaSourceFactory(mediaSourceFactory) // ✅ Inyección del Extractor DSD
+            .setMediaSourceFactory(mediaSourceFactory)
             .build()
 
-        // 4. Configurar la sesión
         val sessionActivityIntent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
