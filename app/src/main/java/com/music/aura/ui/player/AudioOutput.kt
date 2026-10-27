@@ -9,7 +9,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import kotlinx.coroutines.flow.StateFlow
 
 enum class AudioOutputKind { PHONE, WIRED, BLUETOOTH, USB, HDMI, OTHER }
 enum class BluetoothForm { UNKNOWN, BUDS, HEADPHONES, SPEAKER, CAR }
@@ -21,12 +20,6 @@ data class AudioOutputDevice(
     val isActive: Boolean,
     val form: BluetoothForm = BluetoothForm.UNKNOWN,
 )
-
-interface SystemVolume {
-    val level: StateFlow<Float>
-    fun set(level: Float)
-    fun refresh()
-}
 
 @Composable
 internal fun rememberAndroidAudioOutputs(): List<AudioOutputDevice> {
