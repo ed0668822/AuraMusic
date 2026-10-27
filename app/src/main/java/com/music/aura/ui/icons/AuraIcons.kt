@@ -365,6 +365,29 @@ object AuraIcons {
         }.build()
     }
 
+    val Clock: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "aura_clock",
+            defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 24f, viewportHeight = 24f,
+        ).apply {
+            path(
+                stroke = stroke,
+                strokeLineWidth = STROKE,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round,
+            ) {
+                moveTo(12f, 3.4f)
+                arcToRelative(8.6f, 8.6f, 0f, isMoreThanHalf = true, isPositiveArc = true, 0f, 17.2f)
+                arcToRelative(8.6f, 8.6f, 0f, isMoreThanHalf = true, isPositiveArc = true, 0f, -17.2f)
+                close()
+                moveTo(12f, 7.4f)
+                lineTo(12f, 12f)
+                lineTo(15f, 14.4f)
+            }
+        }.build()
+    }
+
     val GridView: ImageVector by lazy {
         ImageVector.Builder(
             name = "aura_grid_view",
