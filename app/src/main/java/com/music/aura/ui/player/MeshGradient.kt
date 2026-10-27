@@ -35,6 +35,7 @@ import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
 import coil3.request.SuccessResult
 import com.music.aura.ui.graphics.ColorUtils
+import com.music.aura.ui.graphics.forPixelAccess
 import com.music.aura.ui.graphics.paletteSwatches
 import com.music.aura.ui.graphics.toImageBitmap
 import kotlinx.coroutines.Dispatchers
@@ -54,19 +55,59 @@ private val FallbackColors = listOf(
     Color(0xFFFFAF7B),
 )
 
+/** The four mesh colours, wrapped so the backdrop can skip recomposition. */
 @Immutable
 data class MeshPalette(val colors: List<Color>)
 
+/**
+ * The Apple Music "Now Playing" backdrop: four luminous colour blobs sampled
+ * from the album art, drawn as soft radial gradients and blurred into a mesh.
+ * Colour changes on track skip crossfade over ~1.4s instead of snapping.
+ *
+ * The blobs drift when there is a reason to — the player opening, or
+ * [trackKey] changing — and then come to rest. They used to orbit forever,
+ * which meant re-blurring a full-screen layer at display refresh rate for as
+ * long as the player was up: the most expensive thing in the app, for motion
+ * that reads as ambient at best and is invisible while the phone is in a
+ * pocket. The settled frame looks the same; only the battery drain is gone.
+ */
 @Composable
 fun MeshGradientBackground(
     palette: MeshPalette,
     modifier: Modifier = Modifier,
     trackKey: Any? = null,
     driftMillis: Int = 8_000,
+    /**
+     * Keep the blobs orbiting instead of letting them settle.
+     *
+     * Off everywhere the mesh fills a screen, for the reason in the class note.
+     * On the Replay's cards it is the opposite trade — the surface is a few
+     * hundred dp of a card the user has deliberately opened and is looking
+     * straight at, the motion is what makes the card feel like an object rather
+     * than a picture of one, and "reduce animation" still stops it dead.
+     */
     continuous: Boolean = false,
+    /**
+     * How far the blobs are smeared. The default is sized for a full screen;
+     * a small surface needs proportionally less.
+     */
     blurRadius: Dp = 64.dp,
+    /**
+     * Off for a surface that should read as a still image: colours snap
+     * straight to target instead of crossfading, and the blobs never drift on
+     * a [trackKey] change, only settling once on first composition.
+     */
     animated: Boolean = true,
+    /**
+     * How long a palette change takes to crossfade. A track skip wants it
+     * brisk; a surface that changes colour on a timer wants it long enough
+     * that one fade runs into the next and the colour never sits still.
+     */
     colorFadeMillis: Int = 1400,
+    /**
+     * Taken as a parameter rather than read from settings here, so callers
+     * without a settings repository can pin it.
+     */
     reduceAnimation: Boolean = false,
 ) {
     val tuned = (palette.colors.ifEmpty { FallbackColors } + FallbackColors)
@@ -79,6 +120,8 @@ fun MeshGradientBackground(
     }
     val baseColor by animateColorAsState(tuned.first().dimmed(), colorSpec, label = "meshBase")
 
+    // Read in the draw lambda, not here: an Animatable read during draw
+    // invalidates only the drawing, leaving composition out of the loop.
     val phase = remember { Animatable(0f) }
     LaunchedEffect(trackKey, reduceAnimation, continuous, animated) {
         when {
@@ -134,6 +177,7 @@ fun MeshGradientBackground(
             )
         }
 
+        // Gentle scrim so white text stays legible over bright art.
         drawRect(
             brush = Brush.verticalGradient(
                 colors = listOf(
@@ -145,17 +189,31 @@ fun MeshGradientBackground(
     }
 }
 
+/**
+ * How long each palette in a [cyclingMeshPalette] is held, which is also how
+ * long the fade into it takes — pass it as `colorFadeMillis` so one crossfade
+ * runs straight into the next and the colour is never at rest.
+ */
 const val MESH_CYCLE_MILLIS = 3_600
 
+/**
+ * Aura's own colours, for the surfaces that have no artwork to take them
+ * from: the welcome pages and the sign-in card on Home.
+ */
 val WelcomeMeshPalettes: List<MeshPalette> = listOf(
     MeshPalette(listOf(Color(0xFFFA2D48), Color(0xFF7B2FF7), Color(0xFFFF7A45), Color(0xFF2E1A8A))),
     MeshPalette(listOf(Color(0xFFFF4E8A), Color(0xFFFF9A3C), Color(0xFFE0245E), Color(0xFF6A1B9A))),
     MeshPalette(listOf(Color(0xFF1E88E5), Color(0xFF00BFA5), Color(0xFF5E35B1), Color(0xFF0D47A1))),
-    MeshPalette(listOf(Color(0xFF00C853), Color(0xFF00BFA5), Color(0xFF7C4DFF), Color(0xFF1A237E))),
+    MeshPalette(listOf(Color(0xFF00C853), Color(0xFF00B8D4), Color(0xFF7C4DFF), Color(0xFF1A237E))),
     MeshPalette(listOf(Color(0xFFD500F9), Color(0xFFFF4081), Color(0xFF651FFF), Color(0xFF4A148C))),
     MeshPalette(listOf(Color(0xFFFFB300), Color(0xFFFF5252), Color(0xFFF06292), Color(0xFF6D2E46))),
 )
 
+/**
+ * Steps through [palettes] for as long as the caller is composed, one every
+ * [stepMillis]. "Reduce animation" would make every step a snap, so there it
+ * stays on the first palette instead.
+ */
 @Composable
 fun cyclingMeshPalette(
     palettes: List<MeshPalette>,
@@ -174,8 +232,8 @@ fun cyclingMeshPalette(
 }
 
 /**
- * Paleta de colores del artwork local.
- * Adaptado de BitChord: usa content:// URI en vez de URL remota.
+ * Loads the artwork with Coil (software bitmap, thumbnail-sized) and pulls a
+ * 4-colour palette out of it. Recomputes when [artworkUri] changes.
  */
 @Composable
 fun rememberArtworkColors(artworkUri: Uri?): MeshPalette {
@@ -187,6 +245,7 @@ fun rememberArtworkColors(artworkUri: Uri?): MeshPalette {
         val request = ImageRequest.Builder(context)
             .data(artworkUri)
             .size(128)
+            .forPixelAccess()
             .build()
         val result = runCatching {
             SingletonImageLoader.get(context).execute(request)
@@ -198,10 +257,28 @@ fun rememberArtworkColors(artworkUri: Uri?): MeshPalette {
     return palette
 }
 
+/**
+ * How far the blobs travel in one settle. A shade under half a turn: enough
+ * that the backdrop visibly reacts to a track change, short of a full orbit
+ * that would land the blobs back where they started.
+ */
 private const val DRIFT_RADIANS = (PI * 0.45f).toFloat()
 
+/**
+ * The player's four mesh colours for [bitmap], for surfaces that draw the mesh
+ * somewhere this code doesn't run.
+ */
 fun artworkMeshColors(bitmap: ImageBitmap): List<Color> = paletteOf(bitmap)
 
+/**
+ * Four mesh colours drawn from the artwork.
+ *
+ * The named swatches — vibrant, muted and friends — are a convenience over the
+ * full set, and on dark or desaturated sleeves every vibrant slot comes back
+ * null. Topping the rest up from [FallbackColors] is what left those covers
+ * sitting under the stock purple. So the whole swatch list is read instead, and
+ * any shortfall is derived from the art's own colours rather than borrowed.
+ */
 private fun paletteOf(bitmap: ImageBitmap): List<Color> {
     fun swatchesOf(clearFilters: Boolean): List<Color> =
         paletteSwatches(bitmap, 24, clearFilters)
@@ -209,6 +286,8 @@ private fun paletteOf(bitmap: ImageBitmap): List<Color> {
             .map { Color(it.rgb) }
 
     val found = swatchesOf(clearFilters = false).ifEmpty {
+        // The default filter discards near-black and near-white, which on a
+        // monochrome sleeve can be everything there is.
         swatchesOf(clearFilters = true)
     }
 
@@ -220,6 +299,7 @@ private fun paletteOf(bitmap: ImageBitmap): List<Color> {
     }
 }
 
+/** Drop near-duplicates, so the four blobs don't collapse into one wash. */
 private fun List<Color>.distinctEnough(): List<Color> {
     val kept = mutableListOf<Color>()
     forEach { color -> if (kept.none { it.isCloseTo(color) }) kept += color }
@@ -233,6 +313,7 @@ private fun Color.isCloseTo(other: Color): Boolean {
     return hueGap < 15f && abs(a[2] - b[2]) < 0.12f
 }
 
+/** Fill the empty slots off the art itself, fanning hue and lightness out. */
 private fun List<Color>.expandedToFour(): List<Color> {
     val out = toMutableList()
     var step = 1
@@ -253,6 +334,7 @@ private fun Color.shifted(hue: Float, lightness: Float): Color {
 private fun Color.hsl(): FloatArray =
     FloatArray(3).also { ColorUtils.colorToHSL(toArgb(), it) }
 
+/** Boost saturation and clamp lightness so any artwork yields a rich, non-muddy mesh. */
 private fun Color.tuned(): Color {
     val hsl = FloatArray(3)
     ColorUtils.colorToHSL(toArgb(), hsl)
