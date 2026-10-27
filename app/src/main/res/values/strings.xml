@@ -2,6 +2,7 @@
 <resources>
     <string name="app_name">Aura Music</string>
 
+    <!-- Search -->
     <string name="search">Buscar</string>
     <string name="search_hint">Buscar canciones, artistas, álbumes…</string>
     <string name="clear_search">Borrar búsqueda</string>
@@ -10,6 +11,7 @@
     <string name="search_library_no_results">Sin resultados para «%1$s»</string>
     <string name="recent_searches">Búsquedas recientes</string>
 
+    <!-- Library / Home -->
     <string name="library">Biblioteca</string>
     <string name="home">Inicio</string>
     <string name="explore">Explorar</string>
@@ -31,7 +33,12 @@
     <string name="open_artist">Abrir artista</string>
     <string name="open_playlist">Abrir lista</string>
     <string name="history_empty">Aún no has escuchado nada</string>
+    <string name="all_songs">Todas las canciones</string>
+    <string name="audio_files_on_device">Archivos de audio en el dispositivo</string>
+    <string name="folders">Carpetas</string>
+    <string name="browse_by_folder">Explorar por carpeta</string>
 
+    <!-- Playback -->
     <string name="play">Reproducir</string>
     <string name="shuffle">Aleatorio</string>
     <string name="play_next">Reproducir después</string>
@@ -39,13 +46,17 @@
     <string name="queue">Cola</string>
     <string name="now_playing">Sonando ahora</string>
     <string name="next_in_queue">Siguiente</string>
+    <string name="next_from">Siguiente de %1$s</string>
     <string name="remove_from_queue">Quitar de la cola</string>
     <string name="drag_to_reorder">Arrastra para reordenar</string>
     <string name="clear">Limpiar</string>
     <string name="more">Más</string>
     <string name="sleep_timer">Temporizador</string>
     <string name="one_hour">1 hora</string>
+    <string name="audio_pipeline">Ruta de audio</string>
+    <string name="personal_phone">Este teléfono</string>
 
+    <!-- Song actions / info -->
     <string name="song_info">Información de la canción</string>
     <string name="song_info_album">Álbum</string>
     <string name="song_info_artist">Artista</string>
@@ -58,8 +69,10 @@
     <string name="cancel">Cancelar</string>
     <string name="share">Compartir</string>
     <string name="save">Guardar</string>
+    <string name="saved">¡Guardado!</string>
     <string name="saved_bang">¡Guardado!</string>
 
+    <!-- Playlists -->
     <string name="add_to_playlist">Añadir a lista</string>
     <string name="your_playlists">Tus listas</string>
     <string name="new_playlist">Nueva lista</string>
@@ -75,6 +88,7 @@
     <string name="reorder_songs">Reordenar canciones</string>
     <string name="save_order">Guardar orden</string>
 
+    <!-- Lyrics -->
     <string name="lyrics_offset">Ajuste de letras</string>
     <string name="lyrics_offset_description">Desplaza las letras para sincronizarlas con el audio.</string>
     <string name="lyrics_offset_reset">Restablecer</string>
@@ -90,7 +104,12 @@
     <string name="your_lyrics_card">Tu tarjeta de letras</string>
     <string name="couldnt_draw_picture">No se pudo generar la imagen</string>
     <string name="lyrics_share_pick_limit">Elige menos líneas para compartir</string>
+    <string name="lyrics_share_description">Comparte la letra de esta canción</string>
+    <string name="lyrics_share_story">Modo historia</string>
+    <string name="lyrics_share_story_revert">Volver a modo normal</string>
+    <string name="share_your_lyrics">Comparte tus letras</string>
 
+    <!-- Audio output -->
     <string name="audio_output">Salida de audio</string>
     <string name="audio_output_playing">Reproduciendo aquí</string>
     <string name="wired_headphones">Auriculares con cable</string>
@@ -98,6 +117,7 @@
     <string name="hdmi_output">HDMI</string>
     <string name="this_phone">Este teléfono</string>
 
+    <!-- Replay -->
     <string name="replay">Replay</string>
     <string name="not_enough_listening">Aún no hay suficientes datos</string>
     <string name="top_songs">Canciones más escuchadas</string>
@@ -114,13 +134,82 @@
     <string name="midday">Mediodía</string>
     <string name="this_month">Este mes</string>
     <string name="this_year">Este año</string>
+    <string name="this_week">Esta semana</string>
     <string name="all_time">Todo el tiempo</string>
     <string name="replay_this_week">Esta semana</string>
     <string name="replay_period_weekly">Semanal</string>
     <string name="replay_period_monthly">Mensual</string>
     <string name="replay_period_yearly">Anual</string>
     <string name="replay_period_lifetime">Histórico</string>
+    <string name="share_my_replay">Compartir mi Replay</string>
+    <string name="your_replay">Tu Replay</string>
+    <string name="share_your_replay">Comparte tu Replay</string>
+    <string name="close_replay">Cerrar</string>
+    <string name="replay_share_summary_description">Resumen de tu año musical</string>
+    <string name="replay_share_card_description">Tarjeta de tu año musical</string>
+    <string name="replay_intro_headline">Tu año en música</string>
+    <string name="replay_minutes_headline_prefix">Has escuchado</string>
+    <string name="replay_minutes_headline_suffix">minutos</string>
+    <string name="replay_songs_headline_prefix">Tu canción top fue</string>
+    <string name="replay_songs_headline_suffix">veces</string>
+    <string name="replay_artists_headline_prefix">Tu artista top fue</string>
+    <string name="replay_artists_headline_suffix">minutos</string>
+    <string name="replay_albums_headline_prefix">Tu álbum top fue</string>
+    <string name="replay_albums_headline_suffix">veces</string>
+    <string name="replay_genres_headline_prefix">Tu género top fue</string>
+    <string name="replay_genres_headline_suffix"></string>
+    <string name="replay_habits_headline">Tus hábitos</string>
+    <string name="replay_summary_headline">Resumen final</string>
+    <string name="replay_private_counting">Cuenta privada</string>
+    <string name="replay_hours_across">horas en</string>
+    <string name="replay_across">a través de</string>
+    <string name="replay_play_count">%1$s reproducciones</string>
+    <string name="different_albums">álbumes diferentes</string>
+    <string name="your_biggest_day">Tu día más fuerte</string>
+    <string name="when_you_listen_the_most">Cuando más escuchas</string>
+    <string name="minutes">minutos</string>
+    <string name="top_genre">Género top</string>
+    <string name="tap_share_for_picture">Toca compartir para imagen</string>
 
+    <!-- Equalizer -->
+    <string name="equalizer">Ecualizador</string>
+    <string name="equalizer_footer">Ajusta el sonido a tu gusto</string>
+    <string name="equalizer_tone">Tono</string>
+    <string name="equalizer_focused_footer">Rango enfocado</string>
+    <string name="equalizer_broad_footer">Rango amplio</string>
+    <string name="equalizer_broad">Amplio</string>
+    <string name="equalizer_focused">Enfocado</string>
+    <string name="equalizer_preset">Preset</string>
+    <string name="equalizer_bands">Bandas</string>
+    <string name="equalizer_bands_footer">Ajusta las frecuencias</string>
+    <string name="equalizer_reset">Restablecer</string>
+    <string name="equalizer_balance">Balance</string>
+    <string name="equalizer_balance_footer">Izquierda / Derecha</string>
+    <string name="equalizer_tilt">Inclinación</string>
+    <string name="equalizer_contour">Contorno</string>
+    <string name="equalizer_balance_left">L</string>
+    <string name="equalizer_balance_right">R</string>
+    <string name="equalizer_dynamic">Dinámico</string>
+    <string name="equalizer_manual">Manual</string>
+    <string name="eq_preset_flat">Plano</string>
+    <string name="eq_preset_acoustic">Acústico</string>
+    <string name="eq_preset_bass_boost">Bajos +</string>
+    <string name="eq_preset_bass_cut">Bajos -</string>
+    <string name="eq_preset_vocal">Vocal</string>
+    <string name="eq_preset_treble_boost">Agudos +</string>
+    <string name="eq_preset_treble_cut">Agudos -</string>
+    <string name="eq_preset_loudness">Sonoridad</string>
+    <string name="eq_preset_spoken_word">Palabra hablada</string>
+    <string name="eq_preset_electronic">Electrónica</string>
+    <string name="eq_preset_rock">Rock</string>
+    <string name="eq_preset_hip_hop">Hip-Hop</string>
+    <string name="eq_preset_jazz">Jazz</string>
+    <string name="eq_preset_classical">Clásica</string>
+    <string name="eq_preset_small_speakers">Altavoces pequeños</string>
+    <string name="eq_preset_late_night">Noche</string>
+    <string name="eq_preset_custom">Personalizado</string>
+
+    <!-- Onboarding -->
     <string name="onboarding_welcome_title">Aura Music</string>
     <string name="onboarding_welcome_body">Tu música local, con un reproductor que se siente como en casa.</string>
     <string name="onboarding_next">Continuar</string>
@@ -131,6 +220,7 @@
     <string name="onboarding_skip">Omitir</string>
     <string name="onboarding_back">Atrás</string>
 
+    <!-- Widgets -->
     <string name="widget_artwork">Carátula</string>
     <string name="widget_previous">Anterior</string>
     <string name="widget_play">Reproducir / Pausar</string>
@@ -140,6 +230,7 @@
     <string name="widget_wide_description">Aura Music — widget ancho</string>
     <string name="widget_pill_description">Aura Music — widget píldora</string>
 
+    <!-- Plurals -->
     <plurals name="minute_count">
         <item quantity="one">%d minuto</item>
         <item quantity="other">%d minutos</item>
