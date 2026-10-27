@@ -5,7 +5,6 @@ import androidx.media3.common.C
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.BaseAudioProcessor
 import androidx.media3.common.util.UnstableApi
-import com.music.aura.BuildConfig
 import com.music.aura.playback.audio.AudioBlock
 import com.music.aura.playback.audio.FloatAudioProcessor
 import com.music.aura.playback.audio.PcmBoundary
@@ -19,47 +18,9 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.math.tan
 
-/**
- * 10-band parametric equaliser, tone controls, pre-amp and left/right balance.
- *
- * ## The layout
- *
- * [EqLayout] fixes the layout of sections. Bands 0 and 9 are shelves (cornered
- * at 60 Hz and 14 kHz); the eight between them are peaking bells. The tone
- * controls (Bass / Treble) share the two shelf sections rather than sitting in
- * series with them, so a curve that touches both adds the two gains together.
- *
- * Balance is an output trim rather than an extra section, and does not run at
- * all for mono files — see [onConfigure].
- *
- * ## State-variable filters
- *
- * Implemented as two-integrator state-variable sections using the bilinear
- * transform with frequency pre-warping (the standard trapezoidal SVF). Chosen
- * because SVFs decouple frequency from Q — changing gain or bandwidth does not
- * shift the centre — and because their internal states stay bounded under
- * parameter modulation, which lets the user drag a band smoothly without
- * generating transients.
- *
- * ## Gliding
- *
- * Every slider change is a target, not a step. The processor updates its
- * coefficients once per [GLIDE_FRAMES] frames, chasing the target curve
- * smoothly. This turns an abrupt preset switch into a short, inaudible glide
- * instead of a transient that would clip or click.
- *
- * ## Overs
- *
- * The make-up only takes back half of a boost ([EqCurve.preampDb]), so the
- * odd peak can land past full scale. On the float path that is left alone
- * here — a later stage may well turn it back down — and caught at the end of
- * the chain by [LoudnessProcessor]'s limiter, which [isShaping] keeps engaged.
- * The 16-bit path has nowhere to keep it, so it runs its own [PeakLimiter].
- */
 @UnstableApi
 class EqualizerProcessor : BaseAudioProcessor() {
 
-    /** What the processor is aiming at. Swapped whole, never mutated in place. */
     private class Tuning(val curve: EqCurve, val balance: Float) {
         companion object {
             val OFF = Tuning(EqCurve.FLAT, 0f)
@@ -84,38 +45,18 @@ class EqualizerProcessor : BaseAudioProcessor() {
     private val mixBand = FloatArray(EqLayout.SLOTS)
     private val mixLow = FloatArray(EqLayout.SLOTS)
 
-    /** Which sections are worth running this sub-block, and how many. */
     private val activeSlots = IntArray(EqLayout.SLOTS)
     private val running = BooleanArray(EqLayout.SLOTS)
 
-    /** Two integrator states per section, per channel. */
     private var state = FloatArray(0)
-
-    /** Output trim per channel: make-up attenuation, and balance where stereo. */
     private var channelGain = FloatArray(0)
-
-    /** One frame held back on the 16-bit path, so the limiter can see every channel of it. */
     private var frame = FloatArray(0)
 
     private val limiter = PeakLimiter()
 
-    /**
-     * Whether the last float block came out altered. Read by [com.music.aura.playback.audio.DspChain]
-     * on the audio thread to keep the end-of-chain limiter engaged for as long as
-     * this can be pushing peaks past full scale.
-     */
     var isShaping: Boolean = false
         private set
 
-    /**
-     * Aims the equaliser. Called from whoever owns the settings, not from the
-     * audio thread; nothing here is read until the next sub-block boundary.
-     *
-     * `enabled = false` is a flat curve and a centred balance rather than a
-     * bypass flag, so switching the equaliser off glides down to nothing like
-     * every other change instead of cutting the current curve out from under a
-     * playing track.
-     */
     fun setTuning(enabled: Boolean, curve: EqCurve, balance: Float) {
         target = if (enabled) Tuning(curve, balance.coerceIn(-1f, 1f)) else Tuning.OFF
     }
@@ -123,9 +64,6 @@ class EqualizerProcessor : BaseAudioProcessor() {
     val isEnabled: Boolean
         get() = target !== Tuning.OFF
 
-    /**
-     * Configures the Float32 DSP engine for [sampleRate] and [channelCount].
-     */
     fun configure(sampleRate: Int, channelCount: Int) {
         this.sampleRate = sampleRate
         this.channelCount = channelCount
@@ -144,10 +82,6 @@ class EqualizerProcessor : BaseAudioProcessor() {
         snapToTarget()
     }
 
-    /**
-     * Processes interleaved Float32 audio samples in [block] in-place.
-     * Preserves dynamic headroom without clamping to [-1.0f, +1.0f].
-     */
     fun process(block: AudioBlock) {
         val frameCount = block.frameCount
         if (frameCount == 0 || channelCount < 1 || sampleRate <= 0) return
@@ -183,16 +117,8 @@ class EqualizerProcessor : BaseAudioProcessor() {
         }
     }
 
-    /**
-     * 16-bit PCM, any channel count.
-     */
     override fun onConfigure(inputAudioFormat: AudioProcessor.AudioFormat): AudioProcessor.AudioFormat {
         if (inputAudioFormat.encoding != C.ENCODING_PCM_16BIT || inputAudioFormat.channelCount < 1) {
-            Log.w(
-                TAG,
-                "Equaliser inactive: encoding=${inputAudioFormat.encoding} " +
-                    "channels=${inputAudioFormat.channelCount} is not 16-bit PCM",
-            )
             return AudioProcessor.AudioFormat.NOT_SET
         }
         configure(inputAudioFormat.sampleRate, inputAudioFormat.channelCount)
@@ -265,8 +191,6 @@ class EqualizerProcessor : BaseAudioProcessor() {
         outputBuffer.flip()
     }
 
-    // ---- Gliding -----------------------------------------------------------
-
     private fun snapToTarget() {
         val tuning = target
         tuning.curve.gainsDb.copyInto(currentGainDb)
@@ -306,8 +230,6 @@ class EqualizerProcessor : BaseAudioProcessor() {
         }
         return true
     }
-
-    // ---- Coefficients ------------------------------------------------------
 
     private fun prepareSections(): Int {
         var active = 0
@@ -374,8 +296,6 @@ class EqualizerProcessor : BaseAudioProcessor() {
         }
     }
 
-    // ---- Filter ------------------------------------------------------------
-
     private fun section(slot: Int, channel: Int, input: Float): Float {
         val i = (channel * EqLayout.SLOTS + slot) * 2
         val ic1 = state[i]
@@ -408,29 +328,14 @@ class EqualizerProcessor : BaseAudioProcessor() {
     }
 
     companion object {
-        private const val TAG = "AuraEqualizer"
-
         private const val BYTES_PER_SAMPLE = 2
-
-        /** Frames between coefficient updates. ~1.5 ms at 44.1 kHz. */
         private const val GLIDE_FRAMES = 64
-
-        /** Per-sub-block glide fraction. ~18 ms time constant — a fast drag still tracks. */
         private const val GLIDE_RATE = 0.08f
-
-        /** Below this a band is doing nothing anyone can hear, so it counts as flat. */
         private const val SETTLED_DB = 0.01f
-
-        /** Same idea for the balance trim, where the scale is -1 to 1. */
         private const val SETTLED_BALANCE = 0.0005f
-
         private const val MIN_Q = 0.05f
         private const val MIN_HZ = 10f
-
-        /** Keeps `tan` away from its pole at Nyquist. */
         private const val MAX_FREQUENCY_FRACTION = 0.45f
-
-        /** Safe noise floor threshold to prevent floating point denormals. */
         private const val DENORMAL_FLOOR = 1e-12f
     }
 }
