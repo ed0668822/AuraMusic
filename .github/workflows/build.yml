@@ -21,13 +21,13 @@ jobs:
           cache: gradle
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
 
       - name: Install Android SDK packages
         shell: bash
         run: |
           yes | sdkmanager --licenses
-          sdkmanager --install "platforms;android-35" "build-tools;35.0.0" "cmake;3.22.1" "platform-tools"
+          sdkmanager --install "platform-tools" "platforms;android-35" "build-tools;35.0.0" "cmake;3.22.1"
 
       - name: Decode Keystore
         if: ${{ secrets.KEYSTORE_BASE64 != '' }}
