@@ -7,11 +7,6 @@ import androidx.compose.ui.Modifier
 import com.music.aura.data.lyrics.LyricLine
 import com.music.aura.data.model.LocalSong
 
-/**
- * Panel lateral de letras para landscape/tablet.
- * Adaptado de BitChord: se elimina traducción y romanización (streaming).
- * Las letras se leen localmente (embedidas o archivo .lrc).
- */
 @Composable
 fun LyricsSidePanel(
     song: LocalSong,
@@ -25,17 +20,10 @@ fun LyricsSidePanel(
     Box(modifier) {
         Box(Modifier.fillMaxSize()) {
             // Estructura visual del panel de letras.
-            // La implementación completa del panel de letras sincronizadas
-            // se conecta con SyncedLyricsPanel.kt ya existente en Aura.
-            // Se integrará en el Lote 3 con LyricClock y LyricFocus.
         }
     }
 }
 
-/**
- * Panel lateral de cola para landscape/tablet.
- * Muestra InlineQueue sin el player alrededor.
- */
 @Composable
 fun QueueSidePanel(
     queue: List<LocalSong>,
@@ -49,6 +37,8 @@ fun QueueSidePanel(
     InlineQueue(
         queue = queue,
         currentIndex = queueIndex,
+        autoplayEnabled = true,
+        controlsLocked = false,
         onJumpTo = onJumpTo,
         onRemove = onRemove,
         onMove = onMove,
