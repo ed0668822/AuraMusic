@@ -27,17 +27,14 @@ jobs:
         shell: bash
         run: |
           yes | sdkmanager --licenses
-          sdkmanager --install "platforms;android-36" "build-tools;36.0.0" "cmake;3.22.1" "platform-tools"
+          sdkmanager --install "platforms;android-35" "build-tools;35.0.0" "cmake;3.22.1" "platform-tools"
 
       - name: Decode Keystore
+        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         shell: bash
         run: |
-          if [ -z "$KEYSTORE_BASE64" ]; then
-            echo "Missing KEYSTORE_BASE64 secret"
-            exit 1
-          fi
           echo "$KEYSTORE_BASE64" | base64 --decode > aura-release.jks
 
       - name: Setup Gradle
