@@ -54,13 +54,20 @@ jobs:
             -H 'Content-Type: application/json' \
             -d "$AI_PAYLOAD")
 
+          # Imprimir respuesta en consola de GitHub para depurar si hay error
+          echo "Respuesta de la API:"
+          echo "$RESPONSE"
+
           AI_ANALYSIS=$(echo "$RESPONSE" | jq -r '.candidates[0].content.parts[0].text // empty')
           
           if [ -z "$AI_ANALYSIS" ] || [ "$AI_ANALYSIS" = "null" ]; then
-            AI_ANALYSIS="No se pudo procesar la respuesta de la IA. Revisa los logs de GitHub Actions."
+            # Intentar capturar si Google devolvió un error específico
+            ERROR_MSG=$(echo "$RESPONSE" | jq -r '.error.message // "Desconocido"')
+            AI_ANALYSIS="No se pudo procesar la respuesta de la IA. Motivo API: $ERROR_MSG"
           fi
 
-          DISCORD_MESSAGE="🚨 **Error de compilación detectado**%0A%0A**Análisis y Solución de la IA:**%0A%0A$AI_ANALYSIS"
+          # Construir mensaje limpio para Discord usando jq (evita por completo los %0A literales)
+          DISCORD_MESSAGE="🚨 **Error de compilación detectado**"$'\n\n'"**Análisis y Solución de la IA:**"$'\n\n'"$AI_ANALYSIS"
           
           DISCORD_PAYLOAD=$(jq -n --arg content "${DISCORD_MESSAGE:0:1900}" '{content: $content}')
           
