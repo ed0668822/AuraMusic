@@ -20,13 +20,24 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Dar permisos de ejecución a Gradle
-        run: chmod +x gradlew
-
-      - name: Intentar compilar APK
+      - name: Buscar, dar permisos y compilar APK
         id: gradle_build
         run: |
-          ./gradlew assembleDebug 2>&1 | tee build_log.txt
+          # Buscar automáticamente la ruta del archivo gradlew en el repositorio
+          GRADLEW_PATH=$(find . -name "gradlew" -print -quit)
+          
+          if [ -z "$GRADLEW_PATH" ]; then
+            echo "❌ Error: No se encontró el archivo 'gradlew' en el repositorio."
+            exit 1
+          fi
+          
+          GRADLE_DIR=$(dirname "$GRADLEW_PATH")
+          echo "📁 Gradle encontrado en: $GRADLE_DIR"
+          
+          # Entrar a la carpeta del proyecto, dar permisos y compilar
+          cd "$GRADLE_DIR"
+          chmod +x gradlew
+          ./gradlew assembleDebug 2>&1 | tee ../build_log.txt
         continue-on-error: true
 
       - name: Analizar error con IA y enviar a Discord (si falla)
