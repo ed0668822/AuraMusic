@@ -1,12 +1,20 @@
 package com.music.aura.ui.player
 
+/**
+ * One credit in an artist line.
+ */
 data class ArtistCredit(
     val name: String,
+    /** Null for local music: no page to navigate to. */
     val browseId: String? = null,
 )
 
-private val CREDIT_SEPARATOR = Regex("\\s*(?:,|&| and | ft\\.? | feat\\.? | x )\\s*", RegexOption.IGNORE_CASE)
-
+/**
+ * The credits to draw for a track.
+ *
+ * For local music the artist field is a plain string. Split on common
+ * separators so each name can be displayed individually in the marquee.
+ */
 fun artistCredits(artist: String): List<ArtistCredit> {
     val text = artist.trim()
     if (text.isEmpty()) return emptyList()
@@ -30,3 +38,9 @@ fun artistCredits(artist: String): List<ArtistCredit> {
     if (out.isEmpty()) out += ArtistCredit(name = text)
     return out
 }
+
+/** Common separators in artist bylines: comma, ampersand, "feat.", "ft.", "with", " x ". */
+private val CREDIT_SEPARATOR = Regex(
+    """\s*(?:,|&|\bfeat\.?\b|\bft\.?\b|\bwith\b|\s+x\s+)\s*""",
+    RegexOption.IGNORE_CASE,
+)
