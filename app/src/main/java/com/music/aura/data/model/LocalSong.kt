@@ -1,5 +1,15 @@
 package com.music.aura.data.model
 
+enum class QueueTier {
+    USER_QUEUE,
+    CONTEXT,
+    AUTOPLAY,
+}
+
+enum class PlaybackSourceType {
+    HOME, SEARCH, HISTORY, REPLAY, EXPLORE, BROWSE, SHARED_LINK, QUEUE,
+}
+
 data class LocalSong(
     val id: String,
     val title: String,
