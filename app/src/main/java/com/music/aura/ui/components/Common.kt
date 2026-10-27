@@ -9,6 +9,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -78,42 +79,28 @@ import com.music.aura.ui.haptics.rememberHaptics
 import kotlin.math.abs
 
 val PAGE_GUTTER = 16.dp
-
 val BAR_GUTTER = PAGE_GUTTER
-
 val ROW_DIVIDER_INSET = PAGE_GUTTER + 68.dp
-
 val TRACK_NUMBER_WIDTH = 24.dp
-
 val NUMBERED_ROW_DIVIDER_INSET = PAGE_GUTTER + TRACK_NUMBER_WIDTH + PAGE_GUTTER
-
 val FLOATING_BAR_MAX_WIDTH = 440.dp
-
 val SHELF_CARD_WIDTH = 150.dp
 
 private const val HERO_CARD_FRACTION = 0.70f
-
 private val HERO_CARD_MAX_WIDTH = 320.dp
-
 const val HERO_CARD_RATIO = 0.92f
 
 fun heroCardWidth(available: Dp): Dp = minOf(available * HERO_CARD_FRACTION, HERO_CARD_MAX_WIDTH)
 
 private const val TRACK_COLUMN_FRACTION = 0.88f
-
 private val TRACK_COLUMN_MAX_WIDTH = 400.dp
-
 fun trackColumnWidth(available: Dp): Dp =
     minOf(available * TRACK_COLUMN_FRACTION, TRACK_COLUMN_MAX_WIDTH)
 
 data class LibraryGridSpec(val columns: Int, val cardWidth: Dp)
-
 private val LIBRARY_GRID_MIN_CARD_WIDTH = 140.dp
-
 val LIBRARY_GRID_SPACING = 12.dp
-
 private const val LIBRARY_GRID_MIN_COLUMNS = 2
-
 private const val LIBRARY_GRID_MAX_COLUMNS = 5
 
 fun libraryGrid(available: Dp): LibraryGridSpec {
@@ -352,7 +339,7 @@ private fun SongRowContent(
             Text(
                 text = listOfNotNull(
                     song.artist.takeIf { it.isNotBlank() },
-                    song.album.takeIf { it.isNotBlank() },
+                    song.album?.takeIf { it.isNotBlank() },
                 ).joinToString(" · "),
                 style = MaterialTheme.typography.bodyMedium,
                 color = subtitleColor,
@@ -371,7 +358,7 @@ private fun SongRowContent(
         }
         Spacer(Modifier.width(8.dp))
         Text(
-            text = song.durationText ?: "",
+            text = song.durationText,
             style = MaterialTheme.typography.labelMedium,
             color = subtitleColor,
         )
