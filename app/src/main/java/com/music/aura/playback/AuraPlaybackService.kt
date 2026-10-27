@@ -6,6 +6,7 @@ import androidx.annotation.OptIn
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.MediaSession
@@ -24,9 +25,8 @@ class AuraPlaybackService : MediaSessionService() {
 
         val renderersFactory = NextRenderersFactory(this)
             .setEnableDecoderFallback(true)
-            .setExtensionRendererMode(androidx.media3.exoplayer.DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
+            .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
 
-        // ✅ SOLUCIÓN: Inyectar el ExtractorFactory a través del MediaSourceFactory
         val mediaSourceFactory = DefaultMediaSourceFactory(this)
             .setExtractorsFactory(DsdExtractorsFactory())
 
