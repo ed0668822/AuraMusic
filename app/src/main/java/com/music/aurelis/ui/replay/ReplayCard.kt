@@ -1,4 +1,4 @@
-package com.music.aura.ui.replay
+package com.music.aurelis.ui.replay
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -36,9 +36,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.music.aura.R
-import com.music.aura.ui.icons.AuraIcons
-import com.music.aura.ui.theme.MeshGradient
+import com.music.aurelis.R
+import com.music.aurelis.ui.icons.AurelisIcons
+import com.music.aurelis.ui.theme.MeshGradient
 import java.util.Locale
 
 @Composable
@@ -82,7 +82,7 @@ fun ReplayCreditCard(
                 )
                 Spacer(Modifier.width(10.dp))
                 Icon(
-                    imageVector = AuraIcons.MusicNote,
+                    imageVector = AurelisIcons.MusicNote,
                     contentDescription = null,
                     tint = Color.White,
                     modifier = Modifier.size(28.dp),
