@@ -1,4 +1,4 @@
-package com.music.aura.playback.smart
+package com.music.aurelis.playback.smart
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
