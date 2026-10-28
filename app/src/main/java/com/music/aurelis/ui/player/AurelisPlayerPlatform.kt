@@ -1,4 +1,4 @@
-package com.music.aura.ui.player
+package com.music.aurelis.ui.player
 
 /**
  * Punto de acceso a la plataforma que hospeda el reproductor.
@@ -7,22 +7,22 @@ package com.music.aura.ui.player
  * el estado del host: si el compartir de letras está disponible, cómo avisar
  * al usuario de un mensaje, y preferencias globales como `reduceAnimation`.
  *
- * En Aura todavía no hay un host real — se portará completo en la Fase 7
+ * En Aurelis todavía no hay un host real — se portará completo en la Fase 7
  * (Player UI). Mientras tanto, este stub expone la superficie mínima que
  * el código ya portado necesita para compilar, sin hacer nada en runtime.
  */
-object AuraPlayerPlatform {
-    var host: AuraPlayerHost = StubAuraPlayerHost
+object AurelisPlayerPlatform {
+    var host: AurelisPlayerHost = StubAurelisPlayerHost
 }
 
-interface AuraPlayerHost {
+interface AurelisPlayerHost {
     val lyricsShareAvailable: Boolean
     fun showMessage(message: String)
 }
 
-private object StubAuraPlayerHost : AuraPlayerHost {
+private object StubAurelisPlayerHost : AurelisPlayerHost {
     override val lyricsShareAvailable: Boolean = false
     override fun showMessage(message: String) {
-        android.util.Log.d("AuraPlayerPlatform", message)
+        android.util.Log.d("AurelisPlayerPlatform", message)
     }
 }
