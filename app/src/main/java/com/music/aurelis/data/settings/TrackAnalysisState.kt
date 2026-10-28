@@ -1,4 +1,4 @@
-package com.music.aura.data.settings
+package com.music.aurelis.data.settings
 
 /** Where one track stands in Automix's analysis. */
 enum class TrackAnalysisState {
