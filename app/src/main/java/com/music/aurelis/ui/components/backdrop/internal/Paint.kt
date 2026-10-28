@@ -2,12 +2,12 @@
  * Vendored from Kyant0/backdrop v2.0.0 (io.github.kyant0:backdrop)
  * https://github.com/Kyant0/backdrop — Copyright 2025 Kyant0, Apache License 2.0
  */
-package com.music.aura.ui.components.backdrop.internal
+package com.music.aurelis.ui.components.backdrop.internal
 
 import android.graphics.BlurMaskFilter
 import androidx.compose.ui.graphics.Paint
-import com.music.aura.ui.components.backdrop.RuntimeShader
-import com.music.aura.ui.components.backdrop.asAndroidRuntimeShader
+import com.music.aurelis.ui.components.backdrop.RuntimeShader
+import com.music.aurelis.ui.components.backdrop.asAndroidRuntimeShader
 
 internal fun Paint.blur(radius: Float) {
     this.asFrameworkPaint().maskFilter =
