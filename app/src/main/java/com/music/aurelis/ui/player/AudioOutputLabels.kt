@@ -1,8 +1,8 @@
-package com.music.aura.ui.player
+package com.music.aurelis.ui.player
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
-import com.music.aura.R
+import com.music.aurelis.R
 
 @Composable
 internal fun outputLabel(device: AudioOutputDevice): String {
