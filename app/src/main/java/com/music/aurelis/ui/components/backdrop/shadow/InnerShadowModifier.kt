@@ -1,4 +1,4 @@
-package com.music.aura.ui.components.backdrop.shadow
+package com.music.aurelis.ui.components.backdrop.shadow
 
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.BlendMode
@@ -18,8 +18,8 @@ import androidx.compose.ui.node.requireGraphicsContext
 import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntSize
-import com.music.aura.ui.components.backdrop.internal.ShapeProvider
-import com.music.aura.ui.components.backdrop.internal.blur
+import com.music.aurelis.ui.components.backdrop.internal.ShapeProvider
+import com.music.aurelis.ui.components.backdrop.internal.blur
 import kotlin.math.ceil
 
 internal class InnerShadowElement(
