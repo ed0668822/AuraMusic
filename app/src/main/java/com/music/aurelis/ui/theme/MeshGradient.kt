@@ -1,4 +1,4 @@
-package com.music.aura.ui.theme
+package com.music.aurelis.ui.theme
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
