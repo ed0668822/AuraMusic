@@ -7,7 +7,7 @@
  * scale for cheaper effect rendering. KMP expect/actual declarations were
  * merged into this single Android source set. Package renamed accordingly.
  */
-package com.music.aura.ui.components.backdrop.backdrops
+package com.music.aurelis.ui.components.backdrop.backdrops
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -25,8 +25,8 @@ import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.unit.Density
-import com.music.aura.ui.components.backdrop.Backdrop
-import com.music.aura.ui.components.backdrop.internal.InverseLayerScope
+import com.music.aurelis.ui.components.backdrop.Backdrop
+import com.music.aurelis.ui.components.backdrop.internal.InverseLayerScope
 
 private val DefaultOnDraw: ContentDrawScope.() -> Unit = { drawContent() }
 
