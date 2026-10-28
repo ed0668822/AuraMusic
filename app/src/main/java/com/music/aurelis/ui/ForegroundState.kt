@@ -1,4 +1,4 @@
-package com.music.aura.ui
+package com.music.aurelis.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
