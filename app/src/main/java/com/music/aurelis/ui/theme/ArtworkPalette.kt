@@ -1,4 +1,4 @@
-package com.music.aura.ui.theme
+package com.music.aurelis.ui.theme
 
 import android.content.Context
 import android.net.Uri
@@ -23,11 +23,11 @@ import coil3.SingletonImageLoader
 import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
 import coil3.request.SuccessResult
-import com.music.aura.data.SettingsRepository
-import com.music.aura.ui.graphics.ColorUtils
-import com.music.aura.ui.graphics.forPixelAccess
-import com.music.aura.ui.graphics.paletteSwatches
-import com.music.aura.ui.graphics.toImageBitmap
+import com.music.aurelis.data.SettingsRepository
+import com.music.aurelis.ui.graphics.ColorUtils
+import com.music.aurelis.ui.graphics.forPixelAccess
+import com.music.aurelis.ui.graphics.paletteSwatches
+import com.music.aurelis.ui.graphics.toImageBitmap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.math.pow
