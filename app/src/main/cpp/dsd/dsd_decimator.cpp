@@ -65,7 +65,7 @@ struct Decoder {
 }
 
 extern "C" JNIEXPORT jlong JNICALL
-Java_com_music_aura_playback_dsd_DsdBlockDecoder_create(JNIEnv* env, jobject, jint channels,
+Java_com_music_aurelis_playback_dsd_DsdBlockDecoder_create(JNIEnv* env, jobject, jint channels,
         jint decimation, jlong samples, jdoubleArray coefficients) {
     if (!coefficients || channels < 1 || channels > 2 || samples <= 0 ||
         (decimation != 16 && decimation != 32 && decimation != 64 && decimation != 128 && decimation != 256)) return 0;
@@ -80,14 +80,14 @@ Java_com_music_aura_playback_dsd_DsdBlockDecoder_create(JNIEnv* env, jobject, ji
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_music_aura_playback_dsd_DsdBlockDecoder_reset(JNIEnv*, jobject, jlong handle, jlong byte, jlong frame) {
+Java_com_music_aurelis_playback_dsd_DsdBlockDecoder_reset(JNIEnv*, jobject, jlong handle, jlong byte, jlong frame) {
     auto* d = reinterpret_cast<Decoder*>(handle);
     d->source = byte; d->frame = frame; d->position = 0; d->full = 0;
     std::fill(d->history.begin(), d->history.end(), 0);
 }
 
 extern "C" JNIEXPORT jint JNICALL
-Java_com_music_aura_playback_dsd_DsdBlockDecoder_decode(JNIEnv* env, jobject, jlong handle,
+Java_com_music_aurelis_playback_dsd_DsdBlockDecoder_decode(JNIEnv* env, jobject, jlong handle,
         jbyteArray bytes, jint size, jfloatArray output) {
     auto* d = reinterpret_cast<Decoder*>(handle);
     if (!d || !output || size < 0 || size > 8192 || size % d->channels ||
@@ -115,6 +115,6 @@ Java_com_music_aura_playback_dsd_DsdBlockDecoder_decode(JNIEnv* env, jobject, jl
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_music_aura_playback_dsd_DsdBlockDecoder_destroy(JNIEnv*, jobject, jlong handle) {
+Java_com_music_aurelis_playback_dsd_DsdBlockDecoder_destroy(JNIEnv*, jobject, jlong handle) {
     delete reinterpret_cast<Decoder*>(handle);
 }
