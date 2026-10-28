@@ -1,4 +1,4 @@
-package com.music.aura.ui.components
+package com.music.aurelis.ui.components
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,8 +17,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
-import com.music.aura.R
-import com.music.aura.data.model.LocalSong
+import com.music.aurelis.R
+import com.music.aurelis.data.model.LocalSong
 
 /**
  * What a source row says it can be streamed at, in the player badge's terms.
