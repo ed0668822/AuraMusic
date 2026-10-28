@@ -6,12 +6,12 @@ import java.util.Locale
  * Single place that knows zh-Hant / zh-Hans.
  *
  * Internally the app stores and compares full script tags ("zh-Hant",
- * "zh-Hans"). Downstream services that care about region (translation
- * endpoints, etc.) get the dialect they understand ("zh-TW" / "zh-CN").
+ * "zh-Hans"). On the wire each service gets the dialect it understands:
+ * YouTube / Google Translate want region tags ("zh-TW" / "zh-CN").
  *
- * Aura-specific: the original BitChord version also exposed YouTube-specific
- * helpers (ytHl, ytGl, acceptLanguage). Those are omitted because Aura is
- * local-only and will never build an Innertube context.
+ * Portado desde Bitchord sin cambios: aunque Aura solo soporta 6 idiomas
+ * en el diálogo, el resto de la app (traducción de letras en Fase 7) usará
+ * este helper para normalizar tags. Mantenerlo completo evita divergencias.
  */
 object LocaleTags {
     const val ZH_HANT = "zh-Hant"
@@ -50,10 +50,41 @@ object LocaleTags {
     /** Full tag for the current device/app locale, script-preserving. */
     fun systemTag(): String = normalizeAppTag(Locale.getDefault().toLanguageTag())
 
+    /** What YouTube Music wants as `hl` / Innertube context hl. */
+    fun ytHl(appTag: String): String {
+        val norm = normalizeAppTag(appTag)
+        return when (norm) {
+            ZH_HANT -> ZH_TW_WIRE
+            ZH_HANS -> ZH_CN_WIRE
+            else -> norm.substringBefore('-')
+        }
+    }
+
+    /** Geo for Innertube context gl + InnerTubeX locale. */
+    fun ytGl(appTag: String): String {
+        return when (normalizeAppTag(appTag)) {
+            ZH_HANT -> "TW"
+            ZH_HANS -> "CN"
+            else -> "US"
+        }
+    }
+
+    fun acceptLanguage(appTag: String): String {
+        return when (normalizeAppTag(appTag)) {
+            ZH_HANT -> "zh-TW,zh-Hant;q=0.9,zh;q=0.8,en-US;q=0.7,en;q=0.6"
+            ZH_HANS -> "zh-CN,zh-Hans;q=0.9,zh;q=0.8,en-US;q=0.7,en;q=0.6"
+            "en" -> "en-US,en;q=0.9"
+            else -> {
+                val base = normalizeAppTag(appTag).substringBefore('-')
+                "$base,en-US;q=0.8,en;q=0.7"
+            }
+        }
+    }
+
     /**
-     * What the lyrics translation endpoint wants as `tl`. Google understands
-     * zh-TW / zh-CN as scripts; sending bare "zh" always returns Simplified,
-     * and sending "zh-Hant" is not reliably honoured — so map script to region.
+     * What the lyrics endpoint wants as `tl`. Google understands zh-TW /
+     * zh-CN as scripts; sending bare "zh" always returns Simplified, and
+     * sending "zh-Hant" is not reliably honoured — so map script to region.
      * An explicit translator choice in zh-TW/zh-CN form passes through.
      */
     fun translationWireTarget(tag: String): String {
