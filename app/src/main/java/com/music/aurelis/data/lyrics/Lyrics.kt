@@ -1,4 +1,4 @@
-package com.music.aura.data.lyrics
+package com.music.aurelis.data.lyrics
 
 /**
  * Letras de una canción, sincronizadas o planas.
