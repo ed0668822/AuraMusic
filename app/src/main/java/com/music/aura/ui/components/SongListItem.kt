@@ -25,8 +25,15 @@ import com.music.aura.data.model.LocalSong
 
 /**
  * Fila individual de una canción en la lista de la biblioteca.
- * Muestra artwork, título, artista, duración y barras de ecualizador
- * cuando la canción está sonando.
+ *
+ * Muestra artwork, título (con badge explícito si `isExplicit == true`),
+ * artista, badge de calidad (si `sourceQualityBadge()` no es null),
+ * barras de ecualizador cuando suena y duración.
+ *
+ * Fase 2 Wave 2 — Decisión A (Opción C): el badge de calidad solo aparece
+ * cuando `LocalSong.sourceQuality` esté poblado. Hasta Fase 8 (NerdStats
+ * real) ese campo es `null`, así que el badge no se dibuja; la integración
+ * ya está lista para cuando el escáner empiece a rellenarlo.
  */
 @Composable
 fun SongListItem(
@@ -35,6 +42,7 @@ fun SongListItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val titleColor = if (isPlaying) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -70,18 +78,12 @@ fun SongListItem(
 
         Spacer(modifier = Modifier.width(14.dp))
 
-        // Título y artista
+        // Título (con badge explícito si aplica) y artista
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = song.title,
+            ExplicitSongTitle(
+                song = song,
                 style = MaterialTheme.typography.bodyLarge,
-                color = if (isPlaying) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurface
-                },
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+                color = titleColor,
             )
             Text(
                 text = song.artist,
@@ -94,6 +96,16 @@ fun SongListItem(
         }
 
         Spacer(modifier = Modifier.width(8.dp))
+
+        // Badge de calidad (Opción A: junto a la duración, a la derecha)
+        song.sourceQualityBadge()?.let { quality ->
+            SourceQualityBadge(
+                quality = quality,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.labelSmall,
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+        }
 
         // Indicador de reproducción o duración
         if (isPlaying) {
