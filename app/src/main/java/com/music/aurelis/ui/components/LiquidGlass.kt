@@ -1,8 +1,8 @@
 /*
  * The glass rendering itself is Kyant0/backdrop (Apache-2.0), vendored at
- * [com.music.aura.ui.components.backdrop].
+ * [com.music.aurelis.ui.components.backdrop].
  */
-package com.music.aura.ui.components
+package com.music.aurelis.ui.components
 
 import android.os.Build
 import androidx.compose.foundation.background
@@ -20,16 +20,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import com.music.aura.ui.components.backdrop.Backdrop
-import com.music.aura.ui.components.backdrop.backdrops.LayerBackdrop
-import com.music.aura.ui.components.backdrop.drawBackdrop
-import com.music.aura.ui.components.backdrop.effects.blur
-import com.music.aura.ui.components.backdrop.effects.lens
-import com.music.aura.ui.components.backdrop.highlight.Highlight
-import com.music.aura.ui.components.backdrop.highlight.HighlightElement
-import com.music.aura.ui.components.backdrop.internal.ShapeProvider
+import com.music.aurelis.ui.components.backdrop.Backdrop
+import com.music.aurelis.ui.components.backdrop.backdrops.LayerBackdrop
+import com.music.aurelis.ui.components.backdrop.drawBackdrop
+import com.music.aurelis.ui.components.backdrop.effects.blur
+import com.music.aurelis.ui.components.backdrop.effects.lens
+import com.music.aurelis.ui.components.backdrop.highlight.Highlight
+import com.music.aurelis.ui.components.backdrop.highlight.HighlightElement
+import com.music.aurelis.ui.components.backdrop.internal.ShapeProvider
 // ✅ CORREGIDO: Importación explícita de Shadow
-import com.music.aura.ui.components.backdrop.shadow.Shadow
+import com.music.aurelis.ui.components.backdrop.shadow.Shadow
 
 /** Whether the liquid glass nav bar is turned on. */
 val LocalLiquidGlassEnabled = staticCompositionLocalOf { true }
