@@ -1,8 +1,8 @@
-package com.music.aura.playback
+package com.music.aurelis.playback
 
-import com.music.aura.data.model.LocalSong
-import com.music.aura.data.model.PlaybackSourceType
-import com.music.aura.data.model.QueueTier
+import com.music.aurelis.data.model.LocalSong
+import com.music.aurelis.data.model.PlaybackSourceType
+import com.music.aurelis.data.model.QueueTier
 import java.util.UUID
 
 data class QueueSource(
