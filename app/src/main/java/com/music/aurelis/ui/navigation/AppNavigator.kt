@@ -1,4 +1,4 @@
-package com.music.aura.ui.navigation
+package com.music.aurelis.ui.navigation
 
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableStateListOf
