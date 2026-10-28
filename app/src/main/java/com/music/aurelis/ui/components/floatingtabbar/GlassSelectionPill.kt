@@ -5,7 +5,7 @@
  * LiquidGlassLensMotion (pub.dev/packages/liquid_glass_easy, 4.3.4).
  * Copyright (c) 2025 Ahmed Gamil, MIT License.
  */
-package com.music.aura.ui.components.floatingtabbar
+package com.music.aurelis.ui.components.floatingtabbar
 
 import android.os.Build
 import androidx.compose.foundation.background
@@ -31,14 +31,14 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import com.music.aura.ui.components.LocalAppBackdrop
-import com.music.aura.ui.components.backdrop.Backdrop
-import com.music.aura.ui.components.backdrop.backdrops.LayerBackdrop
-import com.music.aura.ui.components.backdrop.drawBackdrop
-import com.music.aura.ui.components.backdrop.effects.lens
-import com.music.aura.ui.components.backdrop.highlight.Highlight
+import com.music.aurelis.ui.components.LocalAppBackdrop
+import com.music.aurelis.ui.components.backdrop.Backdrop
+import com.music.aurelis.ui.components.backdrop.backdrops.LayerBackdrop
+import com.music.aurelis.ui.components.backdrop.drawBackdrop
+import com.music.aurelis.ui.components.backdrop.effects.lens
+import com.music.aurelis.ui.components.backdrop.highlight.Highlight
 // ✅ CORREGIDO: Importación explícita de Shadow
-import com.music.aura.ui.components.backdrop.shadow.Shadow
+import com.music.aurelis.ui.components.backdrop.shadow.Shadow
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.abs
