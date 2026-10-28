@@ -1,6 +1,6 @@
-package com.music.aura.playback
+package com.music.aurelis.playback
 
-import com.music.aura.data.model.LocalSong
+import com.music.aurelis.data.model.LocalSong
 import java.util.Locale
 
 object QueueBuilder {
