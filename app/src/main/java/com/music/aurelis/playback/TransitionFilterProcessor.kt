@@ -1,12 +1,12 @@
-package com.music.aura.playback
+package com.music.aurelis.playback
 
 import android.util.Log
 import androidx.media3.common.C
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.BaseAudioProcessor
 import androidx.media3.common.util.UnstableApi
-import com.music.aura.playback.audio.AudioBlock
-import com.music.aura.playback.audio.PcmBoundary
+import com.music.aurelis.playback.audio.AudioBlock
+import com.music.aurelis.playback.audio.PcmBoundary
 import java.nio.ByteOrder
 import kotlin.math.exp
 import kotlin.math.ln
