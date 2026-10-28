@@ -2,7 +2,7 @@
  * Vendored from Kyant0/backdrop v2.0.0 (io.github.kyant0:backdrop)
  * https://github.com/Kyant0/backdrop — Copyright 2025 Kyant0, Apache License 2.0
  */
-package com.music.aura.ui.components.backdrop.highlight
+package com.music.aurelis.ui.components.backdrop.highlight
 
 import androidx.annotation.FloatRange
 import androidx.compose.foundation.shape.CornerBasedShape
@@ -14,11 +14,11 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.util.fastCoerceAtMost
-import com.music.aura.ui.components.backdrop.RuntimeShader
-import com.music.aura.ui.components.backdrop.RuntimeShaderCache
-import com.music.aura.ui.components.backdrop.internal.AmbientHighlightShaderString
-import com.music.aura.ui.components.backdrop.internal.DefaultHighlightShaderString
-import com.music.aura.ui.components.backdrop.isRuntimeShaderSupported
+import com.music.aurelis.ui.components.backdrop.RuntimeShader
+import com.music.aurelis.ui.components.backdrop.RuntimeShaderCache
+import com.music.aurelis.ui.components.backdrop.internal.AmbientHighlightShaderString
+import com.music.aurelis.ui.components.backdrop.internal.DefaultHighlightShaderString
+import com.music.aurelis.ui.components.backdrop.isRuntimeShaderSupported
 import kotlin.math.PI
 
 @Immutable
