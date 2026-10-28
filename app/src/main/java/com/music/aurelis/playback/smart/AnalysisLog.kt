@@ -1,4 +1,4 @@
-package com.music.aura.playback.smart
+package com.music.aurelis.playback.smart
 
 /** Where the analyser's warnings go, without it having to know the platform. */
 object AnalysisLog {
