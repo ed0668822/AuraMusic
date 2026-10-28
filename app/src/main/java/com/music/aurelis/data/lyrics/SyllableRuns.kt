@@ -1,4 +1,4 @@
-package com.music.aura.data.lyrics
+package com.music.aurelis.data.lyrics
 
 /**
  * One stamped run of text as a provider wrote it, its spacing untouched.
