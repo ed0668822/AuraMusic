@@ -1,11 +1,11 @@
-package com.music.aura.ui.player
+package com.music.aurelis.ui.player
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.music.aura.data.lyrics.LyricLine
-import com.music.aura.data.model.LocalSong
+import com.music.aurelis.data.lyrics.LyricLine
+import com.music.aurelis.data.model.LocalSong
 
 @Composable
 fun LyricsSidePanel(
