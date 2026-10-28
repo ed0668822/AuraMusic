@@ -1,4 +1,4 @@
-package com.music.aura.ui.screens
+package com.music.aurelis.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -16,8 +16,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import com.music.aura.data.lyrics.Lyrics
-import com.music.aura.ui.components.SyncedLyricsPanel
+import com.music.aurelis.data.lyrics.Lyrics
+import com.music.aurelis.ui.components.SyncedLyricsPanel
 
 @Composable
 fun LyricsScreen(
