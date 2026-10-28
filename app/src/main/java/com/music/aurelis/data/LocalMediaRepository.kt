@@ -1,10 +1,10 @@
-package com.music.aura.data
+package com.music.aurelis.data
 
 import android.content.ContentUris
 import android.content.Context
 import android.net.Uri
 import android.provider.MediaStore
-import com.music.aura.data.model.LocalSong
+import com.music.aurelis.data.model.LocalSong
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
