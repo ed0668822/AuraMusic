@@ -1,4 +1,4 @@
-package com.music.aura.playback
+package com.music.aurelis.playback
 
 import android.os.SystemClock
 import kotlinx.coroutines.flow.MutableStateFlow
