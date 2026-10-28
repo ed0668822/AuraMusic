@@ -28,6 +28,14 @@ data class LocalSong(
     val playbackSource: String? = null,
     val playbackSourceType: PlaybackSourceType? = null,
     val playbackSourceId: String? = null,
+    // === Fase 2 Wave 2 (Decisión A — Opción C) ===
+    // Null/false hasta que NerdStats real exista en Fase 8.
+    // Los rellenará el escáner local cuando se sepa decodificar el formato real;
+    // por ahora sirven para que SourceQualityBadge y ExplicitBadge compilen
+    // y se vean cuando alguien los popule manualmente.
+    val sourceQuality: String? = null,
+    val sourceHiRes: Boolean = false,
+    val isExplicit: Boolean? = null,
 ) {
     val videoId: String get() = id
     val thumbnailUrl: String? get() = artworkUri
