@@ -1,4 +1,4 @@
-package com.music.aura.playback.dsd
+package com.music.aurelis.playback.dsd
 
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
