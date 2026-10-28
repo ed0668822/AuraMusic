@@ -1,4 +1,4 @@
-package com.music.aura.ui.screens
+package com.music.aurelis.ui.screens
 
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -25,9 +25,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
-import com.music.aura.data.ProfileRepository
-import com.music.aura.data.SettingsRepository
-import com.music.aura.ui.components.*
+import com.music.aurelis.data.ProfileRepository
+import com.music.aurelis.data.SettingsRepository
+import com.music.aurelis.ui.components.*
 
 @Composable
 fun SettingsScreen(
@@ -283,7 +283,7 @@ fun SettingsScreen(
             SettingsRow(
                 icon = Icons.Rounded.Folder,
                 title = "Local music folder",
-                subtitle = "Music/Aura",
+                subtitle = "Music/Aurelis",
                 onClick = { }
             )
             RowDivider()
@@ -308,7 +308,7 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Aura Music", fontWeight = FontWeight.Bold)
+                Text("Aurelis Music", fontWeight = FontWeight.Bold)
                 Text("v1.9.0", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
