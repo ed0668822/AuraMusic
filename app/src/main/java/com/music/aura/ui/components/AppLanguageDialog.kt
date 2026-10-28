@@ -1,0 +1,230 @@
+package com.music.aura.ui.components
+
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.core.os.LocaleListCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.music.aura.R
+import com.music.aura.data.LocaleTags
+import com.music.aura.data.SettingsRepository
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
+import dev.chrisbanes.haze.materials.HazeMaterials
+import java.util.Locale
+
+/**
+ * Language tag paired with its display-name string.
+ *
+ * Tags carry a region (`zh-CN` / `zh-TW`, not bare `zh-Hans` / `zh-Hant`):
+ * Android Views understand script qualifiers (`values-b+zh+Hant`) but the
+ * resource system matches language + region more reliably, so a region-less
+ * script tag ends up showing the wrong variant. [LocaleTags.normalizeAppTag]
+ * maps both forms to the same script downstream.
+ *
+ * Language names themselves are conventionally written in their own language
+ * ("English", "Español", "Français"…), not translated, so a user can always
+ * find their language regardless of the current app locale.
+ */
+data class AppLanguage(val tag: String, val nameRes: Int)
+
+val SUPPORTED_LANGUAGES = listOf(
+    AppLanguage("en", R.string.english),
+    AppLanguage("es", R.string.spanish),
+    AppLanguage("fr", R.string.french),
+    AppLanguage("de", R.string.german),
+    AppLanguage("pl", R.string.polish),
+    AppLanguage("pt", R.string.portuguese),
+    AppLanguage("id", R.string.indonesian),
+    AppLanguage("hi", R.string.hindi),
+    AppLanguage("ja", R.string.japanese),
+    AppLanguage("ru", R.string.russian),
+    AppLanguage("zh-CN", R.string.chinese_simplified),
+    AppLanguage("zh-TW", R.string.chinese_traditional),
+    AppLanguage("he", R.string.hebrew),
+    AppLanguage("it", R.string.italian),
+    AppLanguage("tr", R.string.turkish),
+    AppLanguage("th", R.string.thai),
+    AppLanguage("vi", R.string.vietnamese),
+)
+
+fun languageDisplayNameRes(languageTag: String): Int {
+    val norm = LocaleTags.normalizeAppTag(languageTag)
+    return SUPPORTED_LANGUAGES.firstOrNull {
+        LocaleTags.normalizeAppTag(it.tag) == norm
+    }?.nameRes ?: R.string.english
+}
+
+/** How much of the screen the list may take before it scrolls inside the card. */
+private val LANGUAGE_LIST_MAX_HEIGHT = 340.dp
+
+/**
+ * Same frosted iOS alert as the audio dialogs, single-select. Tapping a row
+ * applies it and closes the sheet immediately — there is no separate Done
+ * button, because there is nothing else to decide.
+ *
+ * NOTE: until `values-en/`, `values-fr/`, etc. exist in the project with
+ * translated strings, choosing a language here saves the preference and
+ * marks it selected, but the actual UI text stays in the fallback locale
+ * (`values/`, which is Spanish). That is Android's documented behavior — the
+ * language catalogues are a separate porting phase.
+ */
+@OptIn(ExperimentalHazeMaterialsApi::class)
+@Composable
+fun AppLanguageDialog(
+    hazeState: HazeState,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val reduceDynamicBlur by SettingsRepository.reduceDynamicBlur.collectAsStateWithLifecycle()
+    val shape = RoundedCornerShape(ALERT_CORNER)
+    val currentLanguage = LocaleTags.normalizeAppTag(
+        AppCompatDelegate.getApplicationLocales().get(0)?.toLanguageTag()
+            ?: Locale.getDefault().toLanguageTag(),
+    )
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(SCRIM_COLOR)
+            .clickable(
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() },
+                onClick = onDismiss,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            modifier = Modifier
+                .width(ALERT_WIDTH)
+                .clip(shape)
+                .then(
+                    if (reduceDynamicBlur) {
+                        Modifier.background(MaterialTheme.colorScheme.surface)
+                    } else {
+                        Modifier.optimizedHazeEffect(
+                            state = hazeState,
+                            style = HazeMaterials.regular(MaterialTheme.colorScheme.surface),
+                        )
+                    },
+                )
+                // Swallows the tap before it reaches the scrim behind, so
+                // touching the card itself never dismisses it.
+                .clickable(
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() },
+                    onClick = {},
+                ),
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 19.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = stringResource(R.string.app_language),
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.W600,
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center,
+                )
+                Text(
+                    text = stringResource(R.string.app_language_description),
+                    modifier = Modifier.padding(top = 4.dp),
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontSize = 13.sp,
+                        lineHeight = 17.sp,
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center,
+                )
+            }
+
+            LazyColumn(modifier = Modifier.heightIn(max = LANGUAGE_LIST_MAX_HEIGHT)) {
+                items(SUPPORTED_LANGUAGES, key = { it.tag }) { language ->
+                    AlertRule()
+                    LanguageRow(
+                        language = language,
+                        selected = LocaleTags.normalizeAppTag(language.tag) == currentLanguage,
+                        onClick = {
+                            AppCompatDelegate.setApplicationLocales(
+                                LocaleListCompat.forLanguageTags(language.tag),
+                            )
+                            onDismiss()
+                        },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LanguageRow(language: AppLanguage, selected: Boolean, onClick: () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = ACTION_HEIGHT)
+            .background(
+                if (pressed) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.09f) else Color.Transparent,
+            )
+            .clickable(
+                indication = null,
+                interactionSource = interactionSource,
+                onClick = onClick,
+            )
+            .padding(horizontal = 16.dp, vertical = 9.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = stringResource(language.nameRes),
+            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp),
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f),
+        )
+        if (selected) {
+            Icon(
+                imageVector = Icons.Rounded.Check,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(19.dp),
+            )
+        }
+    }
+}
