@@ -1,6 +1,6 @@
-package com.music.aura.playback
+package com.music.aurelis.playback
 
-import com.music.aura.playback.audio.AudioBlock
+import com.music.aurelis.playback.audio.AudioBlock
 import kotlin.math.abs
 import kotlin.math.exp
 
