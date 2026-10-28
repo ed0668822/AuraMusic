@@ -1,4 +1,4 @@
-package com.music.aura.ui.graphics
+package com.music.aurelis.ui.graphics
 
 import android.graphics.Bitmap
 import androidx.compose.ui.graphics.ImageBitmap
