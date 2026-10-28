@@ -1,8 +1,8 @@
-package com.music.aura.playback
+package com.music.aurelis.playback
 
 import androidx.media3.common.Player
-import com.music.aura.data.model.LocalSong
-import com.music.aura.data.model.QueueTier
+import com.music.aurelis.data.model.LocalSong
+import com.music.aurelis.data.model.QueueTier
 
 private fun Player.queueTierAt(index: Int): QueueTier = getMediaItemAt(index).queueTier
 
