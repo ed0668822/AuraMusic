@@ -1,4 +1,4 @@
-package com.music.aura.data.lyrics
+package com.music.aurelis.data.lyrics
 
 import java.util.Locale
 
