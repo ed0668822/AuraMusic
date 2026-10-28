@@ -1,4 +1,4 @@
-package com.music.aura.playback
+package com.music.aurelis.playback
 
 import kotlin.random.Random
 
@@ -86,9 +86,9 @@ class QueueWindow(
     }
 
     companion object {
-        const val WINDOW_AHEAD: Int = com.music.aura.playback.WINDOW_AHEAD
-        const val WINDOW_LOW_WATER: Int = com.music.aura.playback.WINDOW_LOW_WATER
-        const val LOW_WATER: Int = com.music.aura.playback.LOW_WATER
+        const val WINDOW_AHEAD: Int = com.music.aurelis.playback.WINDOW_AHEAD
+        const val WINDOW_LOW_WATER: Int = com.music.aurelis.playback.WINDOW_LOW_WATER
+        const val LOW_WATER: Int = com.music.aurelis.playback.LOW_WATER
 
         fun startAt(
             canonicalSize: Int,
