@@ -1,4 +1,4 @@
-package com.music.aura.playback
+package com.music.aurelis.playback
 
 import android.app.PendingIntent
 import android.content.Intent
@@ -11,12 +11,12 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
-import com.music.aura.MainActivity
-import com.music.aura.playback.dsd.DsdExtractorsFactory
+import com.music.aurelis.MainActivity
+import com.music.aurelis.playback.dsd.DsdExtractorsFactory
 import io.github.anilbeesetti.nextlib.media3ext.ffdecoder.NextRenderersFactory
 
 @OptIn(UnstableApi::class)
-class AuraPlaybackService : MediaSessionService() {
+class AurelisPlaybackService : MediaSessionService() {
 
     private var mediaSession: MediaSession? = null
 
