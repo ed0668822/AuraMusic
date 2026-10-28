@@ -1,4 +1,4 @@
-package com.music.aura.playback
+package com.music.aurelis.playback
 
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
