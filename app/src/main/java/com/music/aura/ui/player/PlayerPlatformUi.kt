@@ -12,12 +12,10 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.translate
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 
-/**
- * Milliseconds on the clock `SystemClock.uptimeMillis` reads on the phone.
- */
+/** Milliseconds on the clock `SystemClock.uptimeMillis` reads. */
 internal fun uptimeMillis(): Long = SystemClock.uptimeMillis()
 
 /** Whether `Modifier.blur` actually blurs here, rather than being a no-op. */
@@ -34,20 +32,16 @@ internal fun KeepScreenOn(enabled: Boolean) {
     }
 }
 
-/**
- * The app's language, as a BCP 47 tag.
- *
- * Read from the current configuration rather than `AppCompatDelegate` so
- * Aura does not need `androidx.appcompat` yet. When the language picker
- * lands (Fase 12), this will move to `AppCompatDelegate.getApplicationLocales()`.
- */
+/** The app's language, as a BCP 47 tag. */
 @Composable
-internal fun appLanguageTag(): String =
-    LocalConfiguration.current.locales[0].toLanguageTag()
+internal fun appLanguageTag(): String {
+    val context = LocalContext.current
+    return context.resources.configuration.locales.get(0).toLanguageTag()
+}
 
 /**
- * Back goes to [onBack] while [enabled], ahead of the sheet the player is drawn
- * in.
+ * Back, for one of the player's own layers. Call order is priority order: a
+ * later call is the one back reaches first while both are enabled.
  *
  * The BackHandler can't do that on its own. The player is a ModalBottomSheet,
  * and from API 33 the sheet puts its own dismiss straight onto the window's
@@ -58,9 +52,6 @@ internal fun appLanguageTag(): String =
  * holds, and only that long — otherwise the sheet keeps its own back handling
  * and its predictive-back shrink. Below 33 there is no window dispatcher to
  * outrank and the BackHandler is already the newest callback on the dialog's.
- *
- * Call order is priority order among these: a later call is the one back
- * reaches first while both are enabled.
  */
 @Composable
 internal fun PlayerBackHandler(enabled: Boolean, onBack: () -> Unit) {
@@ -74,6 +65,15 @@ internal fun PlayerBackHandler(enabled: Boolean, onBack: () -> Unit) {
     }
 }
 
+/**
+ * A back callback that outranks whatever else the window has registered —
+ * here, the sheet the player is drawn in.
+ *
+ * Everything that names an `android.window` type lives in this object so those
+ * classes, which don't exist below API 33, are only ever *loaded* on a device
+ * that has them: the callback comes back as [Any] rather than as the platform
+ * interface for the same reason.
+ */
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 private object OverlayBack {
     fun register(view: View, onBack: () -> Unit): Any? {
@@ -95,13 +95,10 @@ private object OverlayBack {
 /**
  * A touch drag is the only thing that can move this platform's drawer, and a
  * drag is also how the list inside it scrolls — so a finger that runs out of
- * list has to take the drawer with it. See [PlayerDrawer].
+ * list has to take the drawer with it.
  */
-internal val drawerFollowsListScroll: Boolean get() = true
+internal val drawerFollowsListScroll: Boolean = true
 
-/**
- * Draws [block] clipped to the rectangle given, moved down by [dy] pixels.
- */
 internal fun DrawScope.clipShiftedDown(
     left: Float,
     top: Float,
