@@ -1,10 +1,10 @@
-package com.music.aura.playback
+package com.music.aurelis.playback
 
 import android.os.Bundle
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
-import com.music.aura.data.model.LocalSong
-import com.music.aura.data.model.QueueTier
+import com.music.aurelis.data.model.LocalSong
+import com.music.aurelis.data.model.QueueTier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
