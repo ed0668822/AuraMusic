@@ -2,7 +2,7 @@
  * Vendored from Kyant0/backdrop v2.0.0 (io.github.kyant0:backdrop)
  * https://github.com/Kyant0/backdrop — Copyright 2025 Kyant0, Apache License 2.0
  */
-package com.music.aura.ui.components.backdrop.internal
+package com.music.aurelis.ui.components.backdrop.internal
 
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -10,8 +10,8 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.RenderEffect
 import androidx.compose.ui.graphics.asAndroidColorFilter
 import androidx.compose.ui.graphics.asComposeRenderEffect
-import com.music.aura.ui.components.backdrop.RuntimeShader
-import com.music.aura.ui.components.backdrop.asAndroidRuntimeShader
+import com.music.aurelis.ui.components.backdrop.RuntimeShader
+import com.music.aurelis.ui.components.backdrop.asAndroidRuntimeShader
 
 @RequiresApi(Build.VERSION_CODES.S)
 internal fun RenderEffect?.chain(other: RenderEffect): RenderEffect {
