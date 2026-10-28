@@ -1,4 +1,4 @@
-package com.music.aura.ui.screens
+package com.music.aurelis.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -44,12 +44,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import com.music.aura.R
-import com.music.aura.data.stats.ListeningStats
-import com.music.aura.data.stats.ReplayPeriod
-import com.music.aura.data.stats.ReplaySummary
-import com.music.aura.ui.components.PAGE_GUTTER
-import com.music.aura.ui.theme.MeshGradient
+import com.music.aurelis.R
+import com.music.aurelis.data.stats.ListeningStats
+import com.music.aurelis.data.stats.ReplayPeriod
+import com.music.aurelis.data.stats.ReplaySummary
+import com.music.aurelis.ui.components.PAGE_GUTTER
+import com.music.aurelis.ui.theme.MeshGradient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
