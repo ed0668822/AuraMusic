@@ -1,4 +1,4 @@
-package com.music.aura.ui.components.backdrop
+package com.music.aurelis.ui.components.backdrop
 
 import android.os.Build
 import androidx.annotation.ChecksSdkIntAtLeast
