@@ -1,4 +1,4 @@
-package com.music.aura.ui.icons
+package com.music.aurelis.ui.icons
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -9,14 +9,14 @@ import androidx.compose.ui.graphics.vector.addPathNodes
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
-object AuraIcons {
+object AurelisIcons {
 
     private const val STROKE = 2.2f
     private val stroke = SolidColor(Color.Black)
 
     val Queue: ImageVector by lazy {
         ImageVector.Builder(
-            name = "aura_queue", defaultWidth = 24.dp, defaultHeight = 24.dp,
+            name = "aurelis_queue", defaultWidth = 24.dp, defaultHeight = 24.dp,
             viewportWidth = 24f, viewportHeight = 24f,
         ).apply {
             path(stroke = stroke, strokeLineWidth = 2f, strokeLineCap = StrokeCap.Round) {
@@ -38,7 +38,7 @@ object AuraIcons {
 
     val Play: ImageVector by lazy {
         ImageVector.Builder(
-            name = "aura_play",
+            name = "aurelis_play",
             defaultWidth = 24.dp, defaultHeight = 24.dp,
             viewportWidth = 24f, viewportHeight = 24f,
         ).apply {
@@ -59,7 +59,7 @@ object AuraIcons {
 
     val Home: ImageVector by lazy {
         ImageVector.Builder(
-            name = "aura_home",
+            name = "aurelis_home",
             defaultWidth = 24.dp, defaultHeight = 24.dp,
             viewportWidth = 24f, viewportHeight = 24f,
         ).apply {
@@ -86,7 +86,7 @@ object AuraIcons {
 
     val Search: ImageVector by lazy {
         ImageVector.Builder(
-            name = "aura_search",
+            name = "aurelis_search",
             defaultWidth = 24.dp, defaultHeight = 24.dp,
             viewportWidth = 24f, viewportHeight = 24f,
         ).apply {
@@ -107,7 +107,7 @@ object AuraIcons {
 
     val Explore: ImageVector by lazy {
         ImageVector.Builder(
-            name = "aura_explore",
+            name = "aurelis_explore",
             defaultWidth = 24.dp, defaultHeight = 24.dp,
             viewportWidth = 24f, viewportHeight = 24f,
         ).apply {
@@ -131,7 +131,7 @@ object AuraIcons {
 
     val Shuffle: ImageVector by lazy {
         ImageVector.Builder(
-            name = "aura_shuffle",
+            name = "aurelis_shuffle",
             defaultWidth = 24.dp, defaultHeight = 24.dp,
             viewportWidth = 24f, viewportHeight = 24f,
         ).apply {
@@ -152,7 +152,7 @@ object AuraIcons {
 
     val Repeat: ImageVector by lazy {
         ImageVector.Builder(
-            name = "aura_repeat",
+            name = "aurelis_repeat",
             defaultWidth = 24.dp, defaultHeight = 24.dp,
             viewportWidth = 24f, viewportHeight = 24f,
         ).apply {
@@ -176,7 +176,7 @@ object AuraIcons {
 
     val MusicNote: ImageVector by lazy {
         ImageVector.Builder(
-            name = "aura_music_note",
+            name = "aurelis_music_note",
             defaultWidth = 24.dp, defaultHeight = 24.dp,
             viewportWidth = 24f, viewportHeight = 24f,
         ).apply {
@@ -205,7 +205,7 @@ object AuraIcons {
 
     val Lyrics: ImageVector by lazy {
         ImageVector.Builder(
-            name = "aura_lyrics",
+            name = "aurelis_lyrics",
             defaultWidth = 24.dp, defaultHeight = 24.dp,
             viewportWidth = 24f, viewportHeight = 24f,
         ).apply {
@@ -236,7 +236,7 @@ object AuraIcons {
 
     val ChevronRight: ImageVector by lazy {
         ImageVector.Builder(
-            name = "aura_chevron_right",
+            name = "aurelis_chevron_right",
             defaultWidth = 24.dp, defaultHeight = 24.dp,
             viewportWidth = 24f, viewportHeight = 24f,
         ).apply {
@@ -253,9 +253,9 @@ object AuraIcons {
         }.build()
     }
 
-    val Heart: ImageVector by lazy { heart("aura_heart", filled = false) }
+    val Heart: ImageVector by lazy { heart("aurelis_heart", filled = false) }
 
-    val HeartFilled: ImageVector by lazy { heart("aura_heart_filled", filled = true) }
+    val HeartFilled: ImageVector by lazy { heart("aurelis_heart_filled", filled = true) }
 
     private fun heart(name: String, filled: Boolean): ImageVector =
         ImageVector.Builder(
@@ -279,9 +279,9 @@ object AuraIcons {
             }
         }.build()
 
-    val Star: ImageVector by lazy { star("aura_star", filled = false) }
+    val Star: ImageVector by lazy { star("aurelis_star", filled = false) }
 
-    val StarFilled: ImageVector by lazy { star("aura_star_filled", filled = true) }
+    val StarFilled: ImageVector by lazy { star("aurelis_star_filled", filled = true) }
 
     private fun star(name: String, filled: Boolean): ImageVector =
         ImageVector.Builder(
@@ -312,7 +312,7 @@ object AuraIcons {
 
     val Plus: ImageVector by lazy {
         ImageVector.Builder(
-            name = "aura_plus",
+            name = "aurelis_plus",
             defaultWidth = 24.dp, defaultHeight = 24.dp,
             viewportWidth = 24f, viewportHeight = 24f,
         ).apply {
@@ -330,7 +330,7 @@ object AuraIcons {
 
     val Check: ImageVector by lazy {
         ImageVector.Builder(
-            name = "aura_check",
+            name = "aurelis_check",
             defaultWidth = 24.dp, defaultHeight = 24.dp,
             viewportWidth = 24f, viewportHeight = 24f,
         ).apply {
@@ -347,7 +347,7 @@ object AuraIcons {
 
     val Library: ImageVector by lazy {
         ImageVector.Builder(
-            name = "aura_library",
+            name = "aurelis_library",
             defaultWidth = 24.dp, defaultHeight = 24.dp,
             viewportWidth = 24f, viewportHeight = 24f,
         ).apply {
@@ -367,7 +367,7 @@ object AuraIcons {
 
     val Clock: ImageVector by lazy {
         ImageVector.Builder(
-            name = "aura_clock",
+            name = "aurelis_clock",
             defaultWidth = 24.dp, defaultHeight = 24.dp,
             viewportWidth = 24f, viewportHeight = 24f,
         ).apply {
@@ -390,7 +390,7 @@ object AuraIcons {
 
     val GridView: ImageVector by lazy {
         ImageVector.Builder(
-            name = "aura_grid_view",
+            name = "aurelis_grid_view",
             defaultWidth = 24.dp, defaultHeight = 24.dp,
             viewportWidth = 24f, viewportHeight = 24f,
         ).apply {
@@ -446,7 +446,7 @@ object AuraIcons {
 
     val ListView: ImageVector by lazy {
         ImageVector.Builder(
-            name = "aura_list_view",
+            name = "aurelis_list_view",
             defaultWidth = 24.dp, defaultHeight = 24.dp,
             viewportWidth = 24f, viewportHeight = 24f,
         ).apply {
