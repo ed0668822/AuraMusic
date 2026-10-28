@@ -1,4 +1,4 @@
-package com.music.aura.playback.audio
+package com.music.aurelis.playback.audio
 
 import android.util.Log
 import androidx.media3.common.C
@@ -9,7 +9,7 @@ import androidx.media3.common.util.Util
 import androidx.media3.exoplayer.audio.AudioSink
 import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.exoplayer.audio.ForwardingAudioSink
-import com.music.aura.BuildConfig
+import com.music.aurelis.BuildConfig
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
