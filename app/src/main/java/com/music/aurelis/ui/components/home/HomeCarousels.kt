@@ -1,4 +1,4 @@
-package com.music.aura.ui.components.home
+package com.music.aurelis.ui.components.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -28,9 +28,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import com.music.aura.data.model.LocalAlbum
-import com.music.aura.data.model.LocalArtist
-import com.music.aura.data.model.LocalSong
+import com.music.aurelis.data.model.LocalAlbum
+import com.music.aurelis.data.model.LocalArtist
+import com.music.aurelis.data.model.LocalSong
 
 /* ------------------------------------------------------------------ */
 /*  Header de sección                                                  */
