@@ -2,7 +2,7 @@
  * Vendored from Kyant0/backdrop v2.0.0 (io.github.kyant0:backdrop)
  * https://github.com/Kyant0/backdrop — Copyright 2025 Kyant0, Apache License 2.0
  */
-package com.music.aura.ui.components.backdrop
+package com.music.aurelis.ui.components.backdrop
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -34,15 +34,15 @@ import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
-import com.music.aura.ui.components.backdrop.backdrops.LayerBackdrop
-import com.music.aura.ui.components.backdrop.highlight.Highlight
-import com.music.aura.ui.components.backdrop.highlight.HighlightElement
-import com.music.aura.ui.components.backdrop.internal.ShapeProvider
-import com.music.aura.ui.components.backdrop.internal.recordLayer
-import com.music.aura.ui.components.backdrop.shadow.InnerShadow
-import com.music.aura.ui.components.backdrop.shadow.InnerShadowElement
-import com.music.aura.ui.components.backdrop.shadow.Shadow
-import com.music.aura.ui.components.backdrop.shadow.ShadowElement
+import com.music.aurelis.ui.components.backdrop.backdrops.LayerBackdrop
+import com.music.aurelis.ui.components.backdrop.highlight.Highlight
+import com.music.aurelis.ui.components.backdrop.highlight.HighlightElement
+import com.music.aurelis.ui.components.backdrop.internal.ShapeProvider
+import com.music.aurelis.ui.components.backdrop.internal.recordLayer
+import com.music.aurelis.ui.components.backdrop.shadow.InnerShadow
+import com.music.aurelis.ui.components.backdrop.shadow.InnerShadowElement
+import com.music.aurelis.ui.components.backdrop.shadow.Shadow
+import com.music.aurelis.ui.components.backdrop.shadow.ShadowElement
 
 private val DefaultHighlight = { Highlight.Default }
 private val DefaultShadow = { Shadow.Default }
