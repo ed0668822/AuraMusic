@@ -1,4 +1,4 @@
-package com.music.aura.ui.player
+package com.music.aurelis.ui.player
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -32,12 +32,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.music.aura.R
-import com.music.aura.data.lyrics.LyricLine
-import com.music.aura.data.model.LocalSong
-import com.music.aura.ui.haptics.Haptic
-import com.music.aura.ui.haptics.Haptics
-import com.music.aura.ui.haptics.rememberHaptics
+import com.music.aurelis.R
+import com.music.aurelis.data.lyrics.LyricLine
+import com.music.aurelis.data.model.LocalSong
+import com.music.aurelis.ui.haptics.Haptic
+import com.music.aurelis.ui.haptics.Haptics
+import com.music.aurelis.ui.haptics.rememberHaptics
 
 data class LyricsShareLine(
     val text: String,
@@ -57,7 +57,7 @@ fun fitsOnCard(taken: Int, text: String?): Boolean =
     taken + (text?.length ?: 0) <= SHARE_CARD_CHAR_BUDGET
 
 val lyricsShareAvailable: Boolean
-    get() = AuraPlayerPlatform.host.lyricsShareAvailable
+    get() = AurelisPlayerPlatform.host.lyricsShareAvailable
 
 internal class LyricsPicker(
     val picking: Boolean,
@@ -106,7 +106,7 @@ internal fun rememberLyricsPicker(
             }
             else -> {
                 overBudget = true
-                AuraPlayerPlatform.host.showMessage(cardFullMessage)
+                AurelisPlayerPlatform.host.showMessage(cardFullMessage)
             }
         }
     }
