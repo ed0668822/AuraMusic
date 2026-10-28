@@ -7,7 +7,7 @@
  * scale for cheaper effect rendering. KMP expect/actual declarations were
  * merged into this single Android source set. Package renamed accordingly.
  */
-package com.music.aura.ui.components.backdrop
+package com.music.aurelis.ui.components.backdrop
 
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.RenderEffect
