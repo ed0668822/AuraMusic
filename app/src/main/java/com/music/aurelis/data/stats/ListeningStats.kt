@@ -1,8 +1,8 @@
-package com.music.aura.data.stats
+package com.music.aurelis.data.stats
 
 import android.content.Context
 import android.util.Log
-import com.music.aura.data.model.LocalSong
+import com.music.aurelis.data.model.LocalSong
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -20,7 +20,7 @@ import java.time.ZoneId
 import java.util.Locale
 
 /**
- * Motor de estadísticas de Aura Music (Portado de BitChord).
+ * Motor de estadísticas de Aurelis Music (Portado de BitChord).
  * Guarda los datos en archivos JSON por mes, sin base de datos ni red.
  */
 object ListeningStats {
@@ -461,7 +461,7 @@ object ListeningStats {
         RegexOption.IGNORE_CASE,
     )
 
-    private const val TAG = "AuraListening"
+    private const val TAG = "AurelisListening"
     private const val DIRECTORY = "listening"
     private const val KEEP_MONTHS = 36
     private const val MAX_TRACKS = 600
