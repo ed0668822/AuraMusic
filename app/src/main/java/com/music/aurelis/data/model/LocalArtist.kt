@@ -1,4 +1,4 @@
-package com.music.aura.data.model
+package com.music.aurelis.data.model
 
 /**
  * Artista derivado de las canciones locales.
