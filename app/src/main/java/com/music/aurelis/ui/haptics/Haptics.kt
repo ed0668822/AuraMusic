@@ -1,4 +1,4 @@
-package com.music.aura.ui.haptics
+package com.music.aurelis.ui.haptics
 
 import android.content.Context
 import android.database.ContentObserver
