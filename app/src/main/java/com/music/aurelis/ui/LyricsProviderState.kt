@@ -1,4 +1,4 @@
-package com.music.aura.ui
+package com.music.aurelis.ui
 
 enum class LyricsProviderState {
     NOT_FETCHED,
