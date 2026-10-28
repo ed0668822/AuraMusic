@@ -10,11 +10,11 @@ val autoVersionName = if (runNumber > 0) "1.9.$runNumber" else "1.9.0"
 val autoVersionCode = if (runNumber > 0) 10000 + runNumber else (System.currentTimeMillis() / 60000).toInt()
 
 android {
-    namespace = "com.music.aura"
+    namespace = "com.ondine.music"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.music.aura"
+        applicationId = "com.ondine.music"
         minSdk = 26
         targetSdk = 35
         versionCode = autoVersionCode
@@ -40,7 +40,9 @@ android {
 
     signingConfigs {
         create("release") {
-            val keystorePath = System.getenv("KEYSTORE_PATH") ?: "aura-release.jks"
+            // Renombrado el archivo de keystore por coherencia. Debes crear el archivo
+            // "ondine-release.jks" o cambiar esta ruta a la de tu keystore actual.
+            val keystorePath = System.getenv("KEYSTORE_PATH") ?: "ondine-release.jks"
             val storeFile = rootProject.file(keystorePath)
 
             if (storeFile.exists()) {
