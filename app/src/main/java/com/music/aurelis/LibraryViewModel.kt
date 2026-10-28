@@ -1,15 +1,15 @@
-package com.music.aura
+package com.music.aurelis
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.music.aura.data.AudioPermission
-import com.music.aura.data.LibraryState
-import com.music.aura.data.LocalMediaRepository
-import com.music.aura.data.model.LocalAlbum
-import com.music.aura.data.model.LocalArtist
-import com.music.aura.data.model.LocalSong
-import com.music.aura.data.model.SortOption
+import com.music.aurelis.data.AudioPermission
+import com.music.aurelis.data.LibraryState
+import com.music.aurelis.data.LocalMediaRepository
+import com.music.aurelis.data.model.LocalAlbum
+import com.music.aurelis.data.model.LocalArtist
+import com.music.aurelis.data.model.LocalSong
+import com.music.aurelis.data.model.SortOption
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
