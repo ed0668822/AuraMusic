@@ -2,7 +2,7 @@
  * Vendored from Kyant0/backdrop v2.0.0 (io.github.kyant0:backdrop)
  * https://github.com/Kyant0/backdrop — Copyright 2025 Kyant0, Apache License 2.0
  */
-package com.music.aura.ui.components.backdrop
+package com.music.aurelis.ui.components.backdrop
 
 import android.os.Build
 import androidx.annotation.RequiresApi
