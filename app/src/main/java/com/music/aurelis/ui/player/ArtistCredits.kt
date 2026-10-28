@@ -1,4 +1,4 @@
-package com.music.aura.ui.player
+package com.music.aurelis.ui.player
 
 /**
  * One credit in an artist line.
