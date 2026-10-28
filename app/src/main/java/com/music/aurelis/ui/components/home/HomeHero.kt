@@ -1,4 +1,4 @@
-package com.music.aura.ui.components.home
+package com.music.aurelis.ui.components.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -28,7 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import com.music.aura.data.model.LocalSong
+import com.music.aurelis.data.model.LocalSong
 
 /**
  * Hero card del Home: la canción más reciente con su artwork difuminado
@@ -91,7 +91,7 @@ fun HomeHero(
                 color = Color.White.copy(alpha = 0.75f),
             )
             Text(
-                text = song?.title ?: "Aura Music",
+                text = song?.title ?: "Aurelis Music",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
