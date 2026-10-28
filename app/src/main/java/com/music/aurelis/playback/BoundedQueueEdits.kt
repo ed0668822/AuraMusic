@@ -1,4 +1,4 @@
-package com.music.aura.playback
+package com.music.aurelis.playback
 
 data class BoundedQueueEditState(
     val contextGeneration: Long = 0L,
