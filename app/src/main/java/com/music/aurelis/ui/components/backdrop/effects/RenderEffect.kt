@@ -1,12 +1,12 @@
-package com.music.aura.ui.components.backdrop.effects
+package com.music.aurelis.ui.components.backdrop.effects
 
 import androidx.compose.ui.graphics.RenderEffect
-import com.music.aura.ui.components.backdrop.BackdropEffectScope
-import com.music.aura.ui.components.backdrop.RuntimeShader
-import com.music.aura.ui.components.backdrop.internal.RuntimeShaderEffect
-import com.music.aura.ui.components.backdrop.internal.chain
-import com.music.aura.ui.components.backdrop.isRenderEffectSupported
-import com.music.aura.ui.components.backdrop.isRuntimeShaderSupported
+import com.music.aurelis.ui.components.backdrop.BackdropEffectScope
+import com.music.aurelis.ui.components.backdrop.RuntimeShader
+import com.music.aurelis.ui.components.backdrop.internal.RuntimeShaderEffect
+import com.music.aurelis.ui.components.backdrop.internal.chain
+import com.music.aurelis.ui.components.backdrop.isRenderEffectSupported
+import com.music.aurelis.ui.components.backdrop.isRuntimeShaderSupported
 import org.intellij.lang.annotations.Language
 import kotlin.contracts.ExperimentalContracts
 
