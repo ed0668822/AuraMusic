@@ -1,4 +1,4 @@
-package com.music.aura.ui.components
+package com.music.aurelis.ui.components
 
 import android.net.Uri
 import androidx.compose.foundation.background
@@ -37,9 +37,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import com.music.aura.R
-import com.music.aura.data.model.LocalSong
-import com.music.aura.ui.icons.AuraIcons
+import com.music.aurelis.R
+import com.music.aurelis.data.model.LocalSong
+import com.music.aurelis.ui.icons.AurelisIcons
 
 enum class LocalBrowseType { ALBUM, ARTIST, PLAYLIST, OTHER }
 
@@ -82,7 +82,7 @@ fun BrowseActionsSheet(
             }
 
             onPlay?.let { ActionRow(Icons.Rounded.PlayArrow, stringResource(R.string.play), onClick = it) }
-            onShuffle?.let { ActionRow(AuraIcons.Shuffle, stringResource(R.string.shuffle), onClick = it) }
+            onShuffle?.let { ActionRow(AurelisIcons.Shuffle, stringResource(R.string.shuffle), onClick = it) }
             ActionRow(
                 Icons.AutoMirrored.Rounded.PlaylistPlay,
                 stringResource(R.string.play_next),
@@ -95,7 +95,7 @@ fun BrowseActionsSheet(
             )
             onOpen?.let {
                 ActionRow(
-                    AuraIcons.ChevronRight,
+                    AurelisIcons.ChevronRight,
                     when (target.type) {
                         LocalBrowseType.ALBUM -> stringResource(R.string.open_album)
                         LocalBrowseType.ARTIST -> stringResource(R.string.open_artist)
