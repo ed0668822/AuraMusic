@@ -1,4 +1,4 @@
-package com.music.aura.playback.audio
+package com.music.aurelis.playback.audio
 
 /**
  * Reusable, audio-thread-owned memory block holding interleaved Float32 PCM samples.
