@@ -1,4 +1,4 @@
-package com.music.aura.ui.screens
+package com.music.aurelis.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -26,16 +26,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.music.aura.R
-import com.music.aura.playback.PlaybackViewModel
-import com.music.aura.ui.components.AnimatedArtwork
-import com.music.aura.ui.components.PlayerControls
-import com.music.aura.ui.components.SyncedLyricsPanel
-import com.music.aura.ui.components.ThinSlider
-import com.music.aura.ui.theme.ArtworkColors
-import com.music.aura.ui.theme.DynamicAuraTheme
-import com.music.aura.ui.theme.DynamicThemeViewModel
-import com.music.aura.ui.theme.MeshGradient
+import com.music.aurelis.R
+import com.music.aurelis.playback.PlaybackViewModel
+import com.music.aurelis.ui.components.AnimatedArtwork
+import com.music.aurelis.ui.components.PlayerControls
+import com.music.aurelis.ui.components.SyncedLyricsPanel
+import com.music.aurelis.ui.components.ThinSlider
+import com.music.aurelis.ui.theme.ArtworkColors
+import com.music.aurelis.ui.theme.DynamicAurelisTheme
+import com.music.aurelis.ui.theme.DynamicThemeViewModel
+import com.music.aurelis.ui.theme.MeshGradient
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,7 +76,7 @@ fun NowPlayingScreen(
     ) {
         if (song == null) return@AnimatedVisibility
 
-        DynamicAuraTheme(colors = artworkColors ?: fallbackColors) {
+        DynamicAurelisTheme(colors = artworkColors ?: fallbackColors) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
