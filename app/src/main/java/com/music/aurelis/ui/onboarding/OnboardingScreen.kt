@@ -1,4 +1,4 @@
-package com.music.aura.ui.onboarding
+package com.music.aurelis.ui.onboarding
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
@@ -54,9 +54,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.music.aura.R
-import com.music.aura.ui.icons.AuraIcons
-import com.music.aura.ui.theme.MeshGradient
+import com.music.aurelis.R
+import com.music.aurelis.ui.icons.AurelisIcons
+import com.music.aurelis.ui.theme.MeshGradient
 
 private const val PAGE_WELCOME = 0
 private const val PAGE_PERMISSION = 1
@@ -144,7 +144,7 @@ private fun OnboardingPage(content: @Composable ColumnScope.() -> Unit) {
 private fun ColumnScope.WelcomePage(onNext: () -> Unit) {
     Spacer(Modifier.height(56.dp))
     Icon(
-        imageVector = AuraIcons.MusicNote,
+        imageVector = AurelisIcons.MusicNote,
         contentDescription = null,
         tint = Color.White,
         modifier = Modifier.size(46.dp),
@@ -281,7 +281,7 @@ private fun BackButton(onClick: () -> Unit) {
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            imageVector = AuraIcons.ChevronRight,
+            imageVector = AurelisIcons.ChevronRight,
             contentDescription = stringResource(R.string.onboarding_back),
             tint = Color.White,
             modifier = Modifier
