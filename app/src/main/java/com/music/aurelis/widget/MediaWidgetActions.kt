@@ -1,4 +1,4 @@
-package com.music.aura.widget
+package com.music.aurelis.widget
 
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
@@ -11,7 +11,7 @@ import androidx.core.content.ContextCompat
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
-import com.music.aura.playback.AuraPlaybackService
+import com.music.aurelis.playback.AurelisPlaybackService
 import java.util.concurrent.atomic.AtomicBoolean
 
 class MediaWidgetActions : BroadcastReceiver() {
@@ -22,7 +22,7 @@ class MediaWidgetActions : BroadcastReceiver() {
 
         val pending = goAsync()
         val handler = Handler(Looper.getMainLooper())
-        val token = SessionToken(app, ComponentName(app, AuraPlaybackService::class.java))
+        val token = SessionToken(app, ComponentName(app, AurelisPlaybackService::class.java))
         val future = MediaController.Builder(app, token).buildAsync()
 
         val done = AtomicBoolean(false)
@@ -70,9 +70,9 @@ class MediaWidgetActions : BroadcastReceiver() {
     }
 
     companion object {
-        const val ACTION_TOGGLE = "com.music.aura.widget.TOGGLE"
-        const val ACTION_NEXT = "com.music.aura.widget.NEXT"
-        const val ACTION_PREVIOUS = "com.music.aura.widget.PREVIOUS"
+        const val ACTION_TOGGLE = "com.music.aurelis.widget.TOGGLE"
+        const val ACTION_NEXT = "com.music.aurelis.widget.NEXT"
+        const val ACTION_PREVIOUS = "com.music.aurelis.widget.PREVIOUS"
 
         fun pendingIntent(context: Context, action: String): PendingIntent =
             PendingIntent.getBroadcast(
