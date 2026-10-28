@@ -1,4 +1,4 @@
-package com.music.aura.playback.audio
+package com.music.aurelis.playback.audio
 
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
