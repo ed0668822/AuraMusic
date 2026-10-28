@@ -1,4 +1,4 @@
-package com.music.aura.playback
+package com.music.aurelis.playback
 
 import android.content.ComponentName
 import android.content.Context
@@ -7,21 +7,21 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
-import com.music.aura.data.model.LocalSong
+import com.music.aurelis.data.model.LocalSong
 import kotlinx.coroutines.guava.await
 
 /**
- * Conexión al AuraPlaybackService desde la UI.
+ * Conexión al AurelisPlaybackService desde la UI.
  */
 object PlayerConnection {
 
     /**
-     * Crea un MediaController conectado al servicio de Aura.
+     * Crea un MediaController conectado al servicio de Aurelis.
      */
     suspend fun connect(context: Context): MediaController {
         val sessionToken = SessionToken(
             context,
-            ComponentName(context, AuraPlaybackService::class.java)
+            ComponentName(context, AurelisPlaybackService::class.java)
         )
         return MediaController.Builder(context, sessionToken).buildAsync().await()
     }
