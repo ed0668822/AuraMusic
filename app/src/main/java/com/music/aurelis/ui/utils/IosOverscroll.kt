@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalFoundationApi::class)
 
-package com.music.aura.ui.utils
+package com.music.aurelis.ui.utils
 
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animate
