@@ -1,4 +1,4 @@
-package com.music.aura.ui.screens
+package com.music.aurelis.ui.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -33,19 +33,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import com.music.aura.R
-import com.music.aura.data.model.LocalSong
-import com.music.aura.ui.components.PAGE_GUTTER
-import com.music.aura.ui.components.PlayingAccent
-import com.music.aura.ui.components.RowMoreButton
-import com.music.aura.ui.components.SearchPlayingBars
-import com.music.aura.ui.components.SHELF_CARD_WIDTH
-import com.music.aura.ui.components.ShelfRow
-import com.music.aura.ui.components.contextClick
-import com.music.aura.ui.components.longPressMenuClickable
-import com.music.aura.ui.components.thumbnailBorder
-import com.music.aura.ui.components.trackColumnWidth
-import com.music.aura.ui.icons.AuraIcons
+import com.music.aurelis.R
+import com.music.aurelis.data.model.LocalSong
+import com.music.aurelis.ui.components.PAGE_GUTTER
+import com.music.aurelis.ui.components.PlayingAccent
+import com.music.aurelis.ui.components.RowMoreButton
+import com.music.aurelis.ui.components.SearchPlayingBars
+import com.music.aurelis.ui.components.SHELF_CARD_WIDTH
+import com.music.aurelis.ui.components.ShelfRow
+import com.music.aurelis.ui.components.contextClick
+import com.music.aurelis.ui.components.longPressMenuClickable
+import com.music.aurelis.ui.components.thumbnailBorder
+import com.music.aurelis.ui.components.trackColumnWidth
+import com.music.aurelis.ui.icons.AurelisIcons
 
 private val HOME_TITLE_LIFT = 28.dp
 private const val RECENT_TRACKS_PER_COLUMN = 4
@@ -118,7 +118,7 @@ fun HomeScreen(
 private fun HomeTitle(title: String, modifier: Modifier = Modifier) {
     Column(modifier = modifier.padding(horizontal = PAGE_GUTTER, vertical = 8.dp)) {
         Icon(
-            imageVector = AuraIcons.Home,
+            imageVector = AurelisIcons.Home,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier
