@@ -1,4 +1,4 @@
-package com.music.aura.ui.components
+package com.music.aurelis.ui.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.AnimationSpec
@@ -24,7 +24,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.music.aura.data.SettingsRepository
+import com.music.aurelis.data.SettingsRepository
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
