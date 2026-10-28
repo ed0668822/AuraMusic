@@ -1,4 +1,4 @@
-package com.music.aura.playback
+package com.music.aurelis.playback
 
 const val BACK_RESTARTS_AFTER_MS = 10_000L
 
