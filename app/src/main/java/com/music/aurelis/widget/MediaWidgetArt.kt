@@ -1,4 +1,4 @@
-package com.music.aura.widget
+package com.music.aurelis.widget
 
 import android.content.Context
 import android.graphics.Bitmap
