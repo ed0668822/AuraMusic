@@ -1,4 +1,4 @@
-package com.music.aura.playback
+package com.music.aurelis.playback
 
 enum class EqualizerPreset(vararg val bandsDb: Float) {
     FLAT(0f, 0f, 0f, 0f, 0f, 0f, 0f),
