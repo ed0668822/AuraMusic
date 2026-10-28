@@ -1,4 +1,4 @@
-package com.music.aura.ui.components
+package com.music.aurelis.ui.components
 
 import android.os.Build
 import androidx.compose.foundation.background
@@ -17,8 +17,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
-import com.music.aura.data.SettingsRepository
-import com.music.aura.ui.theme.ArtworkPalette
+import com.music.aurelis.data.SettingsRepository
+import com.music.aurelis.ui.theme.ArtworkPalette
 import android.net.Uri
 
 /**
@@ -26,7 +26,7 @@ import android.net.Uri
  * superficie, con el artwork difuminado en la parte superior y disuelto
  * hacia ese tinte.
  *
- * Adaptado para Aura Music: carga artwork local (content:// URI) en vez
+ * Adaptado para Aurelis Music: carga artwork local (content:// URI) en vez
  * de URLs remotas. El blur es idéntico al de BitChord.
  *
  * Dimensionado completamente por [modifier] — dentro de un padre
