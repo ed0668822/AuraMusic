@@ -1,4 +1,4 @@
-package com.music.aura.data.lyrics
+package com.music.aurelis.data.lyrics
 
 /**
  * One word of a line, with the stretch of the song it is sung over.
