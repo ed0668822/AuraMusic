@@ -2,7 +2,7 @@
  * Vendored from Kyant0/backdrop v2.0.0 (io.github.kyant0:backdrop)
  * https://github.com/Kyant0/backdrop — Copyright 2025 Kyant0, Apache License 2.0
  */
-package com.music.aura.ui.components.backdrop.highlight
+package com.music.aurelis.ui.components.backdrop.highlight
 
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Outline
@@ -23,12 +23,12 @@ import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.util.fastCoerceAtMost
-import com.music.aura.ui.components.backdrop.RuntimeShaderCacheImpl
-import com.music.aura.ui.components.backdrop.internal.ShapeProvider
-import com.music.aura.ui.components.backdrop.internal.blur
-import com.music.aura.ui.components.backdrop.internal.clipOutline
-import com.music.aura.ui.components.backdrop.internal.setRuntimeShader
-import com.music.aura.ui.components.backdrop.isRuntimeShaderSupported
+import com.music.aurelis.ui.components.backdrop.RuntimeShaderCacheImpl
+import com.music.aurelis.ui.components.backdrop.internal.ShapeProvider
+import com.music.aurelis.ui.components.backdrop.internal.blur
+import com.music.aurelis.ui.components.backdrop.internal.clipOutline
+import com.music.aurelis.ui.components.backdrop.internal.setRuntimeShader
+import com.music.aurelis.ui.components.backdrop.isRuntimeShaderSupported
 import kotlin.math.ceil
 
 internal class HighlightElement(
