@@ -3,14 +3,14 @@
  * analyzer this file is adapted from almost unchanged: the mix-out budget,
  * phrase detection and cue scoring below were tuned against real material,
  * and reimplementing them from a description would produce different numbers
- * that Aura's transition policy is not calibrated for.
+ * that Aurelis's transition policy is not calibrated for.
  *
  * Copyright (C) 2026 SFG545 (original Orchard implementation)
- * Copyright (C) 2026 Kushagra Singh (Aura adaptation)
+ * Copyright (C) 2026 Kushagra Singh (Aurelis adaptation)
  *
  * Orchard's original source is licensed under the GNU Affero General Public
  * License, version 3 or later. Per AGPLv3 section 13, this file is combined
- * here into Aura -- a work licensed under the GNU General Public
+ * here into Aurelis -- a work licensed under the GNU General Public
  * License, version 3 or later -- and remains itself governed by the AGPLv3
  * as part of that combination.
  *
@@ -43,7 +43,7 @@
 #include <string>
 #include <vector>
 
-namespace aura::smart {
+namespace aurelis::smart {
 
 // Times are seconds, confidence/probability values are nominally in [0, 1],
 // and ordered event vectors use playback order unless stated otherwise.
@@ -147,4 +147,4 @@ TempoResult AnalyzeTempo(
   double audible_start
 );
 
-}  // namespace aura::smart
+}  // namespace aurelis::smart
