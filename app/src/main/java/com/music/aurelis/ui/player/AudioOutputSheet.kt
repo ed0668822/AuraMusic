@@ -1,4 +1,4 @@
-package com.music.aura.ui.player
+package com.music.aurelis.ui.player
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,10 +22,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.music.aura.R
-import com.music.aura.ui.components.ThinSlider
-import com.music.aura.ui.haptics.Haptic
-import com.music.aura.ui.haptics.rememberHaptics
+import com.music.aurelis.R
+import com.music.aurelis.ui.components.ThinSlider
+import com.music.aurelis.ui.haptics.Haptic
+import com.music.aurelis.ui.haptics.rememberHaptics
 import dev.chrisbanes.haze.HazeState
 
 @Composable
