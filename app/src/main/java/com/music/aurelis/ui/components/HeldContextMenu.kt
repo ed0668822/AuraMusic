@@ -1,4 +1,4 @@
-package com.music.aura.ui.components
+package com.music.aurelis.ui.components
 
 import android.provider.Settings
 import androidx.activity.compose.BackHandler
