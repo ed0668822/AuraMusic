@@ -1,4 +1,4 @@
-package com.music.aura.ui.screens
+package com.music.aurelis.ui.screens
 
 import android.content.Context
 import android.content.Intent
@@ -39,14 +39,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.music.aura.R
-import com.music.aura.data.EqualizerMode
-import com.music.aura.data.SettingsRepository
-import com.music.aura.playback.EqLayout
-import com.music.aura.playback.EqualizerPreset
-import com.music.aura.ui.components.*
-import com.music.aura.ui.haptics.Haptic
-import com.music.aura.ui.haptics.rememberHaptics
+import com.music.aurelis.R
+import com.music.aurelis.data.EqualizerMode
+import com.music.aurelis.data.SettingsRepository
+import com.music.aurelis.playback.EqLayout
+import com.music.aurelis.playback.EqualizerPreset
+import com.music.aurelis.ui.components.*
+import com.music.aurelis.ui.haptics.Haptic
+import com.music.aurelis.ui.haptics.rememberHaptics
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.roundToInt
