@@ -1,4 +1,4 @@
-package com.music.aura.ui.player
+package com.music.aurelis.ui.player
 
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -48,13 +48,13 @@ import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
-import com.music.aura.R
-import com.music.aura.data.SettingsRepository
-import com.music.aura.data.model.LocalSong
-import com.music.aura.data.model.QueueTier
-import com.music.aura.playback.autoplaySectionStart
-import com.music.aura.ui.components.ExplicitSongTitle
-import com.music.aura.ui.components.thumbnailBorder
+import com.music.aurelis.R
+import com.music.aurelis.data.SettingsRepository
+import com.music.aurelis.data.model.LocalSong
+import com.music.aurelis.data.model.QueueTier
+import com.music.aurelis.playback.autoplaySectionStart
+import com.music.aurelis.ui.components.ExplicitSongTitle
+import com.music.aurelis.ui.components.thumbnailBorder
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
