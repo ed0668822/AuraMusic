@@ -1,4 +1,4 @@
-package com.music.aura.playback.audio
+package com.music.aurelis.playback.audio
 
 /**
  * Common contract for high-precision, in-place Float32 audio DSP processors.
@@ -31,8 +31,8 @@ interface FloatAudioProcessor {
     fun reset()
 }
 
-/** Adapts [com.music.aura.playback.SpatialAudioProcessor] to [FloatAudioProcessor]. */
-fun com.music.aura.playback.SpatialAudioProcessor.asFloatAudioProcessor(): FloatAudioProcessor =
+/** Adapts [com.music.aurelis.playback.SpatialAudioProcessor] to [FloatAudioProcessor]. */
+fun com.music.aurelis.playback.SpatialAudioProcessor.asFloatAudioProcessor(): FloatAudioProcessor =
     object : FloatAudioProcessor {
         override fun configure(sampleRate: Int, channelCount: Int) =
             this@asFloatAudioProcessor.configure(sampleRate, channelCount)
@@ -43,8 +43,8 @@ fun com.music.aura.playback.SpatialAudioProcessor.asFloatAudioProcessor(): Float
         override fun reset() = this@asFloatAudioProcessor.reset()
     }
 
-/** Adapts [com.music.aura.playback.EqualizerProcessor] to [FloatAudioProcessor]. */
-fun com.music.aura.playback.EqualizerProcessor.asFloatAudioProcessor(): FloatAudioProcessor =
+/** Adapts [com.music.aurelis.playback.EqualizerProcessor] to [FloatAudioProcessor]. */
+fun com.music.aurelis.playback.EqualizerProcessor.asFloatAudioProcessor(): FloatAudioProcessor =
     object : FloatAudioProcessor {
         override fun configure(sampleRate: Int, channelCount: Int) =
             this@asFloatAudioProcessor.configure(sampleRate, channelCount)
@@ -55,8 +55,8 @@ fun com.music.aura.playback.EqualizerProcessor.asFloatAudioProcessor(): FloatAud
         override fun reset() = this@asFloatAudioProcessor.reset()
     }
 
-/** Adapts [com.music.aura.playback.TransitionFilterProcessor] to [FloatAudioProcessor]. */
-fun com.music.aura.playback.TransitionFilterProcessor.asFloatAudioProcessor(): FloatAudioProcessor =
+/** Adapts [com.music.aurelis.playback.TransitionFilterProcessor] to [FloatAudioProcessor]. */
+fun com.music.aurelis.playback.TransitionFilterProcessor.asFloatAudioProcessor(): FloatAudioProcessor =
     object : FloatAudioProcessor {
         override fun configure(sampleRate: Int, channelCount: Int) =
             this@asFloatAudioProcessor.configure(sampleRate, channelCount)
