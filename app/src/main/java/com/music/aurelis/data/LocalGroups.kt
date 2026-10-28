@@ -1,6 +1,6 @@
-package com.music.aura.data
+package com.music.aurelis.data
 
-import com.music.aura.data.model.LocalSong
+import com.music.aurelis.data.model.LocalSong
 import java.util.Locale
 
 enum class LocalBrowseType { ALBUM, ARTIST, PLAYLIST, OTHER }
