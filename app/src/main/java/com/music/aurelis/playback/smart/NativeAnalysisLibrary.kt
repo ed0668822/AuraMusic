@@ -1,4 +1,4 @@
-package com.music.aura.playback.smart
+package com.music.aurelis.playback.smart
 
 /** Loads the analyser's native library, however the platform keeps it. */
 object NativeAnalysisLibrary {
@@ -17,5 +17,5 @@ object NativeAnalysisLibrary {
             .isSuccess
     }
 
-    const val LIBRARY_NAME = "aura_analysis"
+    const val LIBRARY_NAME = "aurelis_analysis"
 }
