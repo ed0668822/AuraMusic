@@ -1,4 +1,4 @@
-package com.music.aura.playback
+package com.music.aurelis.playback
 
 /** Number of completed queue entries retained behind the current song. */
 internal const val MAX_QUEUE_HISTORY = 25
