@@ -1,8 +1,8 @@
-package com.music.aura.data
+package com.music.aurelis.data
 
 import android.content.Context
 import android.content.SharedPreferences
-import com.music.aura.playback.EqualizerPreset
+import com.music.aurelis.playback.EqualizerPreset
 import kotlinx.coroutines.flow.MutableStateFlow
 
 enum class EqualizerMode { DYNAMIC, MANUAL }
@@ -45,7 +45,7 @@ object SettingsRepository {
     val showQueueHistory = MutableStateFlow(false)
 
     fun init(context: Context) {
-        prefs = context.applicationContext.getSharedPreferences("aura_settings", Context.MODE_PRIVATE)
+        prefs = context.applicationContext.getSharedPreferences("aurelis_settings", Context.MODE_PRIVATE)
         themeMode.value = prefs.getInt("theme_mode", 0)
         dolbyAtmos.value = prefs.getBoolean("dolby_atmos", true)
         liquidGlass.value = prefs.getBoolean("liquid_glass", true)
