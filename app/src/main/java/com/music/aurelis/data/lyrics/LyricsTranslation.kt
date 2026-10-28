@@ -1,4 +1,4 @@
-package com.music.aura.data.lyrics
+package com.music.aurelis.data.lyrics
 
 import java.io.File
 import java.io.FileInputStream
@@ -321,7 +321,7 @@ object LyricsTranslation {
             .build()
         val request = Request.Builder()
             .url(ENDPOINT)
-            .header("User-Agent", "AuraMusic/1.0")
+            .header("User-Agent", "AurelisMusic/1.0")
             .header("Accept", "application/json")
             .post(body)
             .build()
@@ -354,7 +354,7 @@ object LyricsTranslation {
             .build()
         val request = Request.Builder()
             .url(ENDPOINT)
-            .header("User-Agent", "AuraMusic/1.0")
+            .header("User-Agent", "AurelisMusic/1.0")
             .header("Accept", "application/json")
             .post(body)
             .build()
@@ -409,7 +409,7 @@ object LyricsTranslation {
             .build()
         val request = Request.Builder()
             .url(INPUT_TOOLS_ENDPOINT)
-            .header("User-Agent", "AuraMusic/1.0")
+            .header("User-Agent", "AurelisMusic/1.0")
             .header("Accept", "application/json")
             .post(body)
             .build()
