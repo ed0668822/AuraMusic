@@ -1,4 +1,4 @@
-package com.music.aura.ui.components.backdrop.internal
+package com.music.aurelis.ui.components.backdrop.internal
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
