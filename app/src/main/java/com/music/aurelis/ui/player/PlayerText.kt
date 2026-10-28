@@ -1,4 +1,4 @@
-package com.music.aura.ui.player
+package com.music.aurelis.ui.player
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,7 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.music.aura.data.model.LocalSong
+import com.music.aurelis.data.model.LocalSong
 
 @Composable
 fun PlayerText(
