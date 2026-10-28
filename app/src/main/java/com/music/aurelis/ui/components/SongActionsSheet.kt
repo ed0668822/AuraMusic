@@ -1,4 +1,4 @@
-package com.music.aura.ui.components
+package com.music.aurelis.ui.components
 
 import android.net.Uri
 import androidx.compose.foundation.background
@@ -53,10 +53,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import com.music.aura.R
-import com.music.aura.data.model.LocalSong
-import com.music.aura.ui.theme.ArtworkPalette
-import com.music.aura.ui.theme.rememberArtworkPalette
+import com.music.aurelis.R
+import com.music.aurelis.data.model.LocalSong
+import com.music.aurelis.ui.theme.ArtworkPalette
+import com.music.aurelis.ui.theme.rememberArtworkPalette
 
 @Composable
 fun SongActionsSheet(
