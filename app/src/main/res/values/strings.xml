@@ -263,6 +263,11 @@
     <string name="thai">ไทย</string>
     <string name="vietnamese">Tiếng Việt</string>
 
+    <!-- Source quality badge (Fase 2 Wave 2, Decisión A) -->
+    <string name="hi_res_lossless">Hi-Res Lossless</string>
+    <string name="lossless">Lossless</string>
+    <string name="high_quality">Alta calidad</string>
+
     <!-- Plurals -->
     <plurals name="minute_count">
         <item quantity="one">%d minuto</item>
