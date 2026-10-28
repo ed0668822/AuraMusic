@@ -1,4 +1,4 @@
-package com.music.aura.playback.smart
+package com.music.aurelis.playback.smart
 
 import android.content.ContentResolver
 import android.media.MediaDataSource
@@ -12,11 +12,11 @@ import java.util.Locale
 
 /**
  * A reader over a track that is already on the device.
- * Adapted for Aura Music: all tracks are local, so this is the primary source.
+ * Adapted for Aurelis Music: all tracks are local, so this is the primary source.
  */
 internal object LocalAudioSource {
 
-    private const val TAG = "AuraLocalAudio"
+    private const val TAG = "AurelisLocalAudio"
 
     fun isLocal(uri: Uri): Boolean = when (uri.scheme?.lowercase(Locale.ROOT)) {
         ContentResolver.SCHEME_FILE, ContentResolver.SCHEME_CONTENT -> true
