@@ -5,43 +5,39 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Onda sonora: 5 barras verticales de puntas redondeadas.
-         Cada una es un stroke de 7dp con strokeLineCap=round, así que
-         las puntas quedan perfectamente circulares sin path arcs. -->
-
-    <!-- Barra 1 (exterior izquierda) -->
+    <!-- Anillo exterior (aura) -->
     <path
-        android:pathData="M30,46 L30,62"
-        android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="7"
-        android:strokeLineCap="round" />
+        android:pathData="M54,54 m-34,0 a34,34 0 1,0 68,0 a34,34 0 1,0 -68,0"
+        android:strokeColor="#40FFFFFF"
+        android:strokeWidth="1.2"
+        android:fillColor="#00000000" />
 
-    <!-- Barra 2 -->
+    <!-- Anillo interior (aura) -->
     <path
-        android:pathData="M42,40 L42,68"
-        android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="7"
-        android:strokeLineCap="round" />
+        android:pathData="M54,54 m-28,0 a28,28 0 1,0 56,0 a28,28 0 1,0 -56,0"
+        android:strokeColor="#26FFFFFF"
+        android:strokeWidth="0.8"
+        android:fillColor="#00000000" />
 
-    <!-- Barra 3 (central, la más alta) -->
+    <!-- Plica de la nota (stem vertical) -->
     <path
-        android:pathData="M54,34 L54,74"
+        android:pathData="M54,28 L54,66"
         android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="7"
-        android:strokeLineCap="round" />
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
 
-    <!-- Barra 4 (espejo de la 2) -->
+    <!-- Corchete de la nota (flag curvo hacia la derecha) -->
     <path
-        android:pathData="M66,40 L66,68"
+        android:pathData="M54,28 C64,30 70,38 68,48"
         android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="7"
-        android:strokeLineCap="round" />
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
 
-    <!-- Barra 5 (exterior derecha) -->
+    <!-- Cabeza de la nota: rombo Tidal -->
     <path
-        android:pathData="M78,46 L78,62"
-        android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="7"
-        android:strokeLineCap="round" />
+        android:pathData="M54,59 L67,72 L54,85 L41,72 Z"
+        android:fillColor="#FFFFFFFF" />
 
 </vector>
