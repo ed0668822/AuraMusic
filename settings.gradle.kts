@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "AuraMusic"
+rootProject.name = "OndineMusic"
 include(":app")
