@@ -1,12 +1,12 @@
-package com.music.aura.ui.player
+package com.music.aurelis.ui.player
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.music.aura.data.lyrics.LyricLine
-import com.music.aura.playback.PlaybackPosition
+import com.music.aurelis.data.lyrics.LyricLine
+import com.music.aurelis.playback.PlaybackPosition
 
 /**
- * Panel de letras sincronizadas para Aura Music.
+ * Panel de letras sincronizadas para Aurelis Music.
  * Adaptado de BitChord: sin traducción ni romanización.
  * Las letras se leen localmente (embebidas o archivo .lrc).
  */
@@ -22,8 +22,8 @@ fun SyncedLyricsPanel(
     modifier: Modifier = Modifier,
 ) {
     // La implementación completa del panel de letras se conecta
-    // con el SyncedLyricsPanel.kt ya existente en Aura
-    // (app/src/main/java/com/music/aura/ui/components/SyncedLyricsPanel.kt).
+    // con el SyncedLyricsPanel.kt ya existente en Aurelis
+    // (app/src/main/java/com/music/aurelis/ui/components/SyncedLyricsPanel.kt).
     // Este wrapper proporciona la interfaz compatible con el player.
     //
     // Se integrará completamente cuando se porte LyricsPanel
