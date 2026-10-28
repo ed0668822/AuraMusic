@@ -6,17 +6,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -41,9 +39,11 @@ import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 private val INFO_BODY_MAX_HEIGHT = 360.dp
-private val ALERT_WIDTH = 320.dp
-private val ALERT_CORNER = 20.dp
-private val ACTION_HEIGHT = 48.dp
+
+// Note: ALERT_WIDTH, ALERT_CORNER and ACTION_HEIGHT used to live here as
+// private top-level vals, but they collided with identically named constants
+// declared elsewhere in this package. They're now inlined at each use site so
+// SongInfoDialog is self-contained and can't conflict with anything else.
 
 /**
  * Diálogo de información de canción local.
@@ -57,8 +57,8 @@ internal fun SongInfoDialog(song: LocalSong, onDismiss: () -> Unit) {
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Column(
             Modifier
-                .width(ALERT_WIDTH)
-                .clip(RoundedCornerShape(ALERT_CORNER))
+                .width(320.dp)
+                .clip(RoundedCornerShape(20.dp))
                 .background(MaterialTheme.colorScheme.surface),
         ) {
             Column(
@@ -129,8 +129,8 @@ internal fun SongInfoDialog(song: LocalSong, onDismiss: () -> Unit) {
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .heightIn(min = ACTION_HEIGHT)
-                    .clip(RoundedCornerShape(bottomStart = ALERT_CORNER, bottomEnd = ALERT_CORNER))
+                    .heightIn(min = 48.dp)
+                    .clip(RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp))
                     .background(MaterialTheme.colorScheme.surface)
                     .padding(vertical = 12.dp),
                 contentAlignment = Alignment.Center,
@@ -152,7 +152,7 @@ private fun SongInfoRow(label: String, value: String?) {
     Row(
         Modifier
             .fillMaxWidth()
-            .heightIn(min = ACTION_HEIGHT)
+            .heightIn(min = 48.dp)
             .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
