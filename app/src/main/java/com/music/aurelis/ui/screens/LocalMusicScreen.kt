@@ -1,4 +1,4 @@
-package com.music.aura.ui.screens
+package com.music.aurelis.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -19,13 +19,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.music.aura.LibraryViewModel
-import com.music.aura.data.LibraryState
-import com.music.aura.playback.PlaybackViewModel
-import com.music.aura.ui.components.SegmentedControl
-import com.music.aura.ui.components.SongListItem
-import com.music.aura.ui.components.home.AlbumCarousel
-import com.music.aura.ui.components.home.ArtistCarousel
+import com.music.aurelis.LibraryViewModel
+import com.music.aurelis.data.LibraryState
+import com.music.aurelis.playback.PlaybackViewModel
+import com.music.aurelis.ui.components.SegmentedControl
+import com.music.aurelis.ui.components.SongListItem
+import com.music.aurelis.ui.components.home.AlbumCarousel
+import com.music.aurelis.ui.components.home.ArtistCarousel
 
 @Composable
 fun LocalMusicScreen(
