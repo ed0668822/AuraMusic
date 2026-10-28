@@ -1,4 +1,4 @@
-package com.music.aura.ui.theme
+package com.music.aurelis.ui.theme
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -6,13 +6,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 
 /**
- * Tema dinámico de Aura Music.
+ * Tema dinámico de Aurelis Music.
  * Genera un ColorScheme Material 3 a partir de ArtworkColors.
  *
  * Si [colors] es null, usa la paleta oscura por defecto.
  */
 @Composable
-fun DynamicAuraTheme(
+fun DynamicAurelisTheme(
     colors: ArtworkColors?,
     content: @Composable () -> Unit
 ) {
