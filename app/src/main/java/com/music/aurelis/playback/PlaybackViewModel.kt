@@ -1,4 +1,4 @@
-package com.music.aura.playback
+package com.music.aurelis.playback
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
@@ -7,10 +7,10 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.Timeline
 import androidx.media3.session.MediaController
-import com.music.aura.data.lyrics.Lyrics
-import com.music.aura.data.lyrics.LyricsRepository
-import com.music.aura.data.model.LocalSong
-import com.music.aura.data.stats.ListeningStats
+import com.music.aurelis.data.lyrics.Lyrics
+import com.music.aurelis.data.lyrics.LyricsRepository
+import com.music.aurelis.data.model.LocalSong
+import com.music.aurelis.data.stats.ListeningStats
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
