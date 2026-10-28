@@ -1,8 +1,8 @@
-package com.music.aura.playback
+package com.music.aurelis.playback
 
 import androidx.media3.common.MediaItem
-import com.music.aura.data.model.LocalSong
-import com.music.aura.data.model.QueueTier
+import com.music.aurelis.data.model.LocalSong
+import com.music.aurelis.data.model.QueueTier
 import java.util.concurrent.ConcurrentHashMap
 
 internal const val EXTRA_QUEUE_ENTRY_ID = "bitchord.queueEntryId"
