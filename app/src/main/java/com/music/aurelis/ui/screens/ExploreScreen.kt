@@ -1,4 +1,4 @@
-package com.music.aura.ui.screens
+package com.music.aurelis.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -37,9 +37,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.music.aura.R
-import com.music.aura.ui.components.PAGE_GUTTER
-import com.music.aura.ui.components.ShimmerBox
+import com.music.aurelis.R
+import com.music.aurelis.ui.components.PAGE_GUTTER
+import com.music.aurelis.ui.components.ShimmerBox
 import androidx.compose.ui.res.stringResource
 
 /**
