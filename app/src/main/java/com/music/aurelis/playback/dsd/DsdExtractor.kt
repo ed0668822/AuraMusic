@@ -1,4 +1,4 @@
-package com.music.aura.playback.dsd
+package com.music.aurelis.playback.dsd
 
 import android.net.Uri
 import androidx.media3.common.C
