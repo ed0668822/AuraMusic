@@ -7,7 +7,7 @@
  * scale for cheaper effect rendering. KMP expect/actual declarations were
  * merged into this single Android source set. Package renamed accordingly.
  */
-package com.music.aura.ui.components.backdrop.backdrops
+package com.music.aurelis.ui.components.backdrop.backdrops
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
@@ -15,7 +15,7 @@ import androidx.compose.ui.graphics.GraphicsLayerScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.unit.Density
-import com.music.aura.ui.components.backdrop.Backdrop
+import com.music.aurelis.ui.components.backdrop.Backdrop
 
 @Stable
 fun emptyBackdrop(): Backdrop = EmptyBackdrop
