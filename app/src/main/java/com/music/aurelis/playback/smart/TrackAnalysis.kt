@@ -1,4 +1,4 @@
-package com.music.aura.playback.smart
+package com.music.aurelis.playback.smart
 
 /**
  * Stored offline analysis for one track, in that track's own timeline seconds.
