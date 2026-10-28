@@ -1,7 +1,7 @@
-package com.music.aura.ui.replay
+package com.music.aurelis.ui.replay
 
 import android.content.Context
-import com.music.aura.R
+import com.music.aurelis.R
 import java.util.Locale
 
 enum class ReplayPeriod { THIS_WEEK, THIS_MONTH, THIS_YEAR, ALL_TIME }
