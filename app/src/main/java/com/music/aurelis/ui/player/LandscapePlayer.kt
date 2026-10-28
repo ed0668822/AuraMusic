@@ -1,4 +1,4 @@
-package com.music.aura.ui.player
+package com.music.aurelis.ui.player
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.Crossfade
@@ -52,11 +52,11 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import coil3.compose.AsyncImagePainter
 import coil3.request.ImageRequest
-import com.music.aura.R
-import com.music.aura.data.model.LocalSong
-import com.music.aura.ui.components.ExplicitBadge
-import com.music.aura.ui.icons.AuraIcons
-import com.music.aura.ui.theme.stableStatusBarInsets
+import com.music.aurelis.R
+import com.music.aurelis.data.model.LocalSong
+import com.music.aurelis.ui.components.ExplicitBadge
+import com.music.aurelis.ui.icons.AurelisIcons
+import com.music.aurelis.ui.theme.stableStatusBarInsets
 
 private val LANDSCAPE_PLAYER_MAX_WIDTH = 1100.dp
 private val LANDSCAPE_COMPACT_HEIGHT = 440.dp
@@ -208,7 +208,7 @@ internal fun LandscapeArtwork(
         ) {
             if (!artLoaded) {
                 Icon(
-                    imageVector = AuraIcons.MusicNote,
+                    imageVector = AurelisIcons.MusicNote,
                     contentDescription = null,
                     tint = Color.White.copy(alpha = 0.35f),
                     modifier = Modifier.fillMaxSize(0.36f),
