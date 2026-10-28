@@ -1,4 +1,4 @@
-package com.music.aura.playback.dsd
+package com.music.aurelis.playback.dsd
 
 class DsdRawSource(val format: DsdFormat) {
     private val normalized = ByteArray(8192)
@@ -71,7 +71,7 @@ class DsdBlockDecoder(val format: DsdFormat) : AutoCloseable {
     private external fun decode(handle: Long, bytes: ByteArray?, size: Int, output: FloatArray): Int
     private external fun destroy(handle: Long)
 
-    companion object { init { System.loadLibrary("aura_dsd") } }
+    companion object { init { System.loadLibrary("aurelis_dsd") } }
 }
 
 class DstDecoder(val channels: Int) : AutoCloseable {
@@ -98,7 +98,7 @@ class DstDecoder(val channels: Int) : AutoCloseable {
     private external fun decode(handle: Long, input: ByteArray, output: ByteArray): Int
     private external fun destroy(handle: Long)
 
-    companion object { init { System.loadLibrary("aura_dst") } }
+    companion object { init { System.loadLibrary("aurelis_dst") } }
 }
 
 data class DstFrame(val offset: Long, val size: Int, val crc: Int? = null)
