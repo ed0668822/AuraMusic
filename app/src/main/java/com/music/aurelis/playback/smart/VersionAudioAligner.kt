@@ -1,4 +1,4 @@
-package com.music.aura.playback.smart
+package com.music.aurelis.playback.smart
 
 import android.content.Context
 import android.media.MediaDataSource
@@ -24,12 +24,12 @@ import kotlin.system.measureTimeMillis
  * Analyzes audio waveforms/energy envelopes to find the exact time alignment
  * offset between two versions of the same track.
  *
- * Adapted for Aura Music: operates on local file URIs only.
+ * Adapted for Aurelis Music: operates on local file URIs only.
  */
 @UnstableApi
 object VersionAudioAligner {
 
-    private const val TAG = "AuraVersionAligner"
+    private const val TAG = "AurelisVersionAligner"
     private const val HOP_MS = 10.0
     private const val WIN_MS = 40.0
     private const val MAX_LAG_SECONDS = 40.0
