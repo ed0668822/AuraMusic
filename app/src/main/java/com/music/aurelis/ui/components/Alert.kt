@@ -1,4 +1,4 @@
-package com.music.aura.ui.components
+package com.music.aurelis.ui.components
 
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -8,7 +8,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 /**
- * Shared tokens for iOS-style alert cards in Aura (AppLanguageDialog, and
+ * Shared tokens for iOS-style alert cards in Aurelis (AppLanguageDialog, and
  * later SongInfoDialog once it's migrated). Defined here so callers don't
  * repeat magic numbers.
  */
