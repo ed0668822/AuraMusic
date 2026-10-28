@@ -1,4 +1,4 @@
-package com.music.aura
+package com.music.aurelis
 
 import android.content.Intent
 import android.net.Uri
@@ -39,26 +39,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.music.aura.data.AppUpdateChecker
-import com.music.aura.data.AudioPermission
-import com.music.aura.data.LibraryState
-import com.music.aura.data.model.LocalSong
-import com.music.aura.playback.PlaybackViewModel
-import com.music.aura.ui.components.BottomTab
-import com.music.aura.ui.components.GlassNavBar
-import com.music.aura.ui.components.MiniPlayer
-import com.music.aura.ui.components.UpdateAvailableDialog
-import com.music.aura.ui.icons.AuraIcons
-import com.music.aura.ui.screens.HomeScreen
-import com.music.aura.ui.screens.LibraryLink
-import com.music.aura.ui.screens.LibraryScreen
-import com.music.aura.ui.screens.LocalMusicScreen
-import com.music.aura.ui.screens.NowPlayingScreen
-import com.music.aura.ui.screens.QueueScreen
-import com.music.aura.ui.screens.ReplayScreen
-import com.music.aura.ui.screens.SearchScreen
-import com.music.aura.ui.screens.SettingsScreen
-import com.music.aura.ui.theme.AuraTheme
+import com.music.aurelis.data.AppUpdateChecker
+import com.music.aurelis.data.AudioPermission
+import com.music.aurelis.data.LibraryState
+import com.music.aurelis.data.model.LocalSong
+import com.music.aurelis.playback.PlaybackViewModel
+import com.music.aurelis.ui.components.BottomTab
+import com.music.aurelis.ui.components.GlassNavBar
+import com.music.aurelis.ui.components.MiniPlayer
+import com.music.aurelis.ui.components.UpdateAvailableDialog
+import com.music.aurelis.ui.icons.AurelisIcons
+import com.music.aurelis.ui.screens.HomeScreen
+import com.music.aurelis.ui.screens.LibraryLink
+import com.music.aurelis.ui.screens.LibraryScreen
+import com.music.aurelis.ui.screens.LocalMusicScreen
+import com.music.aurelis.ui.screens.NowPlayingScreen
+import com.music.aurelis.ui.screens.QueueScreen
+import com.music.aurelis.ui.screens.ReplayScreen
+import com.music.aurelis.ui.screens.SearchScreen
+import com.music.aurelis.ui.screens.SettingsScreen
+import com.music.aurelis.ui.theme.AurelisTheme
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.launch
@@ -73,9 +73,9 @@ class MainActivity : AppCompatActivity() {
         if (!AudioPermission.isGranted(this)) permissionLauncher.launch(AudioPermission.requiredPermission())
 
         setContent {
-            AuraTheme {
+            AurelisTheme {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    AuraApp()
+                    AurelisApp()
                 }
             }
         }
@@ -83,7 +83,7 @@ class MainActivity : AppCompatActivity() {
 }
 
 @Composable
-private fun AuraApp() {
+private fun AurelisApp() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val playbackViewModel: PlaybackViewModel = viewModel()
@@ -161,9 +161,9 @@ private fun AuraApp() {
                     else -> {
                         val listState = rememberLazyListState()
                         val links = listOf(
-                            LibraryLink("Canciones", AuraIcons.MusicNote) { showLocalMusic = true },
-                            LibraryLink("Replay", AuraIcons.Clock) { showReplay = true },
-                            LibraryLink("Ajustes", AuraIcons.Home) { showSettings = true },
+                            LibraryLink("Canciones", AurelisIcons.MusicNote) { showLocalMusic = true },
+                            LibraryLink("Replay", AurelisIcons.Clock) { showReplay = true },
+                            LibraryLink("Ajustes", AurelisIcons.Home) { showSettings = true },
                         )
                         LibraryScreen(
                             listState = listState,
