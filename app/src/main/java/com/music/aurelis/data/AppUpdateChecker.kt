@@ -1,4 +1,4 @@
-package com.music.aura.data
+package com.music.aurelis.data
 
 import android.content.Context
 import android.content.Intent
@@ -6,7 +6,7 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.core.content.FileProvider
-import com.music.aura.BuildConfig
+import com.music.aurelis.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -29,7 +29,7 @@ object AppUpdateChecker {
     )
 
     private const val CACHE_SUBDIR = "updates"
-    private const val LATEST_RELEASE_URL = "https://api.github.com/repos/ed0668822/AuraMusic/releases/latest"
+    private const val LATEST_RELEASE_URL = "https://api.github.com/repos/ed0668822/AurelisMusic/releases/latest"
 
     private val json = Json { ignoreUnknownKeys = true }
     private val httpClient = OkHttpClient()
@@ -88,7 +88,7 @@ object AppUpdateChecker {
         runCatching {
             val dir = File(context.cacheDir, CACHE_SUBDIR).apply { mkdirs() }
             dir.listFiles()?.forEach { it.delete() }
-            val target = File(dir, "aura-${info.version}.apk")
+            val target = File(dir, "aurelis-${info.version}.apk")
 
             val request = Request.Builder().url(url).build()
             httpClient.newCall(request).execute().use { response ->
