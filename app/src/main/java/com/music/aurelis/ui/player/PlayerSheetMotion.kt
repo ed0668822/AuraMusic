@@ -1,4 +1,4 @@
-package com.music.aura.ui.player
+package com.music.aurelis.ui.player
 
 import android.view.Window
 import androidx.compose.animation.core.Spring
