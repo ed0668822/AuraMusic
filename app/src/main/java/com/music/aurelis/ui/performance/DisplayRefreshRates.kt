@@ -1,4 +1,4 @@
-package com.music.aura.ui.performance
+package com.music.aurelis.ui.performance
 
 import android.view.Display
 import kotlin.math.abs
