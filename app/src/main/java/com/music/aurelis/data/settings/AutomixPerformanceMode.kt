@@ -1,4 +1,4 @@
-package com.music.aura.data.settings
+package com.music.aurelis.data.settings
 
 /** CPU budget for Automix's background analysis, not its audible mix algorithm. */
 enum class AutomixPerformanceMode(val inferenceThreads: Int) {
