@@ -1,4 +1,4 @@
-package com.music.aura.ui.components
+package com.music.aurelis.ui.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -95,5 +95,3 @@ private class HoldCapture {
     var requests by mutableIntStateOf(0)
     var handled = 0
 }
-
-
