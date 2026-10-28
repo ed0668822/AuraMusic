@@ -1,4 +1,4 @@
-package com.music.aura.ui.theme
+package com.music.aurelis.ui.theme
 
 import android.app.Activity
 import android.os.Build
