@@ -27,7 +27,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 enum class Haptic {
     /**
      * The lightest single beat, for something that repeats while a finger is
-     * still down — a drag crossing a tab boundary, say.
+     * still down — a drag crossing a tab boundary, say. Anything firmer becomes
+     * a rattle once it fires ten times in a row.
      */
     Tick,
 
@@ -82,8 +83,23 @@ fun rememberHaptics(): Haptics {
 
 // ── The rhythms ───────────────────────────────────────────────────────────────
 
+/**
+ * One beat of a pattern: which of the three short primitives to strike, how
+ * hard relative to that primitive's nominal strength, and how long to wait
+ * after the previous beat before striking it.
+ *
+ * Only the three genuinely *short* primitives are used. The platform also
+ * offers rises, falls, thuds and a spin, and all of them run 80–500ms — long
+ * enough that a two-beat pattern built from them would still be vibrating well
+ * after the screen had finished responding.
+ */
 private class Beat(val kind: Kind, val scale: Float, val gapMs: Long) {
-    enum class Kind(val pulseMs: Long, val amplitude: Int) {
+    enum class Kind(
+        /** Roughly how long the primitive itself lasts, for the waveform tiers. */
+        val pulseMs: Long,
+        /** Its nominal amplitude, before [Beat.scale]. */
+        val amplitude: Int,
+    ) {
         Tick(8, 110),
         LowTick(10, 95),
         Click(14, 210),
@@ -132,6 +148,24 @@ private fun rhythmOf(haptic: Haptic): List<Beat> = when (haptic) {
 
 // ── The motor ─────────────────────────────────────────────────────────────────
 
+/**
+ * Resolves what this particular phone can do once, then renders every [Haptic]
+ * into the best [VibrationEffect] available to it:
+ *
+ *  1. **Composition** (API 30+, primitives supported). Real rhythmic haptics —
+ *     the beats are handed to the vibrator as primitives and it reproduces
+ *     their character, not just their timing. This is the Pixel / recent
+ *     Samsung path and what the patterns above were written for.
+ *  2. **Waveform with amplitudes** (API 26+, `hasAmplitudeControl`). The same
+ *     rhythm as on-pulses of varying strength. Cruder, still clearly a pattern
+ *     rather than a buzz.
+ *  3. **Plain waveform**. An on/off pattern on a motor with one volume, so only
+ *     the timing survives — and the pulses have to be longer to be felt at all,
+ *     which is why this tier drops a three-beat pattern to its two outer beats
+ *     rather than letting the total run past ~80ms.
+ *
+ * Effects are immutable, so each one is compiled on first use and kept.
+ */
 private class HapticDevice private constructor(
     private val vibrator: Vibrator,
     private val canCompose: Boolean,
@@ -141,7 +175,11 @@ private class HapticDevice private constructor(
     private val compiled = HashMap<Haptic, VibrationEffect>()
 
     fun play(haptic: Haptic) {
+        // The system-wide touch-feedback switch is the user's answer to this
+        // whole feature, and going through Vibrator rather than the View means
+        // nothing else is checking it for us.
         if (!systemHapticsEnabled()) return
+
         val effect = synchronized(compiled) {
             compiled.getOrPut(haptic) { compile(rhythmOf(haptic)) }
         }
@@ -160,6 +198,10 @@ private class HapticDevice private constructor(
         else -> waveform(beats.outerTwo(), coarse = true)
     }
 
+    /**
+     * Timings and amplitudes alternate gap / pulse, so a beat contributes two
+     * entries and a leading gap of 0 is harmless.
+     */
     private fun waveform(beats: List<Beat>, coarse: Boolean): VibrationEffect {
         val timings = LongArray(beats.size * 2)
         val amplitudes = IntArray(beats.size * 2)
@@ -176,10 +218,15 @@ private class HapticDevice private constructor(
         }
     }
 
+    /**
+     * An ERM motor needs ~20ms just to spin up, so the primitive-length pulses
+     * above would land as nothing. Stretched to something felt, floored at 18ms.
+     */
     private fun coarsePulseMs(beat: Beat): Long =
         (beat.kind.pulseMs * 2.5f * (0.6f + 0.4f * beat.scale)).toLong().coerceIn(18, 40)
 
     companion object {
+        /** First and last beat, which for a mirrored pair keeps the mirror. */
         private fun List<Beat>.outerTwo(): List<Beat> =
             if (size > 2) listOf(first(), last()) else this
 
@@ -214,6 +261,9 @@ private class HapticDevice private constructor(
             }
             if (vibrator == null || !vibrator.hasVibrator()) return null
 
+            // Claiming API 30 isn't enough — plenty of phones on 30+ have an
+            // ERM motor that supports no primitives, and asking for a
+            // composition there produces silence rather than a fallback.
             val canCompose = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R &&
                 Primitives.supportedBy(vibrator)
 
