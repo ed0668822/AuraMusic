@@ -1,4 +1,4 @@
-package com.music.aura.playback
+package com.music.aurelis.playback
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothClass
