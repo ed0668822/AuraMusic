@@ -1,4 +1,4 @@
-package com.music.aura.playback.smart
+package com.music.aurelis.playback.smart
 
 import android.media.MediaCodec
 import android.media.MediaDataSource
@@ -11,7 +11,7 @@ import kotlin.math.max
 
 object AudioDecoder {
 
-    private const val TAG = "AuraAudioDecoder"
+    private const val TAG = "AurelisAudioDecoder"
     private const val TIMEOUT_US = 10_000L
 
     data class Pcm(val samples: FloatArray, val sampleRate: Double)
