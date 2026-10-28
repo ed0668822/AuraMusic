@@ -1,8 +1,8 @@
-package com.music.aura.data
+package com.music.aurelis.data
 
-import com.music.aura.data.model.LocalAlbum
-import com.music.aura.data.model.LocalArtist
-import com.music.aura.data.model.LocalSong
+import com.music.aurelis.data.model.LocalAlbum
+import com.music.aurelis.data.model.LocalArtist
+import com.music.aurelis.data.model.LocalSong
 
 /**
  * Estado de la biblioteca musical para la UI.
