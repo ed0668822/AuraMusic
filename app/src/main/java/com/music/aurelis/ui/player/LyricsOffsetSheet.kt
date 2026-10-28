@@ -1,4 +1,4 @@
-package com.music.aura.ui.player
+package com.music.aurelis.ui.player
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -51,12 +51,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.music.aura.R
-import com.music.aura.ui.components.optimizedHazeEffect
-import com.music.aura.ui.components.ThinSlider
-import com.music.aura.ui.utils.containSheetGestures
-import com.music.aura.ui.haptics.Haptic
-import com.music.aura.ui.haptics.rememberHaptics
+import com.music.aurelis.R
+import com.music.aurelis.ui.components.optimizedHazeEffect
+import com.music.aurelis.ui.components.ThinSlider
+import com.music.aurelis.ui.utils.containSheetGestures
+import com.music.aurelis.ui.haptics.Haptic
+import com.music.aurelis.ui.haptics.rememberHaptics
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
