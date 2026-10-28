@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -23,6 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -35,7 +37,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.os.LocaleListCompat
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.music.aura.R
 import com.music.aura.data.LocaleTags
 import com.music.aura.data.SettingsRepository
@@ -44,39 +45,25 @@ import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import java.util.Locale
 
-/**
- * Language tag paired with its display-name string.
- *
- * Tags carry a region (`zh-CN` / `zh-TW`, not bare `zh-Hans` / `zh-Hant`):
- * Android Views understand script qualifiers (`values-b+zh+Hant`) but the
- * resource system matches language + region more reliably, so a region-less
- * script tag ends up showing the wrong variant. [LocaleTags.normalizeAppTag]
- * maps both forms to the same script downstream.
- *
- * Language names themselves are conventionally written in their own language
- * ("English", "Español", "Français"…), not translated, so a user can always
- * find their language regardless of the current app locale.
- */
+/** Language tag paired with its display-name string. */
 data class AppLanguage(val tag: String, val nameRes: Int)
 
+/**
+ * Los 6 idiomas "principales" que el diálogo ofrece hoy.
+ *
+ * Al final del proyecto se expandirá al resto y se crearán los
+ * `values-xx/strings.xml` con la traducción real. Mientras tanto,
+ * `values/strings.xml` (base) está en español, así que cualquier selección
+ * cae al español hasta que exista el `values-xx/` correspondiente; el
+ * checkmark sí se mueve, y la elección persiste.
+ */
 val SUPPORTED_LANGUAGES = listOf(
     AppLanguage("en", R.string.english),
     AppLanguage("es", R.string.spanish),
+    AppLanguage("pt", R.string.portuguese),
     AppLanguage("fr", R.string.french),
     AppLanguage("de", R.string.german),
-    AppLanguage("pl", R.string.polish),
-    AppLanguage("pt", R.string.portuguese),
-    AppLanguage("id", R.string.indonesian),
-    AppLanguage("hi", R.string.hindi),
     AppLanguage("ja", R.string.japanese),
-    AppLanguage("ru", R.string.russian),
-    AppLanguage("zh-CN", R.string.chinese_simplified),
-    AppLanguage("zh-TW", R.string.chinese_traditional),
-    AppLanguage("he", R.string.hebrew),
-    AppLanguage("it", R.string.italian),
-    AppLanguage("tr", R.string.turkish),
-    AppLanguage("th", R.string.thai),
-    AppLanguage("vi", R.string.vietnamese),
 )
 
 fun languageDisplayNameRes(languageTag: String): Int {
@@ -86,19 +73,16 @@ fun languageDisplayNameRes(languageTag: String): Int {
     }?.nameRes ?: R.string.english
 }
 
-/** How much of the screen the list may take before it scrolls inside the card. */
+// ─── iOS-alert style constants (mismas dimensiones que Bitchord) ─────────────
+private val LANGUAGE_CARD_CORNER = 14.dp
+private val LANGUAGE_CARD_WIDTH = 270.dp
+private val LANGUAGE_ROW_HEIGHT = 44.dp
+private val LANGUAGE_SCRIM_COLOR = Color.Black.copy(alpha = 0.4f)
 private val LANGUAGE_LIST_MAX_HEIGHT = 340.dp
 
 /**
- * Same frosted iOS alert as the audio dialogs, single-select. Tapping a row
- * applies it and closes the sheet immediately — there is no separate Done
- * button, because there is nothing else to decide.
- *
- * NOTE: until `values-en/`, `values-fr/`, etc. exist in the project with
- * translated strings, choosing a language here saves the preference and
- * marks it selected, but the actual UI text stays in the fallback locale
- * (`values/`, which is Spanish). That is Android's documented behavior — the
- * language catalogues are a separate porting phase.
+ * Frosted iOS alert with a single-select list. Tapping a row applies the
+ * language and dismisses immediately — there is no separate Done action.
  */
 @OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable
@@ -107,8 +91,9 @@ fun AppLanguageDialog(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val reduceDynamicBlur by SettingsRepository.reduceDynamicBlur.collectAsStateWithLifecycle()
-    val shape = RoundedCornerShape(ALERT_CORNER)
+    val reduceDynamicBlur by SettingsRepository.reduceDynamicBlur.collectAsState()
+    val shape = RoundedCornerShape(LANGUAGE_CARD_CORNER)
+    // Full script tag (zh-Hant / zh-Hans preserved); legacy bare "zh" reads as Simplified.
     val currentLanguage = LocaleTags.normalizeAppTag(
         AppCompatDelegate.getApplicationLocales().get(0)?.toLanguageTag()
             ?: Locale.getDefault().toLanguageTag(),
@@ -117,7 +102,7 @@ fun AppLanguageDialog(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(SCRIM_COLOR)
+            .background(LANGUAGE_SCRIM_COLOR)
             .clickable(
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() },
@@ -127,7 +112,7 @@ fun AppLanguageDialog(
     ) {
         Column(
             modifier = Modifier
-                .width(ALERT_WIDTH)
+                .width(LANGUAGE_CARD_WIDTH)
                 .clip(shape)
                 .then(
                     if (reduceDynamicBlur) {
@@ -139,8 +124,7 @@ fun AppLanguageDialog(
                         )
                     },
                 )
-                // Swallows the tap before it reaches the scrim behind, so
-                // touching the card itself never dismisses it.
+                // Swallows the tap before it reaches the scrim behind.
                 .clickable(
                     indication = null,
                     interactionSource = remember { MutableInteractionSource() },
@@ -176,7 +160,7 @@ fun AppLanguageDialog(
 
             LazyColumn(modifier = Modifier.heightIn(max = LANGUAGE_LIST_MAX_HEIGHT)) {
                 items(SUPPORTED_LANGUAGES, key = { it.tag }) { language ->
-                    AlertRule()
+                    LanguageRule()
                     LanguageRow(
                         language = language,
                         selected = LocaleTags.normalizeAppTag(language.tag) == currentLanguage,
@@ -194,13 +178,23 @@ fun AppLanguageDialog(
 }
 
 @Composable
+private fun LanguageRule() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(0.5.dp)
+            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f)),
+    )
+}
+
+@Composable
 private fun LanguageRow(language: AppLanguage, selected: Boolean, onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = ACTION_HEIGHT)
+            .heightIn(min = LANGUAGE_ROW_HEIGHT)
             .background(
                 if (pressed) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.09f) else Color.Transparent,
             )
