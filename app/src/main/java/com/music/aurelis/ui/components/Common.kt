@@ -1,4 +1,4 @@
-package com.music.aura.ui.components
+package com.music.aurelis.ui.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.RepeatMode
@@ -72,10 +72,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
-import com.music.aura.R
-import com.music.aura.data.model.LocalSong
-import com.music.aura.ui.haptics.Haptic
-import com.music.aura.ui.haptics.rememberHaptics
+import com.music.aurelis.R
+import com.music.aurelis.data.model.LocalSong
+import com.music.aurelis.ui.haptics.Haptic
+import com.music.aurelis.ui.haptics.rememberHaptics
 import kotlin.math.abs
 
 val PAGE_GUTTER = 16.dp
