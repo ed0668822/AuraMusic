@@ -1,4 +1,4 @@
-package com.music.aura.widget
+package com.music.aurelis.widget
 
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
@@ -11,8 +11,8 @@ import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.View
 import android.widget.RemoteViews
-import com.music.aura.MainActivity
-import com.music.aura.R
+import com.music.aurelis.MainActivity
+import com.music.aurelis.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
