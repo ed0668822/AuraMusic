@@ -1,4 +1,4 @@
-package com.music.aura.ui.player
+package com.music.aurelis.ui.player
 
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
