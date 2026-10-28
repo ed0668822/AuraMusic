@@ -13,17 +13,18 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
 
     <application
-        android:name=".AuraApplication"
+        android:name=".OndineApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:label="@string/app_name"
         android:localeConfig="@xml/locales_config"
-        android:theme="@style/Theme.Aura">
+        android:theme="@style/Theme.Ondine">
 
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.Aura">
+            android:theme="@style/Theme.Ondine">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -31,7 +32,7 @@
         </activity>
 
         <service
-            android:name=".playback.AuraPlaybackService"
+            android:name=".playback.OndinePlaybackService"
             android:foregroundServiceType="mediaPlayback"
             android:exported="true">
             <intent-filter>
