@@ -1,4 +1,4 @@
-package com.music.aura.ui.components
+package com.music.aurelis.ui.components
 import androidx.compose.ui.graphics.vector.ImageVector
 
 data class BottomTab(
