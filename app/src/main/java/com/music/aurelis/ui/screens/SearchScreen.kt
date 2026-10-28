@@ -1,4 +1,4 @@
-package com.music.aura.ui.screens
+package com.music.aurelis.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -39,16 +39,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.music.aura.R
-import com.music.aura.data.model.LocalSong
-import com.music.aura.ui.components.MessageState
-import com.music.aura.ui.components.PAGE_GUTTER
-import com.music.aura.ui.components.PlayingAccent
-import com.music.aura.ui.components.ROW_DIVIDER_INSET
-import com.music.aura.ui.components.SearchField
-import com.music.aura.ui.components.SongRow
-import com.music.aura.ui.components.songListSkeleton
-import com.music.aura.ui.components.contextClick
+import com.music.aurelis.R
+import com.music.aurelis.data.model.LocalSong
+import com.music.aurelis.ui.components.MessageState
+import com.music.aurelis.ui.components.PAGE_GUTTER
+import com.music.aurelis.ui.components.PlayingAccent
+import com.music.aurelis.ui.components.ROW_DIVIDER_INSET
+import com.music.aurelis.ui.components.SearchField
+import com.music.aurelis.ui.components.SongRow
+import com.music.aurelis.ui.components.songListSkeleton
+import com.music.aurelis.ui.components.contextClick
 
 @Composable
 fun SearchScreen(
