@@ -1,8 +1,8 @@
-package com.music.aura.data.lyrics
+package com.music.aurelis.data.lyrics
 
 import android.content.Context
 import android.net.Uri
-import com.music.aura.data.model.LocalSong
+import com.music.aurelis.data.model.LocalSong
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
