@@ -1,4 +1,4 @@
-package com.music.aura.ui.theme
+package com.music.aurelis.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -15,7 +15,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
-import com.music.aura.data.SettingsRepository
+import com.music.aurelis.data.SettingsRepository
 
 // Apple Music's signature red. No longer the primary accent, but kept for the
 // spots (Replay's rank badge) that want that specific red regardless of theme.
@@ -69,10 +69,10 @@ private val LightColorScheme = lightColorScheme(
 
 /**
  * Heavy, tight typography — the backbone of the Apple Music look. Bitchord
- * ships SF Pro Display; Aura uses the system default font family with the same
+ * ships SF Pro Display; Aurelis uses the system default font family with the same
  * weights and letter-spacing so the layout reads identically.
  */
-private val AuraTypography = Typography(
+private val AurelisTypography = Typography(
     displayLarge = TextStyle(fontWeight = FontWeight.W800, fontSize = 34.sp, letterSpacing = (-0.8).sp),
     headlineLarge = TextStyle(fontWeight = FontWeight.W800, fontSize = 30.sp, letterSpacing = (-0.7).sp),
     headlineMedium = TextStyle(fontWeight = FontWeight.W700, fontSize = 22.sp, letterSpacing = (-0.4).sp),
@@ -85,7 +85,7 @@ private val AuraTypography = Typography(
 )
 
 @Composable
-fun AuraTheme(
+fun AurelisTheme(
     content: @Composable () -> Unit,
 ) {
     val themeMode by SettingsRepository.themeMode.collectAsState()
@@ -98,7 +98,7 @@ fun AuraTheme(
 
     MaterialTheme(
         colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme,
-        typography = AuraTypography,
+        typography = AurelisTypography,
         content = content,
     )
 }
