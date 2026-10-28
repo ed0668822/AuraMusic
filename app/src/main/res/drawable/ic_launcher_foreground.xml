@@ -4,40 +4,14 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-
-    <!-- Anillo exterior (aura) -->
-    <path
-        android:pathData="M54,54 m-34,0 a34,34 0 1,0 68,0 a34,34 0 1,0 -68,0"
-        android:strokeColor="#40FFFFFF"
-        android:strokeWidth="1.2"
-        android:fillColor="#00000000" />
-
-    <!-- Anillo interior (aura) -->
-    <path
-        android:pathData="M54,54 m-28,0 a28,28 0 1,0 56,0 a28,28 0 1,0 -56,0"
-        android:strokeColor="#26FFFFFF"
-        android:strokeWidth="0.8"
-        android:fillColor="#00000000" />
-
-    <!-- Plica de la nota (stem vertical) -->
-    <path
-        android:pathData="M54,28 L54,66"
-        android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="6"
-        android:strokeLineCap="round"
-        android:fillColor="#00000000" />
-
-    <!-- Corchete de la nota (flag curvo hacia la derecha) -->
-    <path
-        android:pathData="M54,28 C64,30 70,38 68,48"
-        android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="6"
-        android:strokeLineCap="round"
-        android:fillColor="#00000000" />
-
-    <!-- Cabeza de la nota: rombo Tidal -->
-    <path
-        android:pathData="M54,59 L67,72 L54,85 L41,72 Z"
-        android:fillColor="#FFFFFFFF" />
-
+    <!-- Nota musical blanca centrada, inspirada en el símbolo de Apple Music -->
+    <group
+        android:scaleX="3.8"
+        android:scaleY="3.8"
+        android:translateX="24"
+        android:translateY="24">
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M12,3v10.55c-0.59,-0.34 -1.27,-0.55 -2,-0.55 -2.21,0 -4,1.79 -4,4s1.79,4 4,4 4,-1.79 4,-4V7h4V3h-6z" />
+    </group>
 </vector>
