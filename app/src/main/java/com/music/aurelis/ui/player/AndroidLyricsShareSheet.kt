@@ -1,4 +1,4 @@
-package com.music.aura.ui.player
+package com.music.aurelis.ui.player
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
