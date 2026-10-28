@@ -1,4 +1,4 @@
-package com.music.aura.data
+package com.music.aurelis.data
 
 import java.util.Locale
 
@@ -9,7 +9,7 @@ import java.util.Locale
  * "zh-Hans"). On the wire each service gets the dialect it understands:
  * YouTube / Google Translate want region tags ("zh-TW" / "zh-CN").
  *
- * Portado desde Bitchord sin cambios: aunque Aura solo soporta 6 idiomas
+ * Portado desde Bitchord sin cambios: aunque Aurelis solo soporta 6 idiomas
  * en el diálogo, el resto de la app (traducción de letras en Fase 7) usará
  * este helper para normalizar tags. Mantenerlo completo evita divergencias.
  */
