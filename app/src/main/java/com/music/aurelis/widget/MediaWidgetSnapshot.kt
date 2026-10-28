@@ -1,4 +1,4 @@
-package com.music.aura.widget
+package com.music.aurelis.widget
 
 import android.content.Context
 
@@ -62,7 +62,7 @@ internal data class MediaWidgetSnapshot(
         }
 
         private fun prefs(context: Context) =
-            context.getSharedPreferences("aura_widget", Context.MODE_PRIVATE)
+            context.getSharedPreferences("aurelis_widget", Context.MODE_PRIVATE)
 
         private const val KEY_MEDIA_ID = "media_id"
         private const val KEY_TITLE = "title"
