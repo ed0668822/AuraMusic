@@ -1,4 +1,4 @@
-package com.music.aura.ui.player
+package com.music.aurelis.ui.player
 
 import android.net.Uri
 import androidx.compose.animation.animateColorAsState
@@ -34,10 +34,10 @@ import coil3.SingletonImageLoader
 import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
 import coil3.request.SuccessResult
-import com.music.aura.ui.graphics.ColorUtils
-import com.music.aura.ui.graphics.forPixelAccess
-import com.music.aura.ui.graphics.paletteSwatches
-import com.music.aura.ui.graphics.toImageBitmap
+import com.music.aurelis.ui.graphics.ColorUtils
+import com.music.aurelis.ui.graphics.forPixelAccess
+import com.music.aurelis.ui.graphics.paletteSwatches
+import com.music.aurelis.ui.graphics.toImageBitmap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -197,7 +197,7 @@ fun MeshGradientBackground(
 const val MESH_CYCLE_MILLIS = 3_600
 
 /**
- * Aura's own colours, for the surfaces that have no artwork to take them
+ * Aurelis's own colours, for the surfaces that have no artwork to take them
  * from: the welcome pages and the sign-in card on Home.
  */
 val WelcomeMeshPalettes: List<MeshPalette> = listOf(
