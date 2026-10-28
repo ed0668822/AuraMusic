@@ -1,11 +1,11 @@
-package com.music.aura.playback.audio
+package com.music.aurelis.playback.audio
 
 import android.util.Log
-import com.music.aura.BuildConfig
-import com.music.aura.playback.EqualizerProcessor
-import com.music.aura.playback.LoudnessProcessor
-import com.music.aura.playback.SpatialAudioProcessor
-import com.music.aura.playback.TransitionFilterProcessor
+import com.music.aurelis.BuildConfig
+import com.music.aurelis.playback.EqualizerProcessor
+import com.music.aurelis.playback.LoudnessProcessor
+import com.music.aurelis.playback.SpatialAudioProcessor
+import com.music.aurelis.playback.TransitionFilterProcessor
 
 class DspChain(
     val spatial: SpatialAudioProcessor = SpatialAudioProcessor(),
@@ -75,6 +75,6 @@ class DspChain(
     }
 
     companion object {
-        private const val TAG = "AuraDspChain"
+        private const val TAG = "AurelisDspChain"
     }
 }
