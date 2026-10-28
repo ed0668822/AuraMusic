@@ -1,4 +1,4 @@
-package com.music.aura.ui.components
+package com.music.aurelis.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,8 +18,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import com.music.aura.ui.components.floatingtabbar.GlassPillMotion
-import com.music.aura.ui.components.floatingtabbar.pillPlacement
+import com.music.aurelis.ui.components.floatingtabbar.GlassPillMotion
+import com.music.aurelis.ui.components.floatingtabbar.pillPlacement
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeChild
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
