@@ -13,7 +13,7 @@ import com.music.aurelis.data.lyrics.LyricsRepository
 import com.music.aurelis.data.lyrics.LyricsSource
 import com.music.aurelis.data.lyrics.LyricsTranslation
 import com.music.aurelis.data.model.LocalSong
-import com.music.aurelis.data.settings.Settings
+import com.music.aurelis.data.SettingsRepository // 👈 IMPORT CORREGIDO
 import com.music.aurelis.data.stats.ListeningStats
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -24,7 +24,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
-/** Lyrics currently loaded, plus which source answered and any translation. */
 sealed interface LyricsState {
     data object None : LyricsState
     data class Loading(val source: LyricsSource? = null) : LyricsState
@@ -33,7 +32,6 @@ sealed interface LyricsState {
         val source: LyricsSource,
         val translation: TranslationState = TranslationState.None,
     ) : LyricsState
-
     data object Missing : LyricsState
 }
 
@@ -148,11 +146,6 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    /**
-     * Translates the currently-loaded lyrics into [targetLanguageTag].
-     * Cancels any previous translation job — pressing "translate → Spanish"
-     * then "translate → Portuguese" leaves the second call in charge.
-     */
     fun translateLyrics(targetLanguageTag: String) {
         val loaded = _state.value.lyrics as? LyricsState.Loaded ?: return
         val song = _state.value.currentSong ?: return
@@ -184,7 +177,6 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    /** Clears translation and re-shows the source lyrics. */
     fun clearTranslation() {
         translationJob?.cancel()
         _state.update { current ->
@@ -223,20 +215,11 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
         _state.update { it.copy(durationMs = ctrl.duration.coerceAtLeast(0L)) }
     }
 
-    /**
-     * One lookup per track change: the app's local extras (embedded lyrics,
-     * .lrc sidecar) are read first, and if they have nothing the repository's
-     * sixteen providers are raced against each other. The winning answer is
-     * whatever the highest-priority source that had *anything* said, with a
-     * word-synced answer outranking line-synced only where the user has asked
-     * for that in Settings.
-     */
     private fun loadLyrics(song: LocalSong) {
         lastLyricsSongId = song.id
         lyricsJob?.cancel()
         translationJob?.cancel()
         _state.update { it.copy(lyrics = LyricsState.Loading()) }
-        val settings = com.music.aurelis.data.SettingsRepository
         lyricsJob = viewModelScope.launch {
             val result = runCatching {
                 LyricsRepository.lyrics(
@@ -245,9 +228,9 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
                     artist = song.artist,
                     durationMs = song.durationMs,
                     album = song.album,
-                    sources = settings.lyricsSources.value,
-                    order = settings.lyricsSourceOrder.value,
-                    prioritizeSyllableSync = settings.prioritizeSyllableSync.value,
+                    sources = SettingsRepository.lyricsSources.value,
+                    order = SettingsRepository.lyricsSourceOrder.value,
+                    prioritizeSyllableSync = SettingsRepository.prioritizeSyllableSync.value,
                 )
             }.getOrNull()
             if (lastLyricsSongId != song.id) return@launch
