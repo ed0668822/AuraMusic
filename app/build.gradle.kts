@@ -40,8 +40,6 @@ android {
 
     signingConfigs {
         create("release") {
-            // Renombrado el archivo de keystore por coherencia. Debes crear el archivo
-            // "aurelis-release.jks" o cambiar esta ruta a la de tu keystore actual.
             val keystorePath = System.getenv("KEYSTORE_PATH") ?: "aurelis-release.jks"
             val storeFile = rootProject.file(keystorePath)
 
@@ -103,7 +101,6 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     implementation("androidx.core:core-ktx:1.15.0")
 
-    // AppCompat: necesario para AppCompatDelegate.setApplicationLocales() + AppCompatActivity
     implementation("androidx.appcompat:appcompat:1.7.0")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
@@ -124,9 +121,10 @@ dependencies {
 
     implementation("com.microsoft.onnxruntime:onnxruntime-android:1.17.0")
 
-    // Requerido por los .java vendorizados de Media3 (androidx/media3/decoder/ffmpeg):
-    //   FfmpegAudioDecoder.java  → com.google.common.base.Preconditions.checkNotNull
-    //   FfmpegLibrary.java       → org.checkerframework.checker.nullness.qual.MonotonicNonNull
+    // Requerido por los .java vendorizados de Media3
     implementation("com.google.guava:guava:33.3.1-android")
     implementation("org.checkerframework:checker-qual:3.48.3")
+
+    // ← AÑADIDO: requerido por data/lyrics/Genius.kt (scraper HTML)
+    implementation("org.jsoup:jsoup:1.18.1")
 }
