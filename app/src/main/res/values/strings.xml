@@ -113,6 +113,23 @@
     <string name="lyrics_share_story_revert">Volver a modo normal</string>
     <string name="share_your_lyrics">Comparte tus letras</string>
 
+    <!-- Lyrics sources / translation -->
+    <string name="lyrics_sources">Fuentes de letras</string>
+    <string name="lyrics_sources_order">Toca para activar, arrastra para ordenar</string>
+    <string name="prioritize_syllable_lyrics">Preferir letras por sílabas</string>
+    <string name="prioritize_syllable_lyrics_subtitle">Esperar por una fuente con tiempos por palabra</string>
+    <string name="paxsenix_api_key">Clave API de PaxSenix</string>
+    <string name="paxsenix_api_key_missing">Configurar clave API de PaxSenix…</string>
+    <string name="paxsenix_api_key_configured">Clave API de PaxSenix configurada</string>
+    <string name="translation_language">Traducir letras a</string>
+    <string name="translation_language_description">Elige el idioma de la traducción</string>
+    <string name="translation_language_app_default">Seguir la app</string>
+    <string name="translation_language_subtitle">Usar el idioma de la interfaz</string>
+    <string name="search_languages">Buscar idiomas</string>
+    <string name="no_languages_match">Ningún idioma coincide</string>
+    <string name="reset_to_default">Restablecer</string>
+    <string name="enabled">Activado</string>
+
     <!-- Audio output -->
     <string name="audio_output">Salida de audio</string>
     <string name="audio_output_playing">Reproduciendo aquí</string>
