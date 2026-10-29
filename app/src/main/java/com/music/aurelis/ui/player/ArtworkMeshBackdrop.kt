@@ -1,3 +1,5 @@
+// Aurelis © 2026. GPL-3.0-or-later.
+
 package com.music.aurelis.ui.player
 
 import android.net.Uri
@@ -25,6 +27,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import coil3.SingletonImageLoader
+import coil3.compose.LocalPlatformContext
+import coil3.request.ImageRequest
+import coil3.request.SuccessResult
+import com.music.aurelis.ui.graphics.forPixelAccess
+import com.music.aurelis.ui.graphics.toImageBitmap
 import kotlin.math.roundToInt
 
 @Immutable
@@ -34,9 +42,22 @@ class ArtworkMesh internal constructor(internal val image: ImageBitmap)
 fun rememberArtworkMesh(
     artworkUri: Uri?,
 ): ArtworkMesh? {
+    val context = LocalPlatformContext.current
     var mesh by remember(artworkUri) { mutableStateOf<ArtworkMesh?>(null) }
     LaunchedEffect(artworkUri) {
-        // no-op for now
+        mesh = null
+        if (artworkUri == null) return@LaunchedEffect
+        val request = ImageRequest.Builder(context)
+            .data(artworkUri)
+            .size(MESH_SAMPLE_PX)
+            .forPixelAccess()
+            .build()
+        val result = runCatching {
+            SingletonImageLoader.get(context).execute(request)
+        }.getOrNull()
+        val bitmap = (result as? SuccessResult)?.image?.toImageBitmap()
+            ?: return@LaunchedEffect
+        mesh = ArtworkMesh(bitmap)
     }
     return mesh
 }
@@ -51,7 +72,8 @@ fun ArtworkMeshBackdrop(
     reduceAnimation: Boolean = false,
     reduceDynamicBlur: Boolean = false,
 ) {
-    val canBlur = !reduceDynamicBlur && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S
+    val canBlur = !reduceDynamicBlur &&
+        android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S
 
     var shown by remember { mutableStateOf(mesh) }
     var incoming by remember { mutableStateOf<ArtworkMesh?>(null) }
@@ -126,3 +148,4 @@ private fun DrawScope.drawMesh(mesh: ArtworkMesh, seamY: Float, alpha: Float) {
 
 private val FallbackBackdrop = Color(0xFF121212)
 private const val MESH_FADE_MS = 900
+private const val MESH_SAMPLE_PX = 512
