@@ -24,17 +24,7 @@ jobs:
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
-          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > aurelis-release.jks
-          ls -la aurelis-release.jks
-
-      - name: Verify Keystore
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-        run: |
-          keytool -list -v -keystore aurelis-release.jks \
-            -storepass "$KEYSTORE_PASSWORD" \
-            -alias "$KEY_ALIAS"
+          echo "$KEYSTORE_BASE64" | base64 --decode > aurelis-release.jks
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -44,12 +34,12 @@ jobs:
           KEYSTORE_PATH: "aurelis-release.jks"
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: gradle clean assembleRelease --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: aurelis-release
+          # El comodín *.apk asegura encontrar el archivo incluso si cambia de nombre
           path: app/build/outputs/apk/release/*.apk
           if-no-files-found: error
