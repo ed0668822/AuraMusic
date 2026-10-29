@@ -1,6 +1,9 @@
+// Aurelis © 2026. GPL-3.0-or-later.
+
 package com.music.aurelis.ui.components
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -11,7 +14,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,14 +28,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 
-/**
- * Artwork con crossfade al cambiar de canción y rotación 3D sutil.
- *
- * - [songKey] dispara el crossfade.
- * - La rotación 3D en Y ocurre al cambiar de canción (efecto "voltear disco").
- * - La escala respira suavemente con [progressFraction].
- * - Sombra amplia y redondeada para efecto premium.
- */
 @Composable
 fun AnimatedArtwork(
     songKey: String,
@@ -54,12 +51,13 @@ fun AnimatedArtwork(
         modifier = modifier,
         label = "artworkCrossfade",
     ) { key ->
-        // Rotación breve al entrar una canción nueva
-        val rotationY by animateFloatAsState(
-            targetValue = 0f,
-            animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing),
-            label = "artworkRotation_$key",
-        )
+        val rotation = remember(key) { Animatable(ROTATION_START_DEGREES) }
+        LaunchedEffect(key) {
+            rotation.animateTo(
+                targetValue = 0f,
+                animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing),
+            )
+        }
 
         Box(
             modifier = Modifier
@@ -67,7 +65,8 @@ fun AnimatedArtwork(
                 .graphicsLayer {
                     scaleX = scale
                     scaleY = scale
-                    this.rotationY = rotationY
+                    rotationY = rotation.value
+                    cameraDistance = 12f * density
                 }
                 .shadow(elevation = 24.dp, shape = shape, clip = false)
                 .clip(shape)
@@ -91,3 +90,5 @@ fun AnimatedArtwork(
         }
     }
 }
+
+private const val ROTATION_START_DEGREES = 8f
