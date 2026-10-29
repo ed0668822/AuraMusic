@@ -1,16 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Aurelis © 2026. GPL-3.0-or-later. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Permiso solo para buscar actualizaciones -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Permiso para instalar APKs -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
-    <!-- El resto de tus permisos (audio, notificaciones, etc.) -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_CONNECT"
+        android:usesPermissionFlags="neverForLocation" />
+
+    <uses-feature
+        android:name="android.hardware.audio.output"
+        android:required="false" />
 
     <application
         android:name=".AurelisApplication"
@@ -40,7 +55,6 @@
             </intent-filter>
         </service>
 
-        <!-- FileProvider para el Actualizador -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
