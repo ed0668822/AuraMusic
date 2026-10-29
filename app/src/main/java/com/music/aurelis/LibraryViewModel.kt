@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.music.aurelis.data.AudioPermission
 import com.music.aurelis.data.LibraryState
 import com.music.aurelis.data.LocalMediaRepository
+import com.music.aurelis.data.SettingsRepository
 import com.music.aurelis.data.model.LocalAlbum
 import com.music.aurelis.data.model.LocalArtist
 import com.music.aurelis.data.model.LocalSong
@@ -64,7 +65,8 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
             }
 
             try {
-                val result = LocalMediaRepository.getAllSongs(context)
+                val filterNonMusic = SettingsRepository.filterNonMusicAudio.value
+                val result = LocalMediaRepository.getAllSongs(context, filterNonMusic)
                 allSongs = result
                 val (albums, artists, recent) = deriveGroupings(result)
                 _uiState.update {
