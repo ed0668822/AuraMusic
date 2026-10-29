@@ -1,8 +1,11 @@
+// Aurelis © 2026. GPL-3.0-or-later.
+
 package com.music.aurelis
 
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -64,13 +67,9 @@ import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
-    private val permissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        if (!AudioPermission.isGranted(this)) permissionLauncher.launch(AudioPermission.requiredPermission())
 
         setContent {
             AurelisTheme {
@@ -89,6 +88,11 @@ private fun AurelisApp() {
     val playbackViewModel: PlaybackViewModel = viewModel()
     val libraryViewModel: LibraryViewModel = viewModel()
 
+    var hasPermission by remember { mutableStateOf(AudioPermission.isGranted(context)) }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted -> hasPermission = granted }
+
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     var showNowPlaying by remember { mutableStateOf(false) }
     var showQueue by remember { mutableStateOf(false) }
@@ -99,8 +103,20 @@ private fun AurelisApp() {
 
     LaunchedEffect(Unit) {
         playbackViewModel.connect()
-        libraryViewModel.loadLibrary()
         AppUpdateChecker.check()
+        if (!hasPermission) {
+            permissionLauncher.launch(AudioPermission.requiredPermission())
+        }
+    }
+
+    LaunchedEffect(hasPermission) {
+        if (hasPermission) libraryViewModel.loadLibrary()
+    }
+
+    LaunchedEffect(showLocalMusic) {
+        if (showLocalMusic && AudioPermission.isGranted(context)) {
+            libraryViewModel.loadLibrary(force = true)
+        }
     }
 
     val playbackState by playbackViewModel.state.collectAsState()
@@ -157,6 +173,7 @@ private fun AurelisApp() {
                     showLocalMusic -> LocalMusicScreen(
                         playbackViewModel = playbackViewModel,
                         onBackClick = { showLocalMusic = false },
+                        libraryViewModel = libraryViewModel,
                     )
                     else -> {
                         val listState = rememberLazyListState()
