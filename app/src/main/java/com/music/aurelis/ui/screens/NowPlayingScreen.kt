@@ -1,3 +1,4 @@
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
@@ -9,33 +10,48 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.MoreHoriz
 import androidx.compose.material.icons.rounded.QueueMusic
-import androidx.compose.material.icons.rounded.Subject
+import androidx.compose.material.icons.rounded.Translate
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.music.aurelis.R
+import com.music.aurelis.playback.LyricsState
+import com.music.aurelis.playback.PlaybackState
 import com.music.aurelis.playback.PlaybackViewModel
+import com.music.aurelis.playback.TranslationState
 import com.music.aurelis.ui.components.AnimatedArtwork
 import com.music.aurelis.ui.components.PlayerControls
-import com.music.aurelis.ui.components.SyncedLyricsPanel
 import com.music.aurelis.ui.components.ThinSlider
+import com.music.aurelis.ui.player.LyricsOffsetSheet
+import com.music.aurelis.ui.player.SyncedLyricsPanel
+import com.music.aurelis.ui.player.TranslationLanguageDialog
+import com.music.aurelis.ui.player.LyricsSourcesDialog
 import com.music.aurelis.ui.theme.ArtworkColors
 import com.music.aurelis.ui.theme.DynamicAurelisTheme
 import com.music.aurelis.ui.theme.DynamicThemeViewModel
 import com.music.aurelis.ui.theme.MeshGradient
+import com.music.aurelis.data.SettingsRepository
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,7 +77,13 @@ fun NowPlayingScreen(
     )
 
     var showLyrics by remember { mutableStateOf(false) }
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var showLyricsSources by remember { mutableStateOf(false) }
+    var showTranslationLanguages by remember { mutableStateOf(false) }
+    var showLyricsOffset by remember { mutableStateOf(false) }
+    
+    val lyricsOffset by SettingsRepository.lyricsOffsetMs.collectAsState()
+    val translationLang by SettingsRepository.translationLanguage.collectAsState()
+    val hazeState = remember { HazeState() }
 
     AnimatedVisibility(
         visible = isVisible && song != null,
@@ -80,7 +102,8 @@ fun NowPlayingScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background),
+                    .background(MaterialTheme.colorScheme.background)
+                    .hazeSource(hazeState),
             ) {
                 MeshGradient(
                     colors = artworkColors ?: fallbackColors,
@@ -124,10 +147,10 @@ fun NowPlayingScreen(
 
                         Spacer(modifier = Modifier.weight(1f))
 
-                        IconButton(onClick = { showLyrics = true }) {
+                        IconButton(onClick = { showLyricsSources = true }) {
                             Icon(
-                                imageVector = Icons.Rounded.Subject,
-                                contentDescription = "Ver letras",
+                                imageVector = Icons.Rounded.MoreHoriz,
+                                contentDescription = "Fuentes de letras",
                                 tint = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.size(26.dp),
                             )
@@ -194,18 +217,19 @@ fun NowPlayingScreen(
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth(),
                     )
-
-                    if (!song.album.isNullOrBlank()) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = song.album,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    // Botón para abrir el panel de letras
+                    Button(
+                        onClick = { showLyrics = true },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            contentColor = MaterialTheme.colorScheme.onSurface
+                        ),
+                        shape = CircleShape
+                    ) {
+                        Text("Ver Letras")
                     }
 
                     Spacer(modifier = Modifier.weight(1f))
@@ -231,24 +255,90 @@ fun NowPlayingScreen(
                     Spacer(modifier = Modifier.height(48.dp))
                 }
 
+                // Panel de letras a pantalla completa
                 if (showLyrics) {
-                    ModalBottomSheet(
-                        onDismissRequest = { showLyrics = false },
-                        sheetState = sheetState,
-                        containerColor = MaterialTheme.colorScheme.background,
+                    val lyricsState = state.lyrics
+                    val lines = when (lyricsState) {
+                        is LyricsState.Loaded -> {
+                            val trans = lyricsState.translation
+                            if (trans is TranslationState.Done) trans.lines else lyricsState.lines
+                        }
+                        else -> emptyList()
+                    }
+
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.background.copy(alpha = 0.95f))
+                            .statusBarsPadding()
                     ) {
-                        if (state.lyrics != null && state.lyrics!!.isSynced) {
-                            SyncedLyricsPanel(
-                                lyrics = state.lyrics!!,
-                                positionMs = state.positionMs,
-                                modifier = Modifier.fillMaxHeight(0.9f)
-                            )
-                        } else {
-                            Box(Modifier.fillMaxHeight(0.9f), contentAlignment = Alignment.Center) {
-                                Text("Letras no sincronizadas", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Column(Modifier.fillMaxSize()) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                IconButton(onClick = { showLyrics = false }) {
+                                    Icon(Icons.Rounded.KeyboardArrowDown, "Cerrar letras", tint = Color.White)
+                                }
+                                Spacer(Modifier.weight(1f))
+                                IconButton(onClick = { showTranslationLanguages = true }) {
+                                    Icon(Icons.Rounded.Translate, "Traducir", tint = Color.White)
+                                }
+                            }
+                            
+                            if (lines.isEmpty()) {
+                                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                                    Text(
+                                        text = when(lyricsState) {
+                                            is LyricsState.Loading -> "Buscando letras..."
+                                            is LyricsState.Missing -> "No se encontraron letras."
+                                            else -> "Cargando..."
+                                        },
+                                        color = Color.White.copy(alpha = 0.7f)
+                                    )
+                                }
+                            } else {
+                                SyncedLyricsPanel(
+                                    lines = lines,
+                                    trackKey = song.id,
+                                    position = com.music.aurelis.playback.PlaybackPosition().apply {
+                                        report(state.positionMs + lyricsOffset)
+                                        advancing = state.isPlaying
+                                    },
+                                    looking = true,
+                                    isPlaying = state.isPlaying,
+                                    onSeekToLine = { playbackViewModel.seekTo(it) },
+                                    modifier = Modifier.weight(1f)
+                                )
                             }
                         }
                     }
+                }
+
+                // Diálogos
+                if (showLyricsSources) {
+                    LyricsSourcesDialog(hazeState = hazeState, onDismiss = { showLyricsSources = false })
+                }
+                if (showTranslationLanguages) {
+                    TranslationLanguageDialog(
+                        hazeState = hazeState,
+                        onDismiss = { 
+                            showTranslationLanguages = false 
+                            // Si se elige un idioma, disparamos la traducción
+                            val currentLang = SettingsRepository.translationLanguage.value
+                            if (currentLang.isNotBlank()) {
+                                playbackViewModel.translateLyrics(currentLang)
+                            }
+                        }
+                    )
+                }
+                if (showLyricsOffset) {
+                    LyricsOffsetSheet(
+                        hazeState = hazeState,
+                        offsetMs = lyricsOffset,
+                        onOffsetChange = { SettingsRepository.setLyricsOffsetMs(it) },
+                        onDismiss = { showLyricsOffset = false }
+                    )
                 }
             }
         }
