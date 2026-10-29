@@ -34,29 +34,26 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # OJO: usamos `gradle`, NO `./gradlew`
       - name: Build Release APK
         env:
-          # Firma (leídas por readSigning() en build.gradle.kts)
           STORE_FILE:     "aurelis-release.jks"
           STORE_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           KEY_ALIAS:      ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD:   ${{ secrets.KEY_PASSWORD }}
-
-          # Listen Together (opcional)
           LISTEN_TOGETHER_SERVER: ${{ secrets.LISTEN_TOGETHER_SERVER }}
-
-          # ✅ Last.fm eliminado: no se pasan LASTFM_API_KEY ni LASTFM_SECRET
         run: gradle clean assembleRelease --no-daemon --stacktrace
 
       - name: Verify APK is signed
         run: |
           APK=$(ls app/build/outputs/apk/release/*.apk | head -n1)
           echo "APK: $APK"
-          $ANDROID_HOME/build-tools/*/apksigner verify --verbose "$APK" || {
-            echo "::error::El APK no está firmado correctamente"
-            exit 1
-          }
+
+          # Elige el apksigner de la versión MÁS ALTA de build-tools instalada
+          # (evita el problema del glob con múltiples versiones)
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -n1)
+          echo "apksigner: $APKSIGNER"
+
+          "$APKSIGNER" verify --verbose "$APK"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
