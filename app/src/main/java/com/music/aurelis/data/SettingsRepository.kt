@@ -1,7 +1,9 @@
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.music.aurelis.data.lyrics.LyricsSource
 import com.music.aurelis.playback.EqualizerPreset
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -40,12 +42,22 @@ object SettingsRepository {
     val hideVolumeBar = MutableStateFlow(false)
     val showNerdStats = MutableStateFlow(false)
     val lyricsOffsetMs = MutableStateFlow(0)
-    
-    // ✅ NUEVO: Para la cola de reproducción
+
+    // ── Queue ─────────────────────────────────────────────────────────────────
     val showQueueHistory = MutableStateFlow(false)
+
+    // ── Lyrics / Translation ──────────────────────────────────────────────────
+    /** Empty means "follow the app's own language", which is not the same
+     *  as naming today's app language and pinning it. */
+    val translationLanguage = MutableStateFlow("")
+    val lyricsSources = MutableStateFlow(LyricsSource.offered.toSet())
+    val lyricsSourceOrder = MutableStateFlow(LyricsSource.offered)
+    val prioritizeSyllableSync = MutableStateFlow(false)
+    val paxSenixApiKey = MutableStateFlow("")
 
     fun init(context: Context) {
         prefs = context.applicationContext.getSharedPreferences("aurelis_settings", Context.MODE_PRIVATE)
+
         themeMode.value = prefs.getInt("theme_mode", 0)
         dolbyAtmos.value = prefs.getBoolean("dolby_atmos", true)
         liquidGlass.value = prefs.getBoolean("liquid_glass", true)
@@ -73,9 +85,32 @@ object SettingsRepository {
         hideVolumeBar.value = prefs.getBoolean("hide_volume_bar", false)
         showNerdStats.value = prefs.getBoolean("show_nerd_stats", false)
         lyricsOffsetMs.value = prefs.getInt("lyrics_offset_ms", 0)
-        
-        // ✅ NUEVO
         showQueueHistory.value = prefs.getBoolean("show_queue_history", false)
+
+        // Lyrics / translation: the two collections need rebuilding from names
+        // so a build that renames or removes a source does not deserialize into
+        // an unreachable one.
+        translationLanguage.value = prefs.getString("translation_language", "") ?: ""
+        paxSenixApiKey.value = prefs.getString("paxsenix_api_key", "") ?: ""
+        val savedSources = prefs.getStringSet("lyrics_sources", null)
+        lyricsSources.value = if (savedSources != null) {
+            LyricsSource.entries
+                .filter { it.name in savedSources && !it.hidden }
+                .toSet()
+        } else {
+            LyricsSource.offered.toSet()
+        }
+        val savedOrder = prefs.getString("lyrics_source_order", null)
+        lyricsSourceOrder.value = if (savedOrder != null) {
+            LyricsSource.ordered(
+                savedOrder.split(',').mapNotNull { name ->
+                    LyricsSource.entries.firstOrNull { it.name == name }
+                },
+            )
+        } else {
+            LyricsSource.offered
+        }
+        prioritizeSyllableSync.value = prefs.getBoolean("prioritize_syllable_sync", false)
     }
 
     // ── Existing setters ──────────────────────────────────────────────────────
@@ -121,10 +156,46 @@ object SettingsRepository {
     fun setHideVolumeBar(value: Boolean) { hideVolumeBar.value = value; prefs.edit().putBoolean("hide_volume_bar", value).apply() }
     fun setShowNerdStats(value: Boolean) { showNerdStats.value = value; prefs.edit().putBoolean("show_nerd_stats", value).apply() }
     fun setLyricsOffsetMs(value: Int) { lyricsOffsetMs.value = value; prefs.edit().putInt("lyrics_offset_ms", value).apply() }
-    
-    // ✅ NUEVO
     fun setShowQueueHistory(value: Boolean) {
         showQueueHistory.value = value
         prefs.edit().putBoolean("show_queue_history", value).apply()
+    }
+
+    // ── Lyrics / translation setters ──────────────────────────────────────────
+    fun setTranslationLanguage(value: String) {
+        translationLanguage.value = value
+        prefs.edit().putString("translation_language", value).apply()
+    }
+
+    fun setLyricsSources(value: Set<LyricsSource>) {
+        lyricsSources.value = value
+        prefs.edit().putStringSet("lyrics_sources", value.map { it.name }.toSet()).apply()
+    }
+
+    fun setLyricsSourceOrder(value: List<LyricsSource>) {
+        lyricsSourceOrder.value = value
+        prefs.edit().putString("lyrics_source_order", value.joinToString(",") { it.name }).apply()
+    }
+
+    fun setPrioritizeSyllableSync(value: Boolean) {
+        prioritizeSyllableSync.value = value
+        prefs.edit().putBoolean("prioritize_syllable_sync", value).apply()
+    }
+
+    fun setPaxSenixApiKey(value: String) {
+        paxSenixApiKey.value = value
+        prefs.edit().putString("paxsenix_api_key", value).apply()
+    }
+
+    /** Back to the enum's own default order and to "every visible source on". */
+    fun resetLyricsSourceSettings() {
+        lyricsSources.value = LyricsSource.offered.toSet()
+        lyricsSourceOrder.value = LyricsSource.offered
+        prioritizeSyllableSync.value = false
+        prefs.edit()
+            .remove("lyrics_sources")
+            .remove("lyrics_source_order")
+            .remove("prioritize_syllable_sync")
+            .apply()
     }
 }
