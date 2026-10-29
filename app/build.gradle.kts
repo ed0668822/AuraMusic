@@ -1,3 +1,4 @@
+// Aurelis © 2026. GPL-3.0-or-later.
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -57,13 +58,28 @@ android {
         buildConfig = true
     }
 
+    // ── CONFIGURACIÓN ESTRICTA DE EMPAQUETADO ──
+    androidResources {
+        // Evita que los modelos ONNX (y otros assets) se compriman, permitiendo acceso directo en runtime
+        noCompress.add("")
+    }
+
+    packaging {
+        jniLibs {
+            // Mantiene las librerías nativas sin compresión y con sus símbolos
+            useLegacyPackaging = false
+            keepDebugSymbols.add("**/*.so")
+        }
+    }
+
     buildTypes {
         debug {
             signingConfig = signingConfigs.findByName("release")
         }
 
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true // Activamos R8 para ofuscación
+            isShrinkResources = false // Desactivamos la eliminación de recursos
             signingConfig = signingConfigs.findByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -125,6 +141,6 @@ dependencies {
     implementation("com.google.guava:guava:33.3.1-android")
     implementation("org.checkerframework:checker-qual:3.48.3")
 
-    // ← AÑADIDO: requerido por data/lyrics/Genius.kt (scraper HTML)
+    // Requerido por data/lyrics/Genius.kt (scraper HTML)
     implementation("org.jsoup:jsoup:1.18.1")
 }
