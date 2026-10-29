@@ -27,21 +27,30 @@ class AurelisRenderersFactory(
         extensionRendererMode: Int,
         mediaCodecSelector: MediaCodecSelector,
         enableDecoderFallback: Boolean,
-        audioSink: AudioSink?,
+        audioSink: AudioSink, // 👈 CORREGIDO: eliminado el '?' porque Media3 1.5.1 espera un tipo no-nullable
         eventHandler: Handler,
         eventListener: AudioRendererEventListener,
         out: ArrayList<Renderer>
     ) {
         val dspProcessor = DspChainAudioProcessor(dspChain)
+        
+        // Construimos el AudioSink personalizado con el DSP integrado
         val customAudioSink = DefaultAudioSink.Builder(context)
             .setAudioProcessors(arrayOf(dspProcessor))
             .setEnableFloatOutput(true)
             .build()
 
-        // FFmpeg para formatos exóticos (DSD, AC3, etc.)
+        // 1. FFmpeg para formatos exóticos (DSD, AC3, etc.)
         out.add(FfmpegAudioRenderer(eventHandler, eventListener, customAudioSink))
 
-        // Decodificador estándar para AAC, MP3, FLAC, etc.
-        out.add(MediaCodecAudioRenderer(context, mediaCodecSelector, enableDecoderFallback, eventHandler, eventListener, customAudioSink))
+        // 2. Decodificador estándar (AAC, MP3, FLAC, etc.)
+        out.add(MediaCodecAudioRenderer(
+            context, 
+            mediaCodecSelector, 
+            enableDecoderFallback, 
+            eventHandler, 
+            eventListener, 
+            customAudioSink
+        ))
     }
 }
