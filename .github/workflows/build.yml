@@ -34,28 +34,25 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Ensure gradlew is executable
-        run: chmod +x ./gradlew
-
+      # OJO: usamos `gradle`, NO `./gradlew`
       - name: Build Release APK
         env:
-          # --- Firma (leídas por readSigning() en build.gradle.kts) ---
-          STORE_FILE:      "aurelis-release.jks"
-          STORE_PASSWORD:  ${{ secrets.KEY_PASSWORD }}
-          KEY_ALIAS:       ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD:    ${{ secrets.KEY_PASSWORD }}
+          # Firma (leídas por readSigning() en build.gradle.kts)
+          STORE_FILE:     "aurelis-release.jks"
+          STORE_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_ALIAS:      ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD:   ${{ secrets.KEY_PASSWORD }}
 
-          # --- Claves de la app (leídas por readValue() en build.gradle.kts) ---
-          LASTFM_API_KEY:         ${{ secrets.LASTFM_API_KEY }}
-          LASTFM_SECRET:          ${{ secrets.LASTFM_SECRET }}
+          # Listen Together (opcional)
           LISTEN_TOGETHER_SERVER: ${{ secrets.LISTEN_TOGETHER_SERVER }}
-        run: ./gradlew clean assembleRelease --no-daemon --stacktrace
+
+          # ✅ Last.fm eliminado: no se pasan LASTFM_API_KEY ni LASTFM_SECRET
+        run: gradle clean assembleRelease --no-daemon --stacktrace
 
       - name: Verify APK is signed
         run: |
           APK=$(ls app/build/outputs/apk/release/*.apk | head -n1)
           echo "APK: $APK"
-          # Si no está firmado, apksigner falla con "DOES NOT VERIFY"
           $ANDROID_HOME/build-tools/*/apksigner verify --verbose "$APK" || {
             echo "::error::El APK no está firmado correctamente"
             exit 1
