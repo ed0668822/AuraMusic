@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.MoreHoriz
 import androidx.compose.material.icons.rounded.QueueMusic
+import androidx.compose.material.icons.rounded.Subject
 import androidx.compose.material.icons.rounded.Translate
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -35,16 +36,15 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.music.aurelis.R
 import com.music.aurelis.playback.LyricsState
-import com.music.aurelis.playback.PlaybackState
 import com.music.aurelis.playback.PlaybackViewModel
 import com.music.aurelis.playback.TranslationState
 import com.music.aurelis.ui.components.AnimatedArtwork
 import com.music.aurelis.ui.components.PlayerControls
 import com.music.aurelis.ui.components.ThinSlider
+import com.music.aurelis.ui.components.LyricsSourcesDialog
+import com.music.aurelis.ui.components.TranslationLanguageDialog
 import com.music.aurelis.ui.player.LyricsOffsetSheet
 import com.music.aurelis.ui.player.SyncedLyricsPanel
-import com.music.aurelis.ui.player.TranslationLanguageDialog
-import com.music.aurelis.ui.player.LyricsSourcesDialog
 import com.music.aurelis.ui.theme.ArtworkColors
 import com.music.aurelis.ui.theme.DynamicAurelisTheme
 import com.music.aurelis.ui.theme.DynamicThemeViewModel
@@ -82,7 +82,6 @@ fun NowPlayingScreen(
     var showLyricsOffset by remember { mutableStateOf(false) }
     
     val lyricsOffset by SettingsRepository.lyricsOffsetMs.collectAsState()
-    val translationLang by SettingsRepository.translationLanguage.collectAsState()
     val hazeState = remember { HazeState() }
 
     AnimatedVisibility(
@@ -132,6 +131,7 @@ fun NowPlayingScreen(
                         .padding(horizontal = 24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
+                    // Barra superior
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -182,6 +182,7 @@ fun NowPlayingScreen(
 
                     Spacer(modifier = Modifier.height(32.dp))
 
+                    // Título y Artista
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center,
@@ -229,11 +230,14 @@ fun NowPlayingScreen(
                         ),
                         shape = CircleShape
                     ) {
+                        Icon(Icons.Rounded.Subject, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text("Ver Letras")
                     }
 
                     Spacer(modifier = Modifier.weight(1f))
 
+                    // Slider de progreso
                     ThinSlider(
                         value = progressFraction,
                         onValueChange = { fraction ->
@@ -244,6 +248,7 @@ fun NowPlayingScreen(
 
                     Spacer(modifier = Modifier.height(32.dp))
 
+                    // Controles de reproducción
                     PlayerControls(
                         isPlaying = state.isPlaying,
                         isLoading = state.isLoading,
@@ -298,13 +303,16 @@ fun NowPlayingScreen(
                                     )
                                 }
                             } else {
+                                val position = remember { com.music.aurelis.playback.PlaybackPosition() }
+                                LaunchedEffect(state.positionMs, lyricsOffset) {
+                                    position.report(state.positionMs + lyricsOffset)
+                                    position.advancing = state.isPlaying
+                                }
+                                
                                 SyncedLyricsPanel(
                                     lines = lines,
                                     trackKey = song.id,
-                                    position = com.music.aurelis.playback.PlaybackPosition().apply {
-                                        report(state.positionMs + lyricsOffset)
-                                        advancing = state.isPlaying
-                                    },
+                                    position = position,
                                     looking = true,
                                     isPlaying = state.isPlaying,
                                     onSeekToLine = { playbackViewModel.seekTo(it) },
@@ -315,7 +323,7 @@ fun NowPlayingScreen(
                     }
                 }
 
-                // Diálogos
+                // Diálogos flotantes
                 if (showLyricsSources) {
                     LyricsSourcesDialog(hazeState = hazeState, onDismiss = { showLyricsSources = false })
                 }
