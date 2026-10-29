@@ -4,22 +4,22 @@ project(aurelis_analysis LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# ─── 1. Analizador de Automix (Deshabilitado temporalmente: faltan los .cpp) ───
-# add_library(aurelis_analysis SHARED
-#     analyzer/audio_analysis.cpp
-#     analyzer/tempo_analysis.cpp
-#     analyzer/resampler.cpp
-#     analyzer/mel_spectrogram.cpp
-#     analyzer/vocal_spectrogram.cpp
-#     jni/analysis_jni.cpp
-#     jni/mel_jni.cpp
-#     jni/vocal_jni.cpp
-# )
-# target_include_directories(aurelis_analysis PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-# target_compile_options(aurelis_analysis PRIVATE -O3 -fvisibility=hidden)
-# find_library(log-lib log)
-# target_link_libraries(aurelis_analysis ${log-lib})
-# target_link_options(aurelis_analysis PRIVATE "-Wl,-z,max-page-size=16384")
+# ─── 1. Analizador de Automix ───────────────────────────────────────────────
+add_library(aurelis_analysis SHARED
+    analyzer/audio_analysis.cpp
+    analyzer/tempo_analysis.cpp
+    analyzer/resampler.cpp
+    analyzer/mel_spectrogram.cpp
+    analyzer/vocal_spectrogram.cpp
+    jni/analysis_jni.cpp
+    jni/mel_jni.cpp
+    jni/vocal_jni.cpp
+)
+target_include_directories(aurelis_analysis PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_compile_options(aurelis_analysis PRIVATE -O3 -fvisibility=hidden)
+find_library(log-lib log)
+target_link_libraries(aurelis_analysis ${log-lib})
+target_link_options(aurelis_analysis PRIVATE "-Wl,-z,max-page-size=16384")
 
 # ─── 2. Decodificador DSD (DSF/DFF) ──────────────────────────────────────────
 add_library(aurelis_dsd SHARED dsd/dsd_decimator.cpp)
