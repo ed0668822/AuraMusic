@@ -1,6 +1,7 @@
 // Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.ui.screens
 
+import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -44,11 +45,12 @@ import com.music.aurelis.ui.components.ThinSlider
 import com.music.aurelis.ui.components.LyricsSourcesDialog
 import com.music.aurelis.ui.components.TranslationLanguageDialog
 import com.music.aurelis.ui.player.LyricsOffsetSheet
+import com.music.aurelis.ui.player.MeshGradientBackground
 import com.music.aurelis.ui.player.SyncedLyricsPanel
+import com.music.aurelis.ui.player.rememberArtworkColors
 import com.music.aurelis.ui.theme.ArtworkColors
 import com.music.aurelis.ui.theme.DynamicAurelisTheme
 import com.music.aurelis.ui.theme.DynamicThemeViewModel
-import com.music.aurelis.ui.theme.MeshGradient
 import com.music.aurelis.data.SettingsRepository
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
@@ -80,7 +82,7 @@ fun NowPlayingScreen(
     var showLyricsSources by remember { mutableStateOf(false) }
     var showTranslationLanguages by remember { mutableStateOf(false) }
     var showLyricsOffset by remember { mutableStateOf(false) }
-    
+
     val lyricsOffset by SettingsRepository.lyricsOffsetMs.collectAsState()
     val hazeState = remember { HazeState() }
 
@@ -104,9 +106,11 @@ fun NowPlayingScreen(
                     .background(MaterialTheme.colorScheme.background)
                     .hazeSource(hazeState),
             ) {
-                MeshGradient(
-                    colors = artworkColors ?: fallbackColors,
-                    isPlaying = state.isPlaying,
+                val meshPalette = rememberArtworkColors(song.artworkUri?.let { Uri.parse(it) })
+                MeshGradientBackground(
+                    palette = meshPalette,
+                    trackKey = song.id,
+                    continuous = state.isPlaying,
                     modifier = Modifier.fillMaxSize(),
                 )
 
@@ -131,7 +135,6 @@ fun NowPlayingScreen(
                         .padding(horizontal = 24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    // Barra superior
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -182,7 +185,6 @@ fun NowPlayingScreen(
 
                     Spacer(modifier = Modifier.height(32.dp))
 
-                    // Título y Artista
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center,
@@ -218,10 +220,9 @@ fun NowPlayingScreen(
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    
+
                     Spacer(modifier = Modifier.height(16.dp))
-                    
-                    // Botón para abrir el panel de letras
+
                     Button(
                         onClick = { showLyrics = true },
                         colors = ButtonDefaults.buttonColors(
@@ -237,7 +238,6 @@ fun NowPlayingScreen(
 
                     Spacer(modifier = Modifier.weight(1f))
 
-                    // Slider de progreso
                     ThinSlider(
                         value = progressFraction,
                         onValueChange = { fraction ->
@@ -248,7 +248,6 @@ fun NowPlayingScreen(
 
                     Spacer(modifier = Modifier.height(32.dp))
 
-                    // Controles de reproducción
                     PlayerControls(
                         isPlaying = state.isPlaying,
                         isLoading = state.isLoading,
@@ -260,7 +259,6 @@ fun NowPlayingScreen(
                     Spacer(modifier = Modifier.height(48.dp))
                 }
 
-                // Panel de letras a pantalla completa
                 if (showLyrics) {
                     val lyricsState = state.lyrics
                     val lines = when (lyricsState) {
@@ -290,7 +288,7 @@ fun NowPlayingScreen(
                                     Icon(Icons.Rounded.Translate, "Traducir", tint = Color.White)
                                 }
                             }
-                            
+
                             if (lines.isEmpty()) {
                                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                                     Text(
@@ -308,7 +306,7 @@ fun NowPlayingScreen(
                                     position.report(state.positionMs + lyricsOffset)
                                     position.advancing = state.isPlaying
                                 }
-                                
+
                                 SyncedLyricsPanel(
                                     lines = lines,
                                     trackKey = song.id,
@@ -323,16 +321,14 @@ fun NowPlayingScreen(
                     }
                 }
 
-                // Diálogos flotantes
                 if (showLyricsSources) {
                     LyricsSourcesDialog(hazeState = hazeState, onDismiss = { showLyricsSources = false })
                 }
                 if (showTranslationLanguages) {
                     TranslationLanguageDialog(
                         hazeState = hazeState,
-                        onDismiss = { 
-                            showTranslationLanguages = false 
-                            // Si se elige un idioma, disparamos la traducción
+                        onDismiss = {
+                            showTranslationLanguages = false
                             val currentLang = SettingsRepository.translationLanguage.value
                             if (currentLang.isNotBlank()) {
                                 playbackViewModel.translateLyrics(currentLang)
