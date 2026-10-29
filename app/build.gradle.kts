@@ -1,10 +1,43 @@
-// Aurelis © 2026. GPL-3.0-or-later.
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
     id("org.jetbrains.kotlin.plugin.serialization")
 }
+
+/**
+ * Optional local signing config kept out of the repo.
+ * If the file is missing, the build still works but a release APK is unsigned.
+ */
+val signing = Properties().apply {
+    val file = rootProject.file("keystore.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}
+
+val localProps = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}
+
+val lastfmApiKey = (
+    localProps.getProperty("LASTFM_API_KEY")
+        ?: System.getenv("LASTFM_API_KEY")
+        ?: ""
+).trim()
+
+val lastfmSecret = (
+    localProps.getProperty("LASTFM_SECRET")
+        ?: System.getenv("LASTFM_SECRET")
+        ?: ""
+).trim()
+
+val listenTogetherServer = (
+    localProps.getProperty("LISTEN_TOGETHER_SERVER")
+        ?: System.getenv("LISTEN_TOGETHER_SERVER")
+        ?: "https://bitchord-listen-together.onrender.com"
+).trim().trimEnd('/')
 
 val runNumber = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 0
 val autoVersionName = if (runNumber > 0) "1.9.$runNumber" else "1.9.0"
@@ -20,11 +53,16 @@ android {
         targetSdk = 35
         versionCode = autoVersionCode
         versionName = autoVersionName
+
         buildConfigField("String", "UPDATE_APK_PREFIX", "\"app-\"")
+        buildConfigField("String", "LASTFM_API_KEY", "\"${lastfmApiKey.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
+        buildConfigField("String", "LASTFM_SECRET", "\"${lastfmSecret.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
+        buildConfigField("String", "LISTEN_TOGETHER_SERVER", "\"${listenTogetherServer.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
 
         ndk {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
         }
+
         externalNativeBuild {
             cmake {
                 cppFlags += "-std=c++17"
@@ -40,15 +78,13 @@ android {
     }
 
     signingConfigs {
-        create("release") {
-            val keystorePath = System.getenv("KEYSTORE_PATH") ?: "aurelis-release.jks"
-            val storeFile = rootProject.file(keystorePath)
-
-            if (storeFile.exists()) {
-                this.storeFile = storeFile
-                this.storePassword = System.getenv("KEYSTORE_PASSWORD")
-                this.keyAlias = System.getenv("KEY_ALIAS")
-                this.keyPassword = System.getenv("KEYSTORE_PASSWORD")
+        val store = signing.getProperty("storeFile")?.let { rootProject.file(it) }
+        if (store != null && store.exists()) {
+            create("release") {
+                storeFile = store
+                storePassword = signing.getProperty("storePassword")
+                keyAlias = signing.getProperty("keyAlias")
+                keyPassword = signing.getProperty("keyPassword")
             }
         }
     }
@@ -113,12 +149,10 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     implementation("androidx.core:core-ktx:1.15.0")
-
     implementation("androidx.appcompat:appcompat:1.7.0")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
 
-    // Media3
     implementation("androidx.media3:media3-exoplayer:1.5.1")
     implementation("androidx.media3:media3-session:1.5.1")
     implementation("androidx.media3:media3-common:1.5.1")
@@ -134,13 +168,8 @@ dependencies {
 
     implementation("com.microsoft.onnxruntime:onnxruntime-android:1.17.0")
 
-    // Requerido por los .java vendorizados de Media3
     implementation("com.google.guava:guava:33.3.1-android")
     implementation("org.checkerframework:checker-qual:3.48.3")
-
-    // Requerido por data/lyrics/Genius.kt (scraper HTML)
     implementation("org.jsoup:jsoup:1.18.1")
-
-    // Requerido por Jsoup 1.18+ para anotaciones de nulabilidad (solo compilación)
     compileOnly("org.jspecify:jspecify:1.0.0")
 }
