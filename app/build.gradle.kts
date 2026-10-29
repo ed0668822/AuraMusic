@@ -58,7 +58,6 @@ android {
         buildConfig = true
     }
 
-    // ── CONFIGURACIÓN ESTRICTA DE EMPAQUETADO ──
     androidResources {
         noCompress.add("")
     }
@@ -141,7 +140,7 @@ dependencies {
 
     // Requerido por data/lyrics/Genius.kt (scraper HTML)
     implementation("org.jsoup:jsoup:1.18.1")
-    
-    // ← NUEVO: Requerido por Jsoup 1.18+ para anotaciones de nulabilidad
+
+    // Requerido por Jsoup 1.18+ para anotaciones de nulabilidad (solo compilación)
     compileOnly("org.jspecify:jspecify:1.0.0")
 }
