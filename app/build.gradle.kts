@@ -64,19 +64,16 @@ fun escapeForBuildConfig(value: String): String {
 
 // --- Variables de configuración ---
 
-val lastfmApiKey = readValue("LASTFM_API_KEY")
-val lastfmSecret = readValue("LASTFM_SECRET")
+// ❌ Last.fm desactivado: no se leen secretos ni se valida nada en CI.
+//    Si algún día lo reactivas, vuelve a leer LASTFM_API_KEY / LASTFM_SECRET aquí
+//    y añade de nuevo los check(...) para CI.
+val lastfmApiKey = ""
+val lastfmSecret = ""
+
 val listenTogetherServer = readValue(
     "LISTEN_TOGETHER_SERVER",
     "https://bitchord-listen-together.onrender.com"
 ).trimEnd('/')
-
-// Falla rápido si en CI faltan las claves obligatorias
-val isRunningInCi = System.getenv("GITHUB_ACTIONS") == "true"
-if (isRunningInCi) {
-    check(lastfmApiKey.isNotEmpty()) { "Falta LASTFM_API_KEY en los secrets de GitHub" }
-    check(lastfmSecret.isNotEmpty())  { "Falta LASTFM_SECRET en los secrets de GitHub" }
-}
 
 // --- Versionado automático ---
 
@@ -100,8 +97,8 @@ android {
         versionName = autoVersionName
 
         buildConfigField("String", "UPDATE_APK_PREFIX", "\"app-\"")
-        buildConfigField("String", "LASTFM_API_KEY", escapeForBuildConfig(lastfmApiKey))
-        buildConfigField("String", "LASTFM_SECRET", escapeForBuildConfig(lastfmSecret))
+        buildConfigField("String", "LASTFM_API_KEY", "\"\"")
+        buildConfigField("String", "LASTFM_SECRET", "\"\"")
         buildConfigField("String", "LISTEN_TOGETHER_SERVER", escapeForBuildConfig(listenTogetherServer))
 
         ndk {
