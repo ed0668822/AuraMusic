@@ -1,3 +1,5 @@
+// Aurelis © 2026. GPL-3.0-or-later.
+
 package com.music.aurelis.data
 
 import android.content.ContentUris
@@ -7,10 +9,29 @@ import android.provider.MediaStore
 import com.music.aurelis.data.model.LocalSong
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.util.Locale
 
 object LocalMediaRepository {
 
     private const val MIN_DURATION_MS = 30_000L
+    private const val TAG = "Aurelis"
+
+    private val MUSIC_EXTENSIONS = setOf(
+        "mp3", "m4a", "mp4", "flac", "ogg", "opus", "aac", "webm", "dsf", "dff",
+    )
+
+    private val NON_MUSIC_PATH_SEGMENTS = listOf(
+        "/alarms/",
+        "/notifications/",
+        "/ringtones/",
+        "/podcasts/",
+        "/audiobooks/",
+        "/recordings/",
+        "/voice recorder/",
+        "/sound_recorder/",
+        "/call_rec/",
+        "/whatsapp voice notes/",
+    )
 
     suspend fun getAllSongs(context: Context): List<LocalSong> = withContext(Dispatchers.IO) {
         val songs = mutableListOf<LocalSong>()
@@ -23,6 +44,7 @@ object LocalMediaRepository {
             MediaStore.Audio.Media.ALBUM_ID,
             MediaStore.Audio.Media.DURATION,
             MediaStore.Audio.Media.DATA,
+            MediaStore.Audio.Media.DISPLAY_NAME,
             MediaStore.Audio.Media.TRACK,
             MediaStore.Audio.Media.YEAR,
             MediaStore.Audio.Media.DATE_ADDED,
@@ -30,75 +52,99 @@ object LocalMediaRepository {
         )
 
         val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0 AND " +
-                "${MediaStore.Audio.Media.DURATION} >= ?"
+            "(${MediaStore.Audio.Media.DURATION} >= ? OR " +
+            "${MediaStore.Audio.Media.DURATION} <= 0 OR " +
+            "${MediaStore.Audio.Media.DURATION} IS NULL)"
 
         val selectionArgs = arrayOf(MIN_DURATION_MS.toString())
         val sortOrder = "${MediaStore.Audio.Media.TITLE} ASC"
         val contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
         val albumArtBaseUri = Uri.parse("content://media/external/audio/albumart")
 
-        context.contentResolver.query(
-            contentUri,
-            projection,
-            selection,
-            selectionArgs,
-            sortOrder
-        )?.use { cursor ->
-            val idCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
-            val titleCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
-            val artistCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
-            val albumCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
-            val albumIdCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
-            val durationCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
-            val dataCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
-            val trackCol = cursor.getColumnIndex(MediaStore.Audio.Media.TRACK)
-            val yearCol = cursor.getColumnIndex(MediaStore.Audio.Media.YEAR)
-            val dateAddedCol = cursor.getColumnIndex(MediaStore.Audio.Media.DATE_ADDED)
-            val sizeCol = cursor.getColumnIndex(MediaStore.Audio.Media.SIZE)
+        runCatching {
+            context.contentResolver.query(
+                contentUri,
+                projection,
+                selection,
+                selectionArgs,
+                sortOrder,
+            )?.use { cursor ->
+                val idCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
+                val titleCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
+                val artistCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
+                val albumCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
+                val albumIdCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
+                val durationCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
+                val dataCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
+                val displayNameCol = cursor.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME)
+                val trackCol = cursor.getColumnIndex(MediaStore.Audio.Media.TRACK)
+                val yearCol = cursor.getColumnIndex(MediaStore.Audio.Media.YEAR)
+                val dateAddedCol = cursor.getColumnIndex(MediaStore.Audio.Media.DATE_ADDED)
+                val sizeCol = cursor.getColumnIndex(MediaStore.Audio.Media.SIZE)
 
-            while (cursor.moveToNext()) {
-                val id = cursor.getLong(idCol)
-                val title = cursor.getString(titleCol) ?: continue
-                val artist = cursor.getString(artistCol) ?: "Unknown Artist"
-                val album = cursor.getString(albumCol)?.takeIf { it.isNotBlank() && it != "<unknown>" }
-                val albumId = cursor.getLong(albumIdCol)
-                val durationMs = cursor.getLong(durationCol)
-                val filePath = cursor.getString(dataCol)
-                val trackNumber = if (trackCol >= 0 && !cursor.isNull(trackCol)) {
-                    parseTrackNumber(cursor.getInt(trackCol))
-                } else null
-                val year = if (yearCol >= 0 && !cursor.isNull(yearCol)) {
-                    cursor.getInt(yearCol).takeIf { it > 0 }
-                } else null
-                val dateAddedMs = if (dateAddedCol >= 0 && !cursor.isNull(dateAddedCol)) {
-                    cursor.getLong(dateAddedCol) * 1000L
-                } else 0L
-                val sizeBytes = if (sizeCol >= 0 && !cursor.isNull(sizeCol)) {
-                    cursor.getLong(sizeCol)
-                } else 0L
+                while (cursor.moveToNext()) {
+                    val id = cursor.getLong(idCol)
+                    val title = cursor.getString(titleCol) ?: continue
+                    val artist = cursor.getString(artistCol)
+                        ?.takeUnless { it.isBlank() || it == "<unknown>" }
+                        ?: "Unknown Artist"
+                    val album = cursor.getString(albumCol)
+                        ?.takeUnless { it.isBlank() || it == "<unknown>" }
+                    val albumId = cursor.getLong(albumIdCol)
+                    val durationMs = cursor.getLong(durationCol)
+                    val filePath = cursor.getString(dataCol)
+                    val displayName = if (displayNameCol >= 0 && !cursor.isNull(displayNameCol)) {
+                        cursor.getString(displayNameCol)
+                    } else null
 
-                val songContentUri = ContentUris.withAppendedId(contentUri, id).toString()
-                val artworkUri = if (albumId > 0) {
-                    ContentUris.withAppendedId(albumArtBaseUri, albumId).toString()
-                } else null
+                    val normalizedPath = filePath?.replace('\\', '/')?.lowercase(Locale.ROOT)
+                    if (normalizedPath != null && NON_MUSIC_PATH_SEGMENTS.any(normalizedPath::contains)) {
+                        continue
+                    }
 
-                songs.add(
-                    LocalSong(
-                        id = id.toString(),
-                        title = title,
-                        artist = artist,
-                        album = album,
-                        contentUri = songContentUri,
-                        artworkUri = artworkUri,
-                        durationMs = durationMs,
-                        filePath = filePath,
-                        trackNumber = trackNumber,
-                        year = year,
-                        dateAddedMs = dateAddedMs,
-                        sizeBytes = sizeBytes,
+                    val ext = (displayName ?: filePath ?: "")
+                        .substringAfterLast('.', "")
+                        .lowercase(Locale.ROOT)
+                    if (ext.isNotEmpty() && ext !in MUSIC_EXTENSIONS) continue
+
+                    val trackNumber = if (trackCol >= 0 && !cursor.isNull(trackCol)) {
+                        parseTrackNumber(cursor.getInt(trackCol))
+                    } else null
+                    val year = if (yearCol >= 0 && !cursor.isNull(yearCol)) {
+                        cursor.getInt(yearCol).takeIf { it > 0 }
+                    } else null
+                    val dateAddedMs = if (dateAddedCol >= 0 && !cursor.isNull(dateAddedCol)) {
+                        cursor.getLong(dateAddedCol) * 1000L
+                    } else 0L
+                    val sizeBytes = if (sizeCol >= 0 && !cursor.isNull(sizeCol)) {
+                        cursor.getLong(sizeCol)
+                    } else 0L
+
+                    val songContentUri = ContentUris.withAppendedId(contentUri, id).toString()
+                    val artworkUri = if (albumId > 0) {
+                        ContentUris.withAppendedId(albumArtBaseUri, albumId).toString()
+                    } else null
+
+                    songs.add(
+                        LocalSong(
+                            id = id.toString(),
+                            title = title,
+                            artist = artist,
+                            album = album,
+                            contentUri = songContentUri,
+                            artworkUri = artworkUri,
+                            durationMs = durationMs,
+                            filePath = filePath,
+                            trackNumber = trackNumber,
+                            year = year,
+                            dateAddedMs = dateAddedMs,
+                            sizeBytes = sizeBytes,
+                        ),
                     )
-                )
+                }
             }
+        }.onFailure {
+            android.util.Log.w(TAG, "Local media scan failed: ${it.message}", it)
         }
 
         songs
