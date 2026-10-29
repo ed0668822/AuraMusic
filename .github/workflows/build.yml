@@ -24,22 +24,46 @@ jobs:
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::error::Falta el secret KEYSTORE_BASE64"
+            exit 1
+          fi
           echo "$KEYSTORE_BASE64" | base64 --decode > aurelis-release.jks
+          ls -la aurelis-release.jks
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Ensure gradlew is executable
+        run: chmod +x ./gradlew
+
       - name: Build Release APK
         env:
-          KEYSTORE_PATH: "aurelis-release.jks"
-          KEYSTORE_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-        run: gradle clean assembleRelease --no-daemon
+          # --- Firma (leídas por readSigning() en build.gradle.kts) ---
+          STORE_FILE:      "aurelis-release.jks"
+          STORE_PASSWORD:  ${{ secrets.KEY_PASSWORD }}
+          KEY_ALIAS:       ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD:    ${{ secrets.KEY_PASSWORD }}
+
+          # --- Claves de la app (leídas por readValue() en build.gradle.kts) ---
+          LASTFM_API_KEY:         ${{ secrets.LASTFM_API_KEY }}
+          LASTFM_SECRET:          ${{ secrets.LASTFM_SECRET }}
+          LISTEN_TOGETHER_SERVER: ${{ secrets.LISTEN_TOGETHER_SERVER }}
+        run: ./gradlew clean assembleRelease --no-daemon --stacktrace
+
+      - name: Verify APK is signed
+        run: |
+          APK=$(ls app/build/outputs/apk/release/*.apk | head -n1)
+          echo "APK: $APK"
+          # Si no está firmado, apksigner falla con "DOES NOT VERIFY"
+          $ANDROID_HOME/build-tools/*/apksigner verify --verbose "$APK" || {
+            echo "::error::El APK no está firmado correctamente"
+            exit 1
+          }
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: aurelis-release
-          # El comodín *.apk asegura encontrar el archivo incluso si cambia de nombre
           path: app/build/outputs/apk/release/*.apk
           if-no-files-found: error
