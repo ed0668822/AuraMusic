@@ -78,13 +78,16 @@ android {
     }
 
     signingConfigs {
-        val store = signing.getProperty("storeFile")?.let { rootProject.file(it) }
+        // Lee primero las variables de entorno (CI) y luego el archivo local
+        val storePath = System.getenv("KEYSTORE_PATH") ?: signing.getProperty("storeFile")
+        val store = storePath?.let { rootProject.file(it) }
+
         if (store != null && store.exists()) {
             create("release") {
                 storeFile = store
-                storePassword = signing.getProperty("storePassword")
-                keyAlias = signing.getProperty("keyAlias")
-                keyPassword = signing.getProperty("keyPassword")
+                storePassword = System.getenv("KEYSTORE_PASSWORD") ?: signing.getProperty("storePassword")
+                keyAlias = System.getenv("KEY_ALIAS") ?: signing.getProperty("keyAlias")
+                keyPassword = System.getenv("KEY_PASSWORD") ?: signing.getProperty("keyPassword")
             }
         }
     }
