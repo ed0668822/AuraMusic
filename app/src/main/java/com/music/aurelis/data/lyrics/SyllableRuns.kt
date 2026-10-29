@@ -1,7 +1,9 @@
+// Ported from BitChord. © 2026 Kushagra Singh (BitChord/Aurelis). GPL-3.0-or-later.
 package com.music.aurelis.data.lyrics
 
 /**
- * One stamped run of text as a provider wrote it, its spacing untouched.
+ * One stamped run of text as a provider wrote it, its spacing untouched: a
+ * word, or one syllable of one.
  */
 internal class TimedRun(val startMs: Long, val endMs: Long, val raw: String)
 
@@ -50,7 +52,6 @@ internal fun wordsFromRuns(runs: List<TimedRun>, spacingIsExplicit: Boolean = fa
     return words
 }
 
-/** Scripts written without spaces between words. */
 private fun Char.isUnspacedScript(): Boolean =
     this in '\u3400'..'\u9FFF' ||
         this in '\u3040'..'\u30FF' ||
