@@ -1,7 +1,7 @@
 # Aurelis © 2026. GPL-3.0-or-later.
 
 # ---------------------------------------------------------
-# 1. Conservar TODAS las clases de la app (Modo estricto)
+# 1. Conservar TODAS las clases de la app
 # ---------------------------------------------------------
 -keep class com.music.aurelis.** { *; }
 -keep interface com.music.aurelis.** { *; }
