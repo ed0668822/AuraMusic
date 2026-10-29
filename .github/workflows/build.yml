@@ -24,7 +24,17 @@ jobs:
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
-          echo "$KEYSTORE_BASE64" | base64 --decode > aurelis-release.jks
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > aurelis-release.jks
+          ls -la aurelis-release.jks
+
+      - name: Verify Keystore
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          keytool -list -v -keystore aurelis-release.jks \
+            -storepass "$KEYSTORE_PASSWORD" \
+            -alias "$KEY_ALIAS"
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
