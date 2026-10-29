@@ -34,12 +34,12 @@ jobs:
           KEYSTORE_PATH: "aurelis-release.jks"
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-        run: gradle clean assembleRelease --no-daemon
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: ./gradlew clean assembleRelease --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: aurelis-release
-          # El comodín *.apk asegura encontrar el archivo incluso si cambia de nombre
           path: app/build/outputs/apk/release/*.apk
           if-no-files-found: error
