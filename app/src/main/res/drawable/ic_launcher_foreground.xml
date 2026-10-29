@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Aurelis © 2026. GPL-3.0-or-later. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Nota musical en rojo, centrada en el área segura del icono adaptativo -->
     <group
-        android:scaleX="3.8"
-        android:scaleY="3.8"
-        android:translateX="24"
-        android:translateY="24">
+        android:scaleX="3.2"
+        android:scaleY="3.2"
+        android:translateX="14"
+        android:translateY="14">
         <path
-            android:fillColor="#C8102E"
-            android:pathData="M12,3v10.55c-0.59,-0.34 -1.27,-0.55 -2,-0.55 -2.21,0 -4,1.79 -4,4s1.79,4 4,4 4,-1.79 4,-4V7h4V3h-6z" />
+            android:fillColor="#FFFFFF"
+            android:pathData="M12,3v10.55c-0.59,-0.34 -1.27,-0.55 -2,-0.55C7.79,13 6,14.79 6,17s1.79,4 4,4 4,-1.79 4,-4V7h4V3h-6z" />
     </group>
 </vector>
