@@ -1,4 +1,4 @@
-// Ported from BitChord. © 2026 Kushagra Singh (BitChord/Aurelis). GPL-3.0-or-later.
+// Aurelis stubs. GPL-3.0-or-later.
 package com.music.aurelis.data.lyrics
 
 import kotlinx.serialization.json.JsonArray
@@ -7,7 +7,6 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
-/** Turns the wire formats used by the smaller providers into Aurelis lyrics. */
 object ProviderLyrics {
 
     fun parse(raw: String): List<LyricLine>? {
@@ -42,21 +41,23 @@ object ProviderLyrics {
         return extract(json)?.trim()?.takeIf { it.isNotEmpty() }
     }
 
-    private fun extract(element: JsonElement): String? = when (element) {
-        JsonNull -> null
-        is JsonPrimitive -> if (element.isString) {
-            val text = element.content.trim()
-            val nested = runCatching { lyricsJson.parseToJsonElement(text) }.getOrNull()
-            if (nested != null && nested !is JsonPrimitive) extract(nested) else text
-        } else null
-        is JsonArray -> element.mapNotNull(::extract).joinToString("\n").takeIf { it.isNotBlank() }
-        is JsonObject -> {
-            if (element["isError"]?.toString() == "true" || element["ok"]?.toString() == "false" ||
-                element["error"]?.let { it !is JsonNull && it.toString() !in setOf("false", "\"\"") } == true
-            ) return null
-            CONTENT_KEYS.asSequence().mapNotNull { element[it]?.let(::extract) }.firstOrNull()
-                ?: (element["metadata"] as? JsonObject)?.let(::extract)
-                ?: element["words"]?.let(::extract)
+    private fun extract(element: JsonElement): String? {
+        return when (element) {
+            JsonNull -> null
+            is JsonPrimitive -> if (element.isString) {
+                val text = element.content.trim()
+                val nested = runCatching { lyricsJson.parseToJsonElement(text) }.getOrNull()
+                if (nested != null && nested !is JsonPrimitive) extract(nested) else text
+            } else null
+            is JsonArray -> element.mapNotNull(::extract).joinToString("\n").takeIf { it.isNotBlank() }
+            is JsonObject -> {
+                if (element["isError"]?.toString() == "true" || element["ok"]?.toString() == "false" ||
+                    element["error"]?.let { it !is JsonNull && it.toString() !in setOf("false", "\"\"") } == true
+                ) return null
+                CONTENT_KEYS.asSequence().mapNotNull { element[it]?.let(::extract) }.firstOrNull()
+                    ?: (element["metadata"] as? JsonObject)?.let(::extract)
+                    ?: element["words"]?.let(::extract)
+            }
         }
     }
 
@@ -108,7 +109,7 @@ object KaraokeLrc {
                 timeMs = minOf(lineStart, words.first().startMs),
                 text = EnhancedLrc.decodeEntities(body.replace(WORD_TIME, "")).trim(),
                 words = words,
-                sungUntilMs = (lineStart + lineDuration).takeIf { lineDuration > 0 },
+                sungUntilMs = (lineStart + lineDuration).takeIf { it > 0 },
             )
         }.filter { it.text.isNotEmpty() }.sortedBy { it.timeMs }.toList()
         return rows.withInstrumentalGaps()
