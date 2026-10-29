@@ -1,3 +1,5 @@
+// Aurelis © 2026. GPL-3.0-or-later.
+
 import java.util.Properties
 
 plugins {
@@ -6,10 +8,6 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
     id("org.jetbrains.kotlin.plugin.serialization")
 }
-
-// ---------------------------------------------------------------------------
-// Lectura de configuración: local.properties > ENV (GitHub Secrets) > default
-// ---------------------------------------------------------------------------
 
 val localProps = Properties().apply {
     val file = rootProject.file("local.properties")
@@ -21,12 +19,6 @@ val signingProps = Properties().apply {
     if (file.exists()) file.inputStream().use { load(it) }
 }
 
-/**
- * Devuelve el primer valor NO VACÍO entre:
- *   1. local.properties
- *   2. variable de entorno (GitHub Actions)
- *   3. default
- */
 fun readValue(key: String, default: String = ""): String {
     val local = localProps.getProperty(key)?.trim()
     if (!local.isNullOrEmpty()) return local
@@ -35,17 +27,12 @@ fun readValue(key: String, default: String = ""): String {
     return default
 }
 
-/** Igual que readValue pero para firmado (keystore.properties o ENV). */
 fun readSigning(key: String): String? {
     val local = signingProps.getProperty(key)?.trim()
     if (!local.isNullOrEmpty()) return local
     return System.getenv(key)?.trim()?.takeIf { it.isNotEmpty() }
 }
 
-/**
- * Escapa correctamente un String para usarlo como literal en BuildConfig.
- * Cubre backslash, comillas, saltos de línea, tab y CR.
- */
 fun escapeForBuildConfig(value: String): String {
     val sb = StringBuilder("\"")
     for (ch in value) {
@@ -62,28 +49,17 @@ fun escapeForBuildConfig(value: String): String {
     return sb.toString()
 }
 
-// --- Variables de configuración ---
-
-// ❌ Last.fm desactivado: no se leen secretos ni se valida nada en CI.
-//    Si algún día lo reactivas, vuelve a leer LASTFM_API_KEY / LASTFM_SECRET aquí
-//    y añade de nuevo los check(...) para CI.
 val lastfmApiKey = ""
 val lastfmSecret = ""
 
 val listenTogetherServer = readValue(
     "LISTEN_TOGETHER_SERVER",
-    "https://bitchord-listen-together.onrender.com"
+    ""
 ).trimEnd('/')
 
-// --- Versionado automático ---
-
-val runNumber = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 0
-val autoVersionName = if (runNumber > 0) "1.9.$runNumber" else "1.9.0"
-val autoVersionCode = if (runNumber > 0) {
-    10000 + runNumber
-} else {
-    (System.currentTimeMillis() / 60_000L).toInt()
-}
+val runNumber = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull()
+val autoVersionCode = if (runNumber != null) 10000 + runNumber else 1
+val autoVersionName = if (runNumber != null) "1.9.$runNumber" else "1.9.0-dev"
 
 android {
     namespace = "com.music.aurelis"
@@ -120,11 +96,11 @@ android {
     }
 
     signingConfigs {
-        val storePath      = readSigning("storeFile")      ?: readSigning("STORE_FILE")
-        val storePassword  = readSigning("storePassword")  ?: readSigning("STORE_PASSWORD")
-        val keyAlias       = readSigning("keyAlias")       ?: readSigning("KEY_ALIAS")
-        val keyPassword    = readSigning("keyPassword")    ?: readSigning("KEY_PASSWORD")
-        val store          = storePath?.let { rootProject.file(it) }
+        val storePath     = readSigning("storeFile")     ?: readSigning("STORE_FILE")
+        val storePassword = readSigning("storePassword") ?: readSigning("STORE_PASSWORD")
+        val keyAlias      = readSigning("keyAlias")      ?: readSigning("KEY_ALIAS")
+        val keyPassword   = readSigning("keyPassword")   ?: readSigning("KEY_PASSWORD")
+        val store         = storePath?.let { rootProject.file(it) }
 
         if (store != null && store.exists() &&
             !storePassword.isNullOrEmpty() &&
@@ -132,7 +108,7 @@ android {
             !keyPassword.isNullOrEmpty()
         ) {
             create("release") {
-                storeFile     = store
+                storeFile          = store
                 this.storePassword = storePassword
                 this.keyAlias      = keyAlias
                 this.keyPassword   = keyPassword
@@ -158,13 +134,14 @@ android {
 
     buildTypes {
         debug {
-            signingConfig = signingConfigs.findByName("release")
+            signingConfigs.findByName("release")?.let { signingConfig = it }
         }
 
         release {
             isMinifyEnabled = true
             isShrinkResources = false
             signingConfig = signingConfigs.findByName("release")
+                ?: signingConfigs.getByName("debug")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
