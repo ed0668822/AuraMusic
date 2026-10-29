@@ -60,13 +60,11 @@ android {
 
     // ── CONFIGURACIÓN ESTRICTA DE EMPAQUETADO ──
     androidResources {
-        // Evita que los modelos ONNX (y otros assets) se compriman, permitiendo acceso directo en runtime
         noCompress.add("")
     }
 
     packaging {
         jniLibs {
-            // Mantiene las librerías nativas sin compresión y con sus símbolos
             useLegacyPackaging = false
             keepDebugSymbols.add("**/*.so")
         }
@@ -78,8 +76,8 @@ android {
         }
 
         release {
-            isMinifyEnabled = true // Activamos R8 para ofuscación
-            isShrinkResources = false // Desactivamos la eliminación de recursos
+            isMinifyEnabled = true
+            isShrinkResources = false
             signingConfig = signingConfigs.findByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -143,4 +141,7 @@ dependencies {
 
     // Requerido por data/lyrics/Genius.kt (scraper HTML)
     implementation("org.jsoup:jsoup:1.18.1")
+    
+    // ← NUEVO: Requerido por Jsoup 1.18+ para anotaciones de nulabilidad
+    compileOnly("org.jspecify:jspecify:1.0.0")
 }
