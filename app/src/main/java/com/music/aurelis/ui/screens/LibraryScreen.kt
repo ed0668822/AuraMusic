@@ -1,4 +1,4 @@
-package com.music.aura.ui.screens
+package com.music.aurelis.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,11 +31,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.music.aura.R
-import com.music.aura.ui.components.LIBRARY_GRID_SPACING
-import com.music.aura.ui.components.PAGE_GUTTER
-import com.music.aura.ui.components.libraryGrid
-import com.music.aura.ui.icons.AuraIcons
+import com.music.aurelis.R
+import com.music.aurelis.ui.components.LIBRARY_GRID_SPACING
+import com.music.aurelis.ui.components.PAGE_GUTTER
+import com.music.aurelis.ui.components.libraryGrid
+import com.music.aurelis.ui.icons.AurelisIcons
 
 data class LibraryLink(val title: String, val icon: ImageVector, val onClick: () -> Unit)
 
@@ -97,7 +97,7 @@ private fun LibraryLinkList(links: List<LibraryLink>) {
                     modifier = Modifier.weight(1f),
                 )
                 Icon(
-                    imageVector = AuraIcons.ChevronRight,
+                    imageVector = AurelisIcons.ChevronRight,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .6f),
                     modifier = Modifier.size(20.dp),
