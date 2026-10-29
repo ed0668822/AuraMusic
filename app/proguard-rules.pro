@@ -32,9 +32,12 @@
 -keep class androidx.media3.** { *; }
 -keep class com.microsoft.onnxruntime.** { *; }
 
-# 6. Evitar que R8 elimine metadatos de depuración (opcional pero útil)
+# 6. Evitar que R8 elimine metadatos de depuración
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile
 
 # 7. Reglas específicas para las librerías nativas y FFmpeg vendorizado
 -keep class androidx.media3.decoder.ffmpeg.** { *; }
+
+# 8. Silenciar warnings de Jsoup 1.18+ (usa anotaciones JSpecify en compileOnly)
+-dontwarn org.jspecify.annotations.**
