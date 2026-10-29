@@ -33,7 +33,35 @@ object LocalMediaRepository {
         "/whatsapp voice notes/",
     )
 
-    suspend fun getAllSongs(context: Context): List<LocalSong> = withContext(Dispatchers.IO) {
+    /**
+     * Escanea la biblioteca de audio local.
+     *
+     * [filterNonMusic] controla si se aplica el filtro `IS_MUSIC != 0`. Como
+     * algunos dispositivos no marcan correctamente los archivos copiados por
+     * USB/MTP/descargas, si el filtro estricto devuelve 0 canciones se reintenta
+     * sin él, para que el usuario nunca vea una biblioteca vacía teniendo
+     * música en el teléfono.
+     */
+    suspend fun getAllSongs(
+        context: Context,
+        filterNonMusic: Boolean = true,
+    ): List<LocalSong> = withContext(Dispatchers.IO) {
+        val strict = scanSongs(context, filterNonMusic)
+        if (strict.isEmpty() && filterNonMusic) {
+            android.util.Log.d(
+                TAG,
+                "Filtro IS_MUSIC devolvió 0 canciones, reintentando sin filtro",
+            )
+            scanSongs(context, filterNonMusic = false)
+        } else {
+            strict
+        }
+    }
+
+    private fun scanSongs(
+        context: Context,
+        filterNonMusic: Boolean,
+    ): List<LocalSong> {
         val songs = mutableListOf<LocalSong>()
 
         val projection = arrayOf(
@@ -51,10 +79,16 @@ object LocalMediaRepository {
             MediaStore.Audio.Media.SIZE,
         )
 
-        val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0 AND " +
-            "(${MediaStore.Audio.Media.DURATION} >= ? OR " +
-            "${MediaStore.Audio.Media.DURATION} <= 0 OR " +
-            "${MediaStore.Audio.Media.DURATION} IS NULL)"
+        val selection = buildString {
+            if (filterNonMusic) {
+                append(MediaStore.Audio.Media.IS_MUSIC).append(" != 0 AND ")
+            }
+            append("(")
+            append(MediaStore.Audio.Media.DURATION).append(" >= ? OR ")
+            append(MediaStore.Audio.Media.DURATION).append(" <= 0 OR ")
+            append(MediaStore.Audio.Media.DURATION).append(" IS NULL")
+            append(")")
+        }
 
         val selectionArgs = arrayOf(MIN_DURATION_MS.toString())
         val sortOrder = "${MediaStore.Audio.Media.TITLE} ASC"
@@ -147,7 +181,8 @@ object LocalMediaRepository {
             android.util.Log.w(TAG, "Local media scan failed: ${it.message}", it)
         }
 
-        songs
+        android.util.Log.d(TAG, "Scan completo: ${songs.size} canciones (filterNonMusic=$filterNonMusic)")
+        return songs
     }
 
     private fun parseTrackNumber(raw: Int): Int? {
