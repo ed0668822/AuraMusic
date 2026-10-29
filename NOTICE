@@ -1,0 +1,161 @@
+Aurelis Music
+Copyright (C) 2026 ed0668822 (Aurelis adaptations)
+Licensed under the GNU General Public License, version 3 or later.
+See the LICENSE file for the full text.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+────────────────────────────────────────────────────────────────────
+
+Aurelis incorporates code adapted from the following projects.
+Their original notices are preserved below.
+
+────────────────────────────────────────────────────────────────────
+
+1. BitChord
+   https://github.com/kushagrasinghx/bitchord
+   Copyright (C) 2026 Kushagra Singh
+   License: GNU General Public License v3.0 or later (GPL-3.0-or-later)
+
+   Adapted modules include: the complete lyrics system (providers,
+   parsers, repository, translation), the DSP audio chain (equalizer,
+   spatial audio, transition filter, loudness), the offline audio
+   analysis pipeline (envelope, tempo, key, structure), AudioRouting,
+   the queue system (Builder, Coordinator, Shuffle, Timeline, Window,
+   History), DSD decoding, the synced lyrics panel, LyricFocus, and
+   the AndroidPlayerHost / PlayerHost abstractions.
+
+   BitChord's source is licensed under the GNU General Public License
+   version 3 or later. See https://www.gnu.org/licenses/gpl-3.0.html.
+
+────────────────────────────────────────────────────────────────────
+
+2. Orchard
+   https://github.com/SFG5453/Orchard
+   Copyright (C) 2026 SFG545
+   License: GNU Affero General Public License v3.0 or later
+            (AGPL-3.0-or-later)
+
+   Adapted modules: native/analyzer/audio_analysis.cpp,
+   native/analyzer/mel_spectrogram.cpp, native/analyzer/resampler.cpp,
+   native/analyzer/tempo_analysis.cpp,
+   native/analyzer/vocal_spectrogram.cpp, and the JNI bridges
+   native/jni/analysis_jni.cpp, native/jni/mel_jni.cpp,
+   native/jni/vocal_jni.cpp.
+
+   Per section 13 of the AGPLv3, these files are combined here into
+   Aurelis -- a work licensed under the GNU General Public License,
+   version 3 or later -- and remain themselves governed by the AGPLv3
+   as part of that combination. The terms of the GPLv3 continue to
+   apply to the combined work.
+
+   Orchard's original source: https://github.com/SFG5453/Orchard
+
+────────────────────────────────────────────────────────────────────
+
+3. Kyant0/backdrop
+   https://github.com/Kyant0/backdrop
+   Copyright (C) 2025 Kyant0
+   License: Apache License, Version 2.0 (Apache-2.0)
+
+   Adapted modules: the entire package
+   com.music.aurelis.ui.components.backdrop.** was vendored as source
+   (not as a binary AAR) so the backdrop rendering pipeline could be
+   compiled against this app's Compose version and extended with a
+   resolution scale for cheaper effect rendering.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+   implied. See the License for the specific language governing
+   permissions and limitations under the License.
+
+────────────────────────────────────────────────────────────────────
+
+4. liquid_glass_easy
+   https://pub.dev/packages/liquid_glass_easy
+   Copyright (c) 2025 Ahmed Gamil
+   License: MIT
+
+   Adapted module: the motion of the selection pill in
+   com.music.aurelis.ui.components.floatingtabbar.GlassSelectionPill
+   (the travel spring, the held lift, the acceleration squash and the
+   glass-to-flat hand-off, with their constants) was ported from
+   LiquidGlassAnimatedNavBar and LiquidGlassLensMotion.
+
+   Permission is hereby granted, free of charge, to any person
+   obtaining a copy of this software and associated documentation
+   files (the "Software"), to deal in the Software without restriction,
+   including without limitation the rights to use, copy, modify,
+   merge, publish, distribute, sublicense, and/or sell copies of the
+   Software, and to permit persons to whom the Software is furnished
+   to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be
+   included in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+   NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+   HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+   WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+
+────────────────────────────────────────────────────────────────────
+
+5. ONNX models (Beat This! and Open-Unmix)
+
+   The Automix feature optionally uses two quantized neural-network
+   models distributed as ONNX files:
+
+   • beat_this_int8.onnx
+     Derived from CPJKU/beat_this (https://github.com/CPJKU/beat_this)
+     Copyright (c) CPJKU / Johannes Kepler University Linz
+     License: MIT
+
+   • vocals_umxhq_int8.onnx
+     Derived from sigsep/open-unmix (https://github.com/sigsep/open-unmix)
+     Copyright (c) Inria / SigSep
+     License: MIT
+
+   Both are redistributed under the MIT License, whose full text
+   appears in section 4 above. The models are optional: Aurelis works
+   without them, falling back to the pure-DSP analyzer.
+
+────────────────────────────────────────────────────────────────────
+
+6. Third-party dependencies
+
+   The following libraries are linked as dependencies and are NOT
+   part of Aurelis's own source. They are redistributed or linked
+   under their own licenses:
+
+   • AndroidX / Jetpack Compose / Media3 — Apache-2.0
+   • Kotlin / kotlinx.coroutines / kotlinx.serialization — Apache-2.0
+   • OkHttp — Apache-2.0
+   • Coil — Apache-2.0
+   • Haze (dev.chrisbanes.haze) — Apache-2.0
+   • nextlib (io.github.anilbeesetti) — Apache-2.0
+   • ONNX Runtime Android (com.microsoft.onnxruntime) — MIT
+   • Guava (com.google.guava) — Apache-2.0
+   • Checker Framework (org.checkerframework) — MIT / GPL-2.0-with-classpath-exception
+   • Jsoup (org.jsoup) — MIT
+
+   Full license texts for the Apache-2.0 and MIT licenses appear
+   above in sections 3 and 4 respectively.
