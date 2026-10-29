@@ -32,7 +32,7 @@ jobs:
       - name: Build Release APK
         env:
           KEYSTORE_PATH: "aurelis-release.jks"
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         run: gradle clean assembleRelease --no-daemon
 
