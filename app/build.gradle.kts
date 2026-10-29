@@ -7,41 +7,86 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization")
 }
 
-/**
- * Optional local signing config kept out of the repo.
- * If the file is missing, the build still works but a release APK is unsigned.
- */
-val signing = Properties().apply {
-    val file = rootProject.file("keystore.properties")
-    if (file.exists()) file.inputStream().use { load(it) }
-}
+// ---------------------------------------------------------------------------
+// Lectura de configuración: local.properties > ENV (GitHub Secrets) > default
+// ---------------------------------------------------------------------------
 
 val localProps = Properties().apply {
     val file = rootProject.file("local.properties")
     if (file.exists()) file.inputStream().use { load(it) }
 }
 
-val lastfmApiKey = (
-    localProps.getProperty("LASTFM_API_KEY")
-        ?: System.getenv("LASTFM_API_KEY")
-        ?: ""
-).trim()
+val signingProps = Properties().apply {
+    val file = rootProject.file("keystore.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}
 
-val lastfmSecret = (
-    localProps.getProperty("LASTFM_SECRET")
-        ?: System.getenv("LASTFM_SECRET")
-        ?: ""
-).trim()
+/**
+ * Devuelve el primer valor NO VACÍO entre:
+ *   1. local.properties
+ *   2. variable de entorno (GitHub Actions)
+ *   3. default
+ */
+fun readValue(key: String, default: String = ""): String {
+    val local = localProps.getProperty(key)?.trim()
+    if (!local.isNullOrEmpty()) return local
+    val env = System.getenv(key)?.trim()
+    if (!env.isNullOrEmpty()) return env
+    return default
+}
 
-val listenTogetherServer = (
-    localProps.getProperty("LISTEN_TOGETHER_SERVER")
-        ?: System.getenv("LISTEN_TOGETHER_SERVER")
-        ?: "https://bitchord-listen-together.onrender.com"
-).trim().trimEnd('/')
+/** Igual que readValue pero para firmado (keystore.properties o ENV). */
+fun readSigning(key: String): String? {
+    val local = signingProps.getProperty(key)?.trim()
+    if (!local.isNullOrEmpty()) return local
+    return System.getenv(key)?.trim()?.takeIf { it.isNotEmpty() }
+}
+
+/**
+ * Escapa correctamente un String para usarlo como literal en BuildConfig.
+ * Cubre backslash, comillas, saltos de línea, tab y CR.
+ */
+fun escapeForBuildConfig(value: String): String {
+    val sb = StringBuilder("\"")
+    for (ch in value) {
+        when (ch) {
+            '\\' -> sb.append("\\\\")
+            '"'  -> sb.append("\\\"")
+            '\n' -> sb.append("\\n")
+            '\r' -> sb.append("\\r")
+            '\t' -> sb.append("\\t")
+            else -> sb.append(ch)
+        }
+    }
+    sb.append('"')
+    return sb.toString()
+}
+
+// --- Variables de configuración ---
+
+val lastfmApiKey = readValue("LASTFM_API_KEY")
+val lastfmSecret = readValue("LASTFM_SECRET")
+val listenTogetherServer = readValue(
+    "LISTEN_TOGETHER_SERVER",
+    "https://bitchord-listen-together.onrender.com"
+).trimEnd('/')
+
+// Falla rápido si en CI faltan las claves obligatorias
+val isRunningInCi = System.getenv("GITHUB_ACTIONS") == "true"
+if (isRunningInCi) {
+    check(lastfmApiKey.isNotEmpty()) { "Falta LASTFM_API_KEY en los secrets de GitHub" }
+    check(lastfmSecret.isNotEmpty())  { "Falta LASTFM_SECRET en los secrets de GitHub" }
+}
+
+// --- Versionado automático ---
 
 val runNumber = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 0
 val autoVersionName = if (runNumber > 0) "1.9.$runNumber" else "1.9.0"
-val autoVersionCode = if (runNumber > 0) 10000 + runNumber else (System.currentTimeMillis() / 60000).toInt()
+val autoVersionCode = if (runNumber > 0) {
+    10000 + runNumber
+} else {
+    (System.currentTimeMillis() / 60_000L).toInt()
+}
 
 android {
     namespace = "com.music.aurelis"
@@ -55,9 +100,9 @@ android {
         versionName = autoVersionName
 
         buildConfigField("String", "UPDATE_APK_PREFIX", "\"app-\"")
-        buildConfigField("String", "LASTFM_API_KEY", "\"${lastfmApiKey.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
-        buildConfigField("String", "LASTFM_SECRET", "\"${lastfmSecret.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
-        buildConfigField("String", "LISTEN_TOGETHER_SERVER", "\"${listenTogetherServer.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
+        buildConfigField("String", "LASTFM_API_KEY", escapeForBuildConfig(lastfmApiKey))
+        buildConfigField("String", "LASTFM_SECRET", escapeForBuildConfig(lastfmSecret))
+        buildConfigField("String", "LISTEN_TOGETHER_SERVER", escapeForBuildConfig(listenTogetherServer))
 
         ndk {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
@@ -78,13 +123,22 @@ android {
     }
 
     signingConfigs {
-        val store = signing.getProperty("storeFile")?.let { rootProject.file(it) }
-        if (store != null && store.exists()) {
+        val storePath      = readSigning("storeFile")      ?: readSigning("STORE_FILE")
+        val storePassword  = readSigning("storePassword")  ?: readSigning("STORE_PASSWORD")
+        val keyAlias       = readSigning("keyAlias")       ?: readSigning("KEY_ALIAS")
+        val keyPassword    = readSigning("keyPassword")    ?: readSigning("KEY_PASSWORD")
+        val store          = storePath?.let { rootProject.file(it) }
+
+        if (store != null && store.exists() &&
+            !storePassword.isNullOrEmpty() &&
+            !keyAlias.isNullOrEmpty() &&
+            !keyPassword.isNullOrEmpty()
+        ) {
             create("release") {
-                storeFile = store
-                storePassword = signing.getProperty("storePassword")
-                keyAlias = signing.getProperty("keyAlias")
-                keyPassword = signing.getProperty("keyPassword")
+                storeFile     = store
+                this.storePassword = storePassword
+                this.keyAlias      = keyAlias
+                this.keyPassword   = keyPassword
             }
         }
     }
