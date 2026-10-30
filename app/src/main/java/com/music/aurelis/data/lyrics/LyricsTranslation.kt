@@ -1,3 +1,4 @@
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.data.lyrics
 
 import java.io.File
@@ -33,12 +34,6 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 
-/**
- * Lightweight, on-demand lyric translation using Google Translate.
- *
- * Translation models are deliberately not installed on the device.
- * Requests are batched and the compact result is kept in a bounded cache.
- */
 object LyricsTranslation {
     sealed interface Result {
         data class Translated(
@@ -84,10 +79,6 @@ object LyricsTranslation {
         }
     }
 
-    /**
-     * Where translated lyrics are kept between runs.
-     * Set during Application.onCreate().
-     */
     @Volatile
     var cacheDir: File? = null
 
