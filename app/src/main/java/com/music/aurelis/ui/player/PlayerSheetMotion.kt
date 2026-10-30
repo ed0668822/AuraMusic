@@ -1,6 +1,7 @@
 // Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.ui.player
 
+import android.content.res.Resources
 import android.view.Window
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animate
@@ -13,7 +14,6 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.platform.WindowInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -56,12 +56,17 @@ class PlayerSheetMotion(
     private var sheetVelocity = 0f
 
     var laidOut by mutableStateOf(false)
-    var windowInfo: WindowInfo? = null
     var flingVelocity = 0f
     private var settle: Job? = null
     private var closing = false
 
-    private fun travel(): Float = dock.sheetTravel.takeIf { it > 0f } ?: (windowInfo?.containerSize?.height ?: 0).toFloat()
+    /**
+     * Altura disponible para el sheet. Usa [PlayerDock.sheetTravel] si ya fue
+     * medido; si no, cae a la altura de pantalla del sistema como fallback.
+     * (`WindowInfo.containerSize` no existe en Compose 1.7.6; se reemplazó.)
+     */
+    private fun travel(): Float = dock.sheetTravel.takeIf { it > 0f }
+        ?: Resources.getSystem().displayMetrics.heightPixels.toFloat()
 
     private fun sheetOffset(): Float = try {
         sheet?.requireOffset() ?: Float.NaN
