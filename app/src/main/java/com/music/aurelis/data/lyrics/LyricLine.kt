@@ -1,9 +1,6 @@
-// Ported from BitChord. © 2026 Kushagra Singh (BitChord/Aurelis). GPL-3.0-or-later.
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.data.lyrics
 
-/**
- * One word of a line, with the stretch of the song it is sung over.
- */
 data class LyricWord(
     val startMs: Long,
     val endMs: Long,
@@ -51,9 +48,6 @@ data class LyricWord(
     }
 }
 
-/**
- * One separately timed piece of a [LyricWord].
- */
 data class LyricSyllable(
     val startMs: Long,
     val endMs: Long,
@@ -80,9 +74,6 @@ data class LyricSyllable(
 
 enum class LyricAlignment { Start, End }
 
-/**
- * One synced line.
- */
 data class LyricLine(
     val timeMs: Long,
     val text: String,
@@ -92,7 +83,6 @@ data class LyricLine(
     val alignment: LyricAlignment = LyricAlignment.Start,
     val timingSource: LyricLine? = null,
 ) {
-    /** Backwards-compat alias used by older callers. */
     val timestampMs: Long get() = timeMs
 
     val isGap: Boolean get() = text.isEmpty()
