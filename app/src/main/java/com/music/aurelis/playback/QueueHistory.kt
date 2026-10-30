@@ -1,9 +1,8 @@
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.playback
 
-/** Number of completed queue entries retained behind the current song. */
 internal const val MAX_QUEUE_HISTORY = 25
 
-/** How many entries at the head of the live queue are older than its history window. */
 internal fun queueHistoryTrimCount(currentIndex: Int): Int =
     (currentIndex - MAX_QUEUE_HISTORY).coerceAtLeast(0)
 
