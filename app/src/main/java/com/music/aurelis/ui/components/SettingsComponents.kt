@@ -39,12 +39,7 @@ fun SettingsGroup(
             text = header.uppercase(Locale.ROOT),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(
-                start = GROUP_INSET + 4.dp,
-                end = GROUP_INSET,
-                top = 26.dp,
-                bottom = 8.dp,
-            ),
+            modifier = Modifier.padding(start = GROUP_INSET + 4.dp, end = GROUP_INSET, top = 26.dp, bottom = 8.dp),
         )
     } else {
         Spacer(Modifier.height(topSpacing))
@@ -63,11 +58,7 @@ fun SettingsGroup(
             text = footer,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(
-                start = GROUP_INSET + 4.dp,
-                end = GROUP_INSET + 4.dp,
-                top = 8.dp,
-            ),
+            modifier = Modifier.padding(start = GROUP_INSET + 4.dp, end = GROUP_INSET + 4.dp, top = 8.dp),
         )
     }
 }
