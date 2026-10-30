@@ -1,12 +1,11 @@
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.playback
 
-import android.util.Log
 import androidx.media3.common.C
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.BaseAudioProcessor
 import androidx.media3.common.util.UnstableApi
 import com.music.aurelis.playback.audio.AudioBlock
-import com.music.aurelis.playback.audio.FloatAudioProcessor
 import com.music.aurelis.playback.audio.PcmBoundary
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -22,13 +21,10 @@ import kotlin.math.tan
 class EqualizerProcessor : BaseAudioProcessor() {
 
     private class Tuning(val curve: EqCurve, val balance: Float) {
-        companion object {
-            val OFF = Tuning(EqCurve.FLAT, 0f)
-        }
+        companion object { val OFF = Tuning(EqCurve.FLAT, 0f) }
     }
 
-    @Volatile
-    private var target: Tuning = Tuning.OFF
+    @Volatile private var target: Tuning = Tuning.OFF
 
     private var channelCount = 0
     private var sampleRate = 0
@@ -61,22 +57,15 @@ class EqualizerProcessor : BaseAudioProcessor() {
         target = if (enabled) Tuning(curve, balance.coerceIn(-1f, 1f)) else Tuning.OFF
     }
 
-    val isEnabled: Boolean
-        get() = target !== Tuning.OFF
+    val isEnabled: Boolean get() = target !== Tuning.OFF
 
     fun configure(sampleRate: Int, channelCount: Int) {
         this.sampleRate = sampleRate
         this.channelCount = channelCount
         val requiredSize = channelCount * EqLayout.SLOTS * 2
-        if (state.size != requiredSize) {
-            state = FloatArray(requiredSize)
-        }
-        if (channelGain.size != channelCount) {
-            channelGain = FloatArray(channelCount) { 1f }
-        }
-        if (frame.size != channelCount) {
-            frame = FloatArray(channelCount)
-        }
+        if (state.size != requiredSize) state = FloatArray(requiredSize)
+        if (channelGain.size != channelCount) channelGain = FloatArray(channelCount) { 1f }
+        if (frame.size != channelCount) frame = FloatArray(channelCount)
         running.fill(false)
         limiter.configure(sampleRate)
         snapToTarget()
@@ -85,12 +74,8 @@ class EqualizerProcessor : BaseAudioProcessor() {
     fun process(block: AudioBlock) {
         val frameCount = block.frameCount
         if (frameCount == 0 || channelCount < 1 || sampleRate <= 0) return
-
         val tuning = target
-        if (isFlat(tuning) && isSettled(tuning)) {
-            isShaping = false
-            return
-        }
+        if (isFlat(tuning) && isSettled(tuning)) { isShaping = false; return }
         isShaping = true
 
         var remaining = frameCount
@@ -105,9 +90,7 @@ class EqualizerProcessor : BaseAudioProcessor() {
                 val baseIdx = (frameOffset + f) * channelCount
                 for (channel in 0 until channelCount) {
                     var sample = block.samples[baseIdx + channel]
-                    for (index in 0 until active) {
-                        sample = section(activeSlots[index], channel, sample)
-                    }
+                    for (index in 0 until active) sample = section(activeSlots[index], channel, sample)
                     block.samples[baseIdx + channel] = sample * channelGain[channel]
                 }
             }
@@ -173,9 +156,7 @@ class EqualizerProcessor : BaseAudioProcessor() {
                 var peak = 0f
                 for (channel in 0 until channelCount) {
                     var sample = inputBuffer.short.toFloat() * invScale
-                    for (index in 0 until active) {
-                        sample = section(activeSlots[index], channel, sample)
-                    }
+                    for (index in 0 until active) sample = section(activeSlots[index], channel, sample)
                     sample *= channelGain[channel]
                     frame[channel] = sample
                     if (abs(sample) > peak) peak = abs(sample)
@@ -208,8 +189,7 @@ class EqualizerProcessor : BaseAudioProcessor() {
         currentBalance = linearGlide(currentBalance, tuning.balance)
     }
 
-    private fun linearGlide(current: Float, target: Float): Float =
-        current + (target - current) * GLIDE_RATE
+    private fun linearGlide(current: Float, target: Float): Float = current + (target - current) * GLIDE_RATE
 
     private fun geometricGlide(current: Float, target: Float): Float {
         val from = ln(current.coerceAtLeast(MIN_Q))
