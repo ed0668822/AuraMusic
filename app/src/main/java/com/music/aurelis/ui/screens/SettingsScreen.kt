@@ -1,3 +1,4 @@
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.ui.screens
 
 import android.content.Intent
@@ -11,14 +12,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -88,7 +87,6 @@ fun SettingsScreen(
             .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
     ) {
-        // Top Bar
         Row(
             modifier = Modifier.fillMaxWidth().padding(top = 40.dp, start = 8.dp, end = 8.dp, bottom = 16.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -105,7 +103,6 @@ fun SettingsScreen(
             )
         }
 
-        // --- Perfil ---
         SettingsGroup(topSpacing = 0.dp) {
             Row(
                 modifier = Modifier.fillMaxWidth().clickable { photoPicker.launch(arrayOf("image/*")) }.padding(16.dp),
@@ -136,7 +133,6 @@ fun SettingsScreen(
             )
         }
 
-        // --- Audio ---
         SettingsGroup(header = "Audio Quality") {
             SettingsRow(
                 icon = Icons.Rounded.Speaker,
@@ -167,7 +163,6 @@ fun SettingsScreen(
             )
         }
 
-        // --- Playback ---
         SettingsGroup(header = "Playback") {
             SettingsRow(
                 icon = Icons.Rounded.Autorenew,
@@ -192,7 +187,6 @@ fun SettingsScreen(
             )
         }
 
-        // --- Apariencia ---
         SettingsGroup(header = "Appearance") {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("Theme", style = MaterialTheme.typography.bodyLarge)
@@ -247,7 +241,6 @@ fun SettingsScreen(
             )
         }
 
-        // --- Letras ---
         SettingsGroup(header = "Lyrics") {
             SettingsRow(
                 icon = Icons.Rounded.Lyrics,
@@ -278,15 +271,7 @@ fun SettingsScreen(
             )
         }
 
-        // --- Local Music ---
         SettingsGroup(header = "Local Music") {
-            SettingsRow(
-                icon = Icons.Rounded.Folder,
-                title = "Local music folder",
-                subtitle = "Music/Aurelis",
-                onClick = { }
-            )
-            RowDivider()
             SettingsRow(
                 icon = Icons.Rounded.FilterAlt,
                 title = "Filter non-music audio",
@@ -302,7 +287,6 @@ fun SettingsScreen(
             )
         }
 
-        // --- Acerca de ---
         SettingsGroup(header = "About") {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
