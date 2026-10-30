@@ -1,3 +1,4 @@
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.playback
 
 import androidx.media3.common.C
@@ -12,8 +13,7 @@ import kotlin.math.roundToInt
 @UnstableApi
 class SpatialAudioProcessor : BaseAudioProcessor() {
 
-    @Volatile
-    var enabled: Boolean = false
+    @Volatile var enabled: Boolean = false
 
     private val widthGain = 2.5f
     private val outputGain = 0.82f
@@ -40,9 +40,7 @@ class SpatialAudioProcessor : BaseAudioProcessor() {
             lowpassRight = 0f
             return
         }
-        val delaySamples = (sampleRate * DELAY_MS / 1000f)
-            .roundToInt()
-            .coerceAtLeast(1)
+        val delaySamples = (sampleRate * DELAY_MS / 1000f).roundToInt().coerceAtLeast(1)
         if (delayLeft.size != delaySamples) {
             delayLeft = FloatArray(delaySamples)
             delayRight = FloatArray(delaySamples)
@@ -53,7 +51,6 @@ class SpatialAudioProcessor : BaseAudioProcessor() {
     fun process(block: AudioBlock) {
         if (!enabled || block.frameCount == 0) return
         if (block.channelCount != 2) return
-
         val delaySize = delayLeft.size
         if (delaySize == 0) return
 
@@ -124,21 +121,13 @@ class SpatialAudioProcessor : BaseAudioProcessor() {
         if (frameCount == 0) return
         val outputBuffer = replaceOutputBuffer(frameCount * BYTES_PER_FRAME)
 
-        if (!enabled) {
-            outputBuffer.put(inputBuffer)
-            outputBuffer.flip()
-            return
-        }
+        if (!enabled) { outputBuffer.put(inputBuffer); outputBuffer.flip(); return }
 
         inputBuffer.order(ByteOrder.nativeOrder())
         outputBuffer.order(ByteOrder.nativeOrder())
 
         val delaySize = delayLeft.size
-        if (delaySize == 0) {
-            outputBuffer.put(inputBuffer)
-            outputBuffer.flip()
-            return
-        }
+        if (delaySize == 0) { outputBuffer.put(inputBuffer); outputBuffer.flip(); return }
 
         var dIdx = delayIndex
         var lpL = lowpassLeft
@@ -148,30 +137,25 @@ class SpatialAudioProcessor : BaseAudioProcessor() {
         repeat(frameCount) {
             val left = inputBuffer.short.toFloat() * invScale
             val right = inputBuffer.short.toFloat() * invScale
-
             val mid = (left + right) * 0.5f
             val side = (left - right) * 0.5f * widthGain
             var widenedLeft = mid + side
             var widenedRight = mid - side
-
             val delayedRight = delayRight[dIdx]
             val delayedLeft = delayLeft[dIdx]
             lpL += lowpassCoeff * (delayedRight - lpL)
             lpR += lowpassCoeff * (delayedLeft - lpR)
             widenedLeft += lpL * crossfeedGain
             widenedRight += lpR * crossfeedGain
-
             delayLeft[dIdx] = left
             delayRight[dIdx] = right
             dIdx = (dIdx + 1) % delaySize
-
             outputBuffer.putShort(PcmBoundary.clamp16FromFloat(widenedLeft * outputGain))
             outputBuffer.putShort(PcmBoundary.clamp16FromFloat(widenedRight * outputGain))
         }
         delayIndex = dIdx
         lowpassLeft = lpL
         lowpassRight = lpR
-
         outputBuffer.flip()
     }
 
