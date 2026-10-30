@@ -1,3 +1,4 @@
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.ui.player
 
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -6,12 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyItemScope
-import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -52,7 +48,6 @@ import com.music.aurelis.R
 import com.music.aurelis.data.SettingsRepository
 import com.music.aurelis.data.model.LocalSong
 import com.music.aurelis.data.model.QueueTier
-import com.music.aurelis.playback.autoplaySectionStart
 import com.music.aurelis.ui.components.ExplicitSongTitle
 import com.music.aurelis.ui.components.thumbnailBorder
 import kotlin.math.abs
@@ -98,11 +93,11 @@ internal class QueueTracks(
 internal fun splitQueue(queue: List<LocalSong>, currentIndex: Int, showHistory: Boolean = false): QueueTracks {
     if (currentIndex !in queue.indices) return QueueTracks.EMPTY
     val seen = HashMap<String, Int>()
-    val occurrence = IntArray(queue.size) { i -> val id = queue[i].videoId; seen.getOrDefault(id, 0).also { seen[id] = it + 1 } }
+    val occurrence = IntArray(queue.size) { i -> val id = queue[i].id; seen.getOrDefault(id, 0).also { seen[id] = it + 1 } }
     val usedKeys = HashSet<String>()
     fun track(index: Int, prefix: String): QueueTrack {
         val song = queue[index]
-        val base = prefix + "_" + (song.queueEntryId ?: "${song.videoId}#${occurrence[index]}")
+        val base = prefix + "_" + (song.queueEntryId ?: "${song.id}#${occurrence[index]}")
         var key = base
         var repeat = 1
         while (!usedKeys.add(key)) key = base + "~" + repeat++
@@ -151,10 +146,7 @@ internal fun InlineQueue(
     val nowPlaying = tracks.nowPlaying
     
     val contextSong = tracks.context.firstOrNull()?.song
-    val contextTitle = contextSong?.playbackSource?.takeIf { it.isNotBlank() }
-        ?: contextSong?.albumName?.takeIf { it.isNotBlank() }
-        ?: nowPlaying?.song?.playbackSource?.takeIf { it.isNotBlank() }
-        ?: nowPlaying?.song?.albumName?.takeIf { it.isNotBlank() }
+    val contextTitle = contextSong?.albumName?.takeIf { it.isNotBlank() }
 
     var hasScrolledOnce by remember { mutableStateOf(false) }
     LaunchedEffect(currentIndex, nowPlaying?.key, showHistory) {
