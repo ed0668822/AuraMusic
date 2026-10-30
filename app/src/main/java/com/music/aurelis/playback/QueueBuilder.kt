@@ -1,3 +1,4 @@
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.playback
 
 import com.music.aurelis.data.model.LocalSong
@@ -12,14 +13,11 @@ object QueueBuilder {
         val perArtist = mutableMapOf<String, Int>()
         val seedArtists = existing.lastOrNull()?.artist?.let(::artistSet).orEmpty()
         val out = mutableListOf<LocalSong>()
-
-        val songsOnly = candidates.filterNot { false } // Local songs are never "video"
+        val songsOnly = candidates.filterNot { false }
         val ordered = songsOnly.ifEmpty { candidates }
-
         for (candidate in ordered) {
             if (out.size >= limit) break
             if (taken.any { isSameRecording(it, candidate) }) continue
-
             val artists = artistSet(candidate.artist)
             val key = artists.minOrNull()
             if (key != null) {
@@ -28,7 +26,6 @@ object QueueBuilder {
                 if (played >= cap) continue
                 perArtist[key] = played + 1
             }
-
             taken += candidate
             out += candidate
         }
