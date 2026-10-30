@@ -1,3 +1,4 @@
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.ui.player
 
 import android.view.Window
@@ -13,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.WindowInfo
+import com.music.aurelis.ui.components.MiniPlayerPull
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -21,17 +23,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.math.abs
 
-interface MiniPlayerPull {
-    fun drag(delta: Float)
-    fun release(velocity: Float)
-}
-
 private const val SLIDE_STIFFNESS = 195f
 private const val SLIDE_SETTLED_PX = 0.5f
 private const val SHEET_VELOCITY_FRESH_MS = 80f
 private const val LAYOUT_WAIT_MS = 300L
 private const val WINDOW_ENTER_MS = 600L
-private const val DEFAULT_TRAVEL_PX = 2400f
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Stable
@@ -41,36 +37,27 @@ class PlayerSheetMotion(
     private val shown: () -> Boolean,
     private val setShown: (Boolean) -> Unit,
 ) : MiniPlayerPull {
-
     var held by mutableFloatStateOf(Float.NaN)
         private set
 
     val holding: Boolean get() = !held.isNaN()
-
     var sheet: SheetState? = null
-
     private var window: Window? = null
     private var windowAnimations = 0
     private var windowRestore: Job? = null
-
     private var pullStartNanos = 0L
     private var pullStartAt = 0f
-
     private var sheetSampleAt = Float.NaN
     private var sheetSampleNanos = 0L
     private var sheetVelocity = 0f
 
     var laidOut by mutableStateOf(false)
-
     var windowInfo: WindowInfo? = null
-
     var flingVelocity = 0f
-
     private var settle: Job? = null
-
     private var closing = false
 
-    private fun travel(): Float = dock.sheetTravel.takeIf { it > 0f } ?: DEFAULT_TRAVEL_PX
+    private fun travel(): Float = dock.sheetTravel.takeIf { it > 0f } ?: (windowInfo?.containerSize?.height ?: 0).toFloat()
 
     private fun sheetOffset(): Float = try {
         sheet?.requireOffset() ?: Float.NaN
