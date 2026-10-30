@@ -1,7 +1,4 @@
-/*
- * The glass rendering itself is Kyant0/backdrop (Apache-2.0), vendored at
- * [com.music.aurelis.ui.components.backdrop].
- */
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.ui.components
 
 import android.os.Build
@@ -11,7 +8,6 @@ import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
@@ -28,18 +24,14 @@ import com.music.aurelis.ui.components.backdrop.effects.lens
 import com.music.aurelis.ui.components.backdrop.highlight.Highlight
 import com.music.aurelis.ui.components.backdrop.highlight.HighlightElement
 import com.music.aurelis.ui.components.backdrop.internal.ShapeProvider
-// ✅ CORREGIDO: Importación explícita de Shadow
 import com.music.aurelis.ui.components.backdrop.shadow.Shadow
 
-/** Whether the liquid glass nav bar is turned on. */
 val LocalLiquidGlassEnabled = staticCompositionLocalOf { true }
-
-/** The backdrop content (app UI) that a liquid glass surface samples from. */
 val LocalAppBackdrop = staticCompositionLocalOf<Backdrop> { error("No AppBackdrop provided") }
-
 internal val LocalGlassExport = compositionLocalOf<LayerBackdrop?> { null }
 
-fun isGlassSupported(sdkInt: Int = Build.VERSION.SDK_INT): Boolean = sdkInt >= Build.VERSION_CODES.S
+fun isGlassSupported(sdkInt: Int = Build.VERSION.SDK_INT): Boolean =
+    sdkInt >= Build.VERSION_CODES.S
 
 private const val VIBRANCY = 1f
 private const val BLUR_RADIUS_DP = 8f
@@ -92,9 +84,7 @@ fun Modifier.lightweightLiquidGlass(
                     shapeProvider = shapeProvider,
                     highlight = { Highlight.Default },
                 )
-            } else {
-                Modifier
-            },
+            } else Modifier,
         )
         .border(GLASS_EDGE_WIDTH, GLASS_EDGE_COLOR, shape)
 }
@@ -117,12 +107,6 @@ fun Modifier.liquidGlass(
     surfaceTint: Color? = null,
 ): Modifier {
     if (!isGlassSupported()) return this
-    // Hardcoded a false for now, since AppSettings isn't fully ported yet.
-    val reduceDynamicBlur = false
-    if (reduceDynamicBlur) {
-        return background(MaterialTheme.colorScheme.surface, shape)
-            .border(GLASS_EDGE_WIDTH, GLASS_EDGE_COLOR, shape)
-    }
     val backdrop = LocalAppBackdrop.current
     val exportedBackdrop = LocalGlassExport.current
     val density = LocalDensity.current
@@ -140,7 +124,6 @@ fun Modifier.liquidGlass(
         backdrop = backdrop,
         shape = { shape },
         effects = {
-            // colorControls(saturation = 1f + 0.5f * VIBRANCY)
             blur(blurPx)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 lens(
@@ -153,9 +136,7 @@ fun Modifier.liquidGlass(
         },
         highlight = { Highlight.Default },
         shadow = { Shadow.Default },
-        onDrawSurface = {
-            drawRect(color = surfaceTintColor, size = size)
-        },
+        onDrawSurface = { drawRect(color = surfaceTintColor, size = size) },
         exportedBackdrop = exportedBackdrop,
         backdropScale = GLASS_RESOLUTION_SCALE,
     )
