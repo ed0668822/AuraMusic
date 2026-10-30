@@ -1,26 +1,16 @@
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.ui.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -34,17 +24,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.music.aurelis.R
+import com.music.aurelis.data.model.LocalAlbum
+import com.music.aurelis.data.model.LocalArtist
 import com.music.aurelis.data.model.LocalSong
-import com.music.aurelis.ui.components.PAGE_GUTTER
-import com.music.aurelis.ui.components.PlayingAccent
-import com.music.aurelis.ui.components.RowMoreButton
-import com.music.aurelis.ui.components.SearchPlayingBars
-import com.music.aurelis.ui.components.SHELF_CARD_WIDTH
-import com.music.aurelis.ui.components.ShelfRow
-import com.music.aurelis.ui.components.contextClick
-import com.music.aurelis.ui.components.longPressMenuClickable
-import com.music.aurelis.ui.components.thumbnailBorder
-import com.music.aurelis.ui.components.trackColumnWidth
+import com.music.aurelis.ui.components.*
+import com.music.aurelis.ui.components.home.*
 import com.music.aurelis.ui.icons.AurelisIcons
 
 private val HOME_TITLE_LIFT = 28.dp
@@ -55,9 +39,13 @@ fun HomeScreen(
     recentlyPlayed: List<LocalSong>,
     mostPlayed: List<LocalSong>,
     recentlyAdded: List<LocalSong>,
+    albums: List<LocalAlbum>,
+    artists: List<LocalArtist>,
     listState: LazyListState,
     onSongClick: (LocalSong) -> Unit,
     onSongLongPress: (LocalSong) -> Unit,
+    onAlbumClick: (LocalAlbum) -> Unit,
+    onArtistClick: (LocalArtist) -> Unit,
     currentSong: LocalSong?,
     isPlaying: Boolean,
     modifier: Modifier = Modifier,
@@ -73,44 +61,81 @@ fun HomeScreen(
     ) {
         item { HomeTitle(stringResource(R.string.home)) }
 
+        if (recentlyAdded.isNotEmpty()) {
+            item(key = "hero") {
+                HomeHero(
+                    song = recentlyAdded.firstOrNull(),
+                    onPlayClick = {
+                        recentlyAdded.firstOrNull()?.let { onSongClick(it) }
+                    },
+                    modifier = Modifier.padding(horizontal = PAGE_GUTTER, vertical = 8.dp),
+                )
+            }
+        }
+
         if (recentlyPlayed.isNotEmpty()) {
             item(key = "recents") {
-                RecentShelf(
+                SongCarousel(
                     title = stringResource(R.string.recently_played),
                     songs = recentlyPlayed,
-                    onSongClick = onSongClick,
-                    onSongLongPress = onSongLongPress,
-                    currentSong = currentSong,
+                    currentSongId = currentSong?.id,
                     isPlaying = isPlaying,
+                    onSongClick = { index ->
+                        recentlyPlayed.getOrNull(index)?.let { onSongClick(it) }
+                    },
                 )
             }
         }
 
         if (mostPlayed.isNotEmpty()) {
             item(key = "most-played") {
-                SongShelf(
+                SongCarousel(
                     title = stringResource(R.string.most_played),
                     songs = mostPlayed,
-                    onSongClick = onSongClick,
-                    onSongLongPress = onSongLongPress,
-                    currentSong = currentSong,
+                    currentSongId = currentSong?.id,
                     isPlaying = isPlaying,
+                    onSongClick = { index ->
+                        mostPlayed.getOrNull(index)?.let { onSongClick(it) }
+                    },
+                )
+            }
+        }
+
+        if (albums.isNotEmpty()) {
+            item(key = "albums") {
+                AlbumCarousel(
+                    title = stringResource(R.string.albums),
+                    albums = albums,
+                    onAlbumClick = onAlbumClick,
+                )
+            }
+        }
+
+        if (artists.isNotEmpty()) {
+            item(key = "artists") {
+                ArtistCarousel(
+                    title = stringResource(R.string.artists),
+                    artists = artists,
+                    onArtistClick = onArtistClick,
                 )
             }
         }
 
         if (recentlyAdded.isNotEmpty()) {
             item(key = "recently-added") {
-                SongShelf(
+                SongCarousel(
                     title = stringResource(R.string.recently_added),
                     songs = recentlyAdded,
-                    onSongClick = onSongClick,
-                    onSongLongPress = onSongLongPress,
-                    currentSong = currentSong,
+                    currentSongId = currentSong?.id,
                     isPlaying = isPlaying,
+                    onSongClick = { index ->
+                        recentlyAdded.getOrNull(index)?.let { onSongClick(it) }
+                    },
                 )
             }
         }
+
+        item { Spacer(Modifier.height(100.dp)) }
     }
 }
 
@@ -121,218 +146,12 @@ private fun HomeTitle(title: String, modifier: Modifier = Modifier) {
             imageVector = AurelisIcons.Home,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier
-                .padding(bottom = 14.dp)
-                .size(30.dp),
+            modifier = Modifier.padding(bottom = 14.dp).size(30.dp),
         )
         Text(
             text = title,
             style = MaterialTheme.typography.displayLarge,
             color = MaterialTheme.colorScheme.onBackground,
         )
-    }
-}
-
-@Composable
-private fun RecentShelf(
-    title: String,
-    songs: List<LocalSong>,
-    onSongClick: (LocalSong) -> Unit,
-    onSongLongPress: (LocalSong) -> Unit,
-    currentSong: LocalSong?,
-    isPlaying: Boolean,
-) {
-    Column(Modifier.padding(bottom = 26.dp)) {
-        SectionHeader(title)
-        BoxWithConstraints {
-            val columnWidth = trackColumnWidth(maxWidth)
-            ShelfRow(
-                contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                items(songs.chunked(RECENT_TRACKS_PER_COLUMN)) { column ->
-                    Column(Modifier.width(columnWidth)) {
-                        column.forEach { song ->
-                            CompactTrackRow(
-                                song = song,
-                                onClick = { onSongClick(song) },
-                                onLongPress = { onSongLongPress(song) },
-                                isCurrent = currentSong?.id == song.id,
-                                isPlaying = currentSong?.id == song.id && isPlaying,
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun SongShelf(
-    title: String,
-    songs: List<LocalSong>,
-    onSongClick: (LocalSong) -> Unit,
-    onSongLongPress: (LocalSong) -> Unit,
-    currentSong: LocalSong?,
-    isPlaying: Boolean,
-) {
-    Column(Modifier.padding(bottom = 26.dp)) {
-        SectionHeader(title)
-        ShelfRow(
-            contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
-            items(songs) { song ->
-                SongCard(
-                    song = song,
-                    onClick = { onSongClick(song) },
-                    onLongPress = { onSongLongPress(song) },
-                    isCurrent = currentSong?.id == song.id,
-                    isPlaying = currentSong?.id == song.id && isPlaying,
-                )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun CompactTrackRow(
-    song: LocalSong,
-    onClick: () -> Unit,
-    onLongPress: (() -> Unit)?,
-    isCurrent: Boolean = false,
-    isPlaying: Boolean = false,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .longPressMenuClickable(onClick = onClick, onLongClick = onLongPress)
-            .contextClick(onLongPress)
-            .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(Modifier.size(48.dp)) {
-            AsyncImage(
-                model = song.artworkUri,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(7.dp))
-                    .thumbnailBorder(RoundedCornerShape(7.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-            )
-            if (isCurrent && isPlaying) SearchPlayingBars(Modifier.align(Alignment.Center))
-        }
-        Spacer(Modifier.width(12.dp))
-        Column(Modifier.weight(1f)) {
-            Text(
-                text = song.title,
-                style = MaterialTheme.typography.titleMedium,
-                color = if (isCurrent) PlayingAccent else MaterialTheme.colorScheme.onBackground,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = song.artist,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-        if (onLongPress != null) {
-            RowMoreButton(onClick = onLongPress)
-        }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun SongCard(
-    song: LocalSong,
-    onClick: () -> Unit,
-    onLongPress: (() -> Unit)? = null,
-    modifier: Modifier = Modifier.width(SHELF_CARD_WIDTH),
-    isCurrent: Boolean = false,
-    isPlaying: Boolean = false,
-) {
-    Column(
-        modifier = modifier
-            .longPressMenuClickable(onClick = onClick, onLongClick = onLongPress)
-            .contextClick(onLongPress),
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(1f)
-                .clip(RoundedCornerShape(12.dp))
-                .thumbnailBorder(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant),
-        ) {
-            AsyncImage(
-                model = song.artworkUri,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
-            )
-            if (isCurrent && isPlaying) SearchPlayingBars(Modifier.align(Alignment.Center))
-        }
-        Spacer(Modifier.height(10.dp))
-        Text(
-            text = song.title,
-            style = MaterialTheme.typography.titleMedium,
-            color = if (isCurrent) PlayingAccent else MaterialTheme.colorScheme.onBackground,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Text(
-            text = song.artist,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-    }
-}
-
-@Composable
-internal fun SectionHeader(title: String, subtitle: String = "", onShowAll: (() -> Unit)? = null) {
-    Row(
-        modifier = Modifier
-            .padding(horizontal = PAGE_GUTTER, vertical = 10.dp)
-            .fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-            if (subtitle.isNotBlank()) {
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        }
-        if (onShowAll != null) {
-            Text(
-                text = stringResource(R.string.show_all),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .clickable(onClick = onShowAll)
-                    .padding(start = 12.dp, top = 4.dp, bottom = 4.dp),
-            )
-        }
     }
 }
