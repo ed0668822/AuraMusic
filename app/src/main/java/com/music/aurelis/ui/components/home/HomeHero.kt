@@ -1,14 +1,9 @@
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.ui.components.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -31,10 +26,9 @@ import coil3.compose.AsyncImage
 import com.music.aurelis.data.model.LocalSong
 
 /**
- * Hero card del Home: la canción más reciente con su artwork difuminado
- * de fondo, gradiente oscuro y botón de play circular.
- *
- * Estilo BitChord: 200dp de alto, corners de 24dp, tipografía bold.
+ * Tarjeta principal del Home: la canción más reciente con su artwork
+ * difuminado de fondo, gradiente oscuro para legibilidad y botón de
+ * reproducción circular. Estilo BitChord: 200dp de alto, corner 24dp.
  */
 @Composable
 fun HomeHero(
@@ -51,19 +45,15 @@ fun HomeHero(
             .clip(shape)
             .background(MaterialTheme.colorScheme.surfaceVariant),
     ) {
-        // Artwork de fondo difuminado
         if (song?.artworkUri != null) {
             AsyncImage(
                 model = song.artworkUri,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .blur(48.dp),
+                modifier = Modifier.fillMaxSize().blur(48.dp),
             )
         }
 
-        // Gradiente oscuro para legibilidad
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -77,7 +67,6 @@ fun HomeHero(
                 ),
         )
 
-        // Textos
         Column(
             modifier = Modifier
                 .align(Alignment.BottomStart)
@@ -109,7 +98,6 @@ fun HomeHero(
             )
         }
 
-        // Botón play circular
         Box(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
