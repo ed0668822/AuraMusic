@@ -1,15 +1,8 @@
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -40,16 +33,6 @@ import java.util.concurrent.TimeUnit
 
 private val INFO_BODY_MAX_HEIGHT = 360.dp
 
-// Note: ALERT_WIDTH, ALERT_CORNER and ACTION_HEIGHT used to live here as
-// private top-level vals, but they collided with identically named constants
-// declared elsewhere in this package. They're now inlined at each use site so
-// SongInfoDialog is self-contained and can't conflict with anything else.
-
-/**
- * Diálogo de información de canción local.
- * Muestra metadatos de MediaStore: álbum, artista, año, duración, tamaño, ruta.
- * Estilo visual idéntico al UIAlertController de BitChord.
- */
 @Composable
 internal fun SongInfoDialog(song: LocalSong, onDismiss: () -> Unit) {
     val onSurface = MaterialTheme.colorScheme.onSurface
@@ -62,9 +45,7 @@ internal fun SongInfoDialog(song: LocalSong, onDismiss: () -> Unit) {
                 .background(MaterialTheme.colorScheme.surface),
         ) {
             Column(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 19.dp),
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 19.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
@@ -96,11 +77,7 @@ internal fun SongInfoDialog(song: LocalSong, onDismiss: () -> Unit) {
 
             HorizontalDivider(thickness = 0.5.dp, color = onSurface.copy(alpha = 0.12f))
 
-            Column(
-                Modifier
-                    .heightIn(max = INFO_BODY_MAX_HEIGHT)
-                    .verticalScroll(rememberScrollState()),
-            ) {
+            Column(Modifier.heightIn(max = INFO_BODY_MAX_HEIGHT).verticalScroll(rememberScrollState())) {
                 val durationFormatted = formatDuration(song.durationMs)
                 val sizeFormatted = formatFileSize(song.sizeBytes)
 
@@ -150,10 +127,7 @@ internal fun SongInfoDialog(song: LocalSong, onDismiss: () -> Unit) {
 private fun SongInfoRow(label: String, value: String?) {
     val onSurface = MaterialTheme.colorScheme.onSurface
     Row(
-        Modifier
-            .fillMaxWidth()
-            .heightIn(min = 48.dp)
-            .padding(horizontal = 16.dp, vertical = 10.dp),
+        Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -175,16 +149,11 @@ private fun SongInfoRow(label: String, value: String?) {
     }
 }
 
-/**
- * Página de Song Info dentro del sheet tintado (navegación interna).
- */
 @Composable
 internal fun SongInfoPage(song: LocalSong, palette: ArtworkPalette, onBack: () -> Unit) {
     Column(Modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 8.dp, end = 22.dp, bottom = 8.dp),
+            modifier = Modifier.fillMaxWidth().padding(start = 8.dp, end = 22.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(onClick = onBack) {
@@ -232,9 +201,7 @@ internal fun SongInfoPage(song: LocalSong, palette: ArtworkPalette, onBack: () -
 @Composable
 private fun SongInfoPageRow(label: String, value: String, palette: ArtworkPalette) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 22.dp, vertical = 15.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 15.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
