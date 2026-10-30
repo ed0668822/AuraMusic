@@ -1,25 +1,11 @@
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyGridState
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -32,9 +18,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.music.aurelis.R
-import com.music.aurelis.ui.components.LIBRARY_GRID_SPACING
-import com.music.aurelis.ui.components.PAGE_GUTTER
-import com.music.aurelis.ui.components.libraryGrid
+import com.music.aurelis.ui.components.*
 import com.music.aurelis.ui.icons.AurelisIcons
 
 data class LibraryLink(val title: String, val icon: ImageVector, val onClick: () -> Unit)
@@ -50,7 +34,7 @@ fun LibraryScreen(
 ) {
     LazyColumn(
         state = listState,
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         contentPadding = contentPadding,
     ) {
         if (showTitle) {
@@ -111,5 +95,67 @@ private fun LibraryLinkList(links: List<LibraryLink>) {
                 )
             }
         }
+    }
+}
+
+@Composable
+fun LibraryGridPage(
+    shelf: com.music.aurelis.data.model.LocalAlbum,
+    gridState: LazyGridState,
+    onAlbumClick: (com.music.aurelis.data.model.LocalAlbum) -> Unit,
+    contentPadding: PaddingValues,
+    modifier: Modifier = Modifier,
+) {
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(140.dp),
+        state = gridState,
+        contentPadding = contentPadding,
+        horizontalArrangement = Arrangement.spacedBy(LIBRARY_GRID_SPACING),
+        verticalArrangement = Arrangement.spacedBy(20.dp),
+        modifier = modifier.fillMaxSize().padding(horizontal = PAGE_GUTTER),
+    ) {
+        items(1, key = { shelf.key }) {
+            AlbumGridCard(album = shelf, onClick = { onAlbumClick(shelf) })
+        }
+    }
+}
+
+@Composable
+private fun AlbumGridCard(
+    album: com.music.aurelis.data.model.LocalAlbum,
+    onClick: () -> Unit,
+) {
+    Column(Modifier.clickable(onClick = onClick)) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant),
+        ) {
+            if (album.artworkUri != null) {
+                coil3.compose.AsyncImage(
+                    model = album.artworkUri,
+                    contentDescription = null,
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+        Text(
+            text = album.name,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(top = 10.dp),
+        )
+        Text(
+            text = album.artist,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
