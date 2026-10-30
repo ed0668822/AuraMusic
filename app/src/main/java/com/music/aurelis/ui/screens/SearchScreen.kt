@@ -1,19 +1,9 @@
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -26,9 +16,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,14 +29,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.music.aurelis.R
 import com.music.aurelis.data.model.LocalSong
-import com.music.aurelis.ui.components.MessageState
-import com.music.aurelis.ui.components.PAGE_GUTTER
-import com.music.aurelis.ui.components.PlayingAccent
-import com.music.aurelis.ui.components.ROW_DIVIDER_INSET
-import com.music.aurelis.ui.components.SearchField
-import com.music.aurelis.ui.components.SongRow
-import com.music.aurelis.ui.components.songListSkeleton
-import com.music.aurelis.ui.components.contextClick
+import com.music.aurelis.data.model.SortOption
+import com.music.aurelis.ui.components.*
 
 @Composable
 fun SearchScreen(
@@ -60,15 +42,15 @@ fun SearchScreen(
     onFocusHandled: () -> Unit,
     onSongClick: (List<LocalSong>, Int) -> Unit,
     onSongLongPress: (LocalSong) -> Unit,
-    onSongSwipe: (LocalSong) -> Unit,
     history: List<String>,
     onSubmit: () -> Unit,
-    onSuggestionClick: (String) -> Unit,
     onHistoryClick: (String) -> Unit,
     onHistoryRemove: (String) -> Unit,
     onHistoryClear: () -> Unit,
     currentSong: LocalSong?,
     isPlaying: Boolean,
+    filter: SortOption = SortOption.TITLE_ASC,
+    onFilterChange: (SortOption) -> Unit = {},
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues,
     topPadding: Dp,
@@ -92,9 +74,33 @@ fun SearchScreen(
                 onQueryChange = onQueryChange,
                 onSubmit = onSubmit,
                 focusRequester = focusRequester,
-                placeholder = stringResource(R.string.search_hint),
+                placeholder = "Buscar canciones, artistas, álbumes…",
                 modifier = Modifier.padding(start = PAGE_GUTTER, end = PAGE_GUTTER, bottom = 4.dp),
             )
+            if (results != null) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = PAGE_GUTTER, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    SearchFilterChip(
+                        label = "Título",
+                        selected = filter == SortOption.TITLE_ASC,
+                        onClick = { onFilterChange(SortOption.TITLE_ASC) },
+                    )
+                    SearchFilterChip(
+                        label = "Artista",
+                        selected = filter == SortOption.ARTIST_ASC,
+                        onClick = { onFilterChange(SortOption.ARTIST_ASC) },
+                    )
+                    SearchFilterChip(
+                        label = "Álbum",
+                        selected = filter == SortOption.ALBUM_ASC,
+                        onClick = { onFilterChange(SortOption.ALBUM_ASC) },
+                    )
+                }
+            }
         }
 
         LazyColumn(
@@ -105,7 +111,7 @@ fun SearchScreen(
             when {
                 results == null && query.isEmpty() -> {
                     if (history.isEmpty()) {
-                        item { MessageState(stringResource(R.string.search_empty)) }
+                        item { MessageState("Busca tu música local") }
                     } else {
                         recentSearches(
                             history = history,
@@ -115,23 +121,16 @@ fun SearchScreen(
                         )
                     }
                 }
-                results == null -> {
-                    item { MessageState(stringResource(R.string.search_library_empty)) }
-                }
-                results.isEmpty() -> {
-                    item {
-                        MessageState(
-                            stringResource(R.string.search_library_no_results, query),
-                        )
-                    }
+                results == null -> item { MessageState("Escribe para buscar") }
+                results.isEmpty() -> item {
+                    MessageState("No hay resultados para \"$query\"")
                 }
                 else -> {
-                    itemsIndexed(results, key = { index, song -> "local_${song.id}_$index" }) { index, song ->
+                    itemsIndexed(results, key = { index, song -> "${song.id}_$index" }) { index, song ->
                         SongRow(
                             song = song,
                             onClick = { onSongClick(results, index) },
                             onLongPress = { onSongLongPress(song) },
-                            onSwipeToQueue = { onSongSwipe(song) },
                             isCurrent = currentSong?.id == song.id,
                             isPlaying = isPlaying && currentSong?.id == song.id,
                             searchPlayingStyle = true,
@@ -151,6 +150,27 @@ fun SearchScreen(
     }
 }
 
+@Composable
+private fun SearchFilterChip(label: String, selected: Boolean, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(percent = 50))
+            .background(
+                if (selected) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.surfaceVariant
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 6.dp),
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = if (selected) MaterialTheme.colorScheme.onPrimary
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
 private fun androidx.compose.foundation.lazy.LazyListScope.recentSearches(
     history: List<String>,
     onClick: (String) -> Unit,
@@ -159,19 +179,17 @@ private fun androidx.compose.foundation.lazy.LazyListScope.recentSearches(
 ) {
     item(key = "recent:header") {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = PAGE_GUTTER, vertical = 10.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = PAGE_GUTTER, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = stringResource(R.string.recent_searches),
+                text = "Búsquedas recientes",
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.weight(1f),
             )
             Text(
-                text = stringResource(R.string.clear),
+                text = "Borrar",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
@@ -183,8 +201,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.recentSearches(
     }
     itemsIndexed(history, key = { _, term -> "recent:$term" }) { _, term ->
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
                 .clickable { onClick(term) }
                 .padding(start = PAGE_GUTTER, end = 8.dp, top = 6.dp, bottom = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -205,10 +222,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.recentSearches(
                 modifier = Modifier.weight(1f),
             )
             Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .clickable { onRemove(term) },
+                modifier = Modifier.size(40.dp).clip(CircleShape).clickable { onRemove(term) },
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
