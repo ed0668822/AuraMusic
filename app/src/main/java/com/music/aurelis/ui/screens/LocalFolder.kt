@@ -27,7 +27,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -98,11 +97,7 @@ internal fun LazyListScope.localFolderItems(
 ) {
     item(key = "folder-tabs") {
         SegmentedControl(
-            options = listOf(
-                stringResource(R.string.songs),
-                stringResource(R.string.artists),
-                stringResource(R.string.albums),
-            ),
+            options = listOf("Canciones", "Artistas", "Álbumes"),
             selectedIndex = state.tab.ordinal,
             onSelect = { state.tab = LocalFolderTab.entries[it] },
             modifier = Modifier.padding(start = PAGE_GUTTER, end = PAGE_GUTTER, bottom = 14.dp),
@@ -116,13 +111,9 @@ internal fun LazyListScope.localFolderItems(
     if (empty) {
         item(key = "folder-empty") {
             MessageState(
-                if (query.isNotBlank()) {
-                    stringResource(R.string.nothing_matches, query)
-                } else if (state.tab == LocalFolderTab.ALBUMS) {
-                    stringResource(R.string.no_local_albums)
-                } else {
-                    stringResource(R.string.no_tracks_here)
-                },
+                if (query.isNotBlank()) "No hay coincidencias para '$query'"
+                else if (state.tab == LocalFolderTab.ALBUMS) "No hay álbumes locales"
+                else "No hay canciones aquí"
             )
         }
         return
@@ -222,7 +213,7 @@ private fun ArtistRow(
         Spacer(Modifier.width(16.dp))
         GroupLabels(
             title = group.title,
-            subtitle = pluralStringResource(R.plurals.song_count_plural, group.songs.size, group.songs.size),
+            subtitle = "${group.songs.size} canciones",
             palette = palette,
             modifier = Modifier.weight(1f),
         )
@@ -237,11 +228,10 @@ private fun ArtistRow(
 
 @Composable
 private fun LocalGroup.albumSubtitle(): String {
-    val count = pluralStringResource(R.plurals.song_count_plural, songs.size, songs.size)
     return when {
-        type == LocalBrowseType.PLAYLIST -> "${stringResource(R.string.playlist)} · $count"
-        subtitle.isNotBlank() && subtitle != title -> "$subtitle · $count"
-        else -> count
+        type == LocalBrowseType.PLAYLIST -> "Playlist · ${songs.size} canciones"
+        subtitle.isNotBlank() && subtitle != title -> "$subtitle · ${songs.size} canciones"
+        else -> "${songs.size} canciones"
     }
 }
 
