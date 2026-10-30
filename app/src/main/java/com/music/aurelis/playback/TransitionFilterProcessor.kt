@@ -1,6 +1,6 @@
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.playback
 
-import android.util.Log
 import androidx.media3.common.C
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.BaseAudioProcessor
@@ -84,11 +84,7 @@ class TransitionFilterProcessor : BaseAudioProcessor() {
         echoEngaged = true
     }
 
-    fun parkEcho() {
-        echoEngaged = false
-        echoTargetSend = 0f
-        echoTargetDry = 1f
-    }
+    fun parkEcho() { echoEngaged = false; echoTargetSend = 0f; echoTargetDry = 1f }
 
     fun configure(sampleRate: Int, channelCount: Int) {
         this.sampleRate = sampleRate
@@ -123,10 +119,7 @@ class TransitionFilterProcessor : BaseAudioProcessor() {
         val targetHigh = targetHighPassHz
         val parked = targetLow >= OPEN_HZ && targetHigh <= OFF_HZ &&
             currentLowPassHz >= OPEN_HZ - SETTLED_HZ && currentHighPassHz <= OFF_HZ + SETTLED_HZ
-        if (parked) {
-            clearStateIfNeeded()
-            return
-        }
+        if (parked) { clearStateIfNeeded(); return }
         filterStateDirty = true
 
         var remaining = frameCount
@@ -192,12 +185,7 @@ class TransitionFilterProcessor : BaseAudioProcessor() {
         val targetHigh = targetHighPassHz
         val parked = targetLow >= OPEN_HZ && targetHigh <= OFF_HZ &&
             currentLowPassHz >= OPEN_HZ - SETTLED_HZ && currentHighPassHz <= OFF_HZ + SETTLED_HZ
-        if (parked) {
-            clearStateIfNeeded()
-            outputBuffer.put(inputBuffer)
-            outputBuffer.flip()
-            return
-        }
+        if (parked) { clearStateIfNeeded(); outputBuffer.put(inputBuffer); outputBuffer.flip(); return }
         filterStateDirty = true
 
         inputBuffer.order(ByteOrder.nativeOrder())
@@ -252,9 +240,7 @@ class TransitionFilterProcessor : BaseAudioProcessor() {
                 val base = f * channels
                 for (c in 0 until channels) samples[base + c] *= dry
             }
-            echoSend = targetSend
-            echoDry = targetDry
-            return
+            echoSend = targetSend; echoDry = targetDry; return
         }
         val lowCoefficient = echoLowCoefficient
         val highCoefficient = echoHighCoefficient
@@ -285,10 +271,7 @@ class TransitionFilterProcessor : BaseAudioProcessor() {
 
     private fun startEcho() {
         echoSeenGeneration = echoGeneration
-        pendingEchoRing?.let {
-            echoRing = it
-            pendingEchoRing = null
-        }
+        pendingEchoRing?.let { echoRing = it; pendingEchoRing = null }
         val channels = channelCount.coerceAtLeast(1)
         echoDelayFrames = (echoSeconds * sampleRate).toInt().coerceIn(0, echoRing.size / channels)
         echoRing.fill(0f, 0, echoDelayFrames * channels)
@@ -305,8 +288,7 @@ class TransitionFilterProcessor : BaseAudioProcessor() {
         return exp(from + (to - from) * GLIDE_RATE)
     }
 
-    private fun usableCutoff(hz: Float): Float =
-        hz.coerceIn(MIN_HZ, sampleRate * MAX_CUTOFF_FRACTION)
+    private fun usableCutoff(hz: Float): Float = hz.coerceIn(MIN_HZ, sampleRate * MAX_CUTOFF_FRACTION)
 
     private fun updateLowCoefficients() {
         if (sampleRate <= 0) return
