@@ -1,4 +1,4 @@
-// Aurelis stubs. GPL-3.0-or-later.
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.data.lyrics
 
 import kotlinx.serialization.json.JsonArray
@@ -73,7 +73,6 @@ object ProviderLyrics {
     )
 }
 
-/** QQ/QRC and NetEase YRC: millisecond line and word ranges. */
 object KaraokeLrc {
     private val LINE = Regex("""^\[(\d{1,8}),(\d{1,8})](.*)$""")
     private val PREFIX_WORD = Regex("""\((\d{1,8}),(\d{1,8})(?:,\d{1,8})?\)([^()]*)""")
