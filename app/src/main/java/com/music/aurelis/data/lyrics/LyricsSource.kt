@@ -1,9 +1,6 @@
-// Ported from BitChord. © 2026 Kushagra Singh (BitChord/Aurelis). GPL-3.0-or-later.
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.data.lyrics
 
-/**
- * The databases [LyricsRepository] can ask, in the order it asks them.
- */
 enum class LyricsSource(
     val label: String,
     val detail: String,
