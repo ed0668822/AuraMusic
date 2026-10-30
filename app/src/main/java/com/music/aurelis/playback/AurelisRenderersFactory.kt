@@ -19,7 +19,7 @@ import java.util.ArrayList
 @UnstableApi
 class AurelisRenderersFactory(
     private val appContext: Context,
-    private val dspChain: DspChain
+    private val dspChain: DspChain,
 ) : DefaultRenderersFactory(appContext) {
 
     override fun buildAudioRenderers(
@@ -27,30 +27,27 @@ class AurelisRenderersFactory(
         extensionRendererMode: Int,
         mediaCodecSelector: MediaCodecSelector,
         enableDecoderFallback: Boolean,
-        audioSink: AudioSink, // 👈 CORREGIDO: eliminado el '?' porque Media3 1.5.1 espera un tipo no-nullable
+        audioSink: AudioSink,
         eventHandler: Handler,
         eventListener: AudioRendererEventListener,
-        out: ArrayList<Renderer>
+        out: ArrayList<Renderer>,
     ) {
         val dspProcessor = DspChainAudioProcessor(dspChain)
-        
-        // Construimos el AudioSink personalizado con el DSP integrado
+
         val customAudioSink = DefaultAudioSink.Builder(context)
             .setAudioProcessors(arrayOf(dspProcessor))
             .setEnableFloatOutput(true)
             .build()
 
-        // 1. FFmpeg para formatos exóticos (DSD, AC3, etc.)
         out.add(FfmpegAudioRenderer(eventHandler, eventListener, customAudioSink))
 
-        // 2. Decodificador estándar (AAC, MP3, FLAC, etc.)
         out.add(MediaCodecAudioRenderer(
-            context, 
-            mediaCodecSelector, 
-            enableDecoderFallback, 
-            eventHandler, 
-            eventListener, 
-            customAudioSink
+            context,
+            mediaCodecSelector,
+            enableDecoderFallback,
+            eventHandler,
+            eventListener,
+            customAudioSink,
         ))
     }
 }
