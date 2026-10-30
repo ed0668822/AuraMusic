@@ -1,3 +1,4 @@
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.playback
 
 import com.music.aurelis.playback.audio.AudioBlock
@@ -6,18 +7,10 @@ import kotlin.math.exp
 
 class LoudnessProcessor {
 
-    @Volatile
-    var gainFor: (String) -> Float = { 1f }
-
-    @Volatile
-    var mediaId: String? = null
-
-    @Volatile
-    var nextMediaId: String? = null
-
-    @Volatile
-    private var trimTarget = 1f
-
+    @Volatile var gainFor: (String) -> Float = { 1f }
+    @Volatile var mediaId: String? = null
+    @Volatile var nextMediaId: String? = null
+    @Volatile private var trimTarget = 1f
     var holdLimiter = false
 
     private var sampleRate = 0
@@ -27,18 +20,14 @@ class LoudnessProcessor {
     private var reduction = 1f
     private var glideCoef = 1f
     private var releaseCoef = 1f
-
-    @Volatile
-    private var snap = true
+    @Volatile private var snap = true
 
     fun track(mediaId: String?, nextMediaId: String?) {
         this.mediaId = mediaId
         this.nextMediaId = nextMediaId
     }
 
-    fun setBlendTrim(value: Float) {
-        trimTarget = value.coerceIn(MIN_TRIM, 1f)
-    }
+    fun setBlendTrim(value: Float) { trimTarget = value.coerceIn(MIN_TRIM, 1f) }
 
     fun onStreamBoundary() {
         nextMediaId?.let { mediaId = it }
@@ -53,17 +42,9 @@ class LoudnessProcessor {
         snap = true
     }
 
-    fun flush() {
-        reduction = 1f
-        snap = true
-    }
+    fun flush() { reduction = 1f; snap = true }
 
-    fun reset() {
-        sampleRate = 0
-        channelCount = 0
-        reduction = 1f
-        snap = true
-    }
+    fun reset() { sampleRate = 0; channelCount = 0; reduction = 1f; snap = true }
 
     fun process(block: AudioBlock) {
         val frames = block.frameCount
@@ -72,19 +53,12 @@ class LoudnessProcessor {
 
         val targetGain = targetGain()
         val targetTrim = trimTarget
-        if (snap) {
-            currentGain = targetGain
-            currentTrim = targetTrim
-            snap = false
-        }
-        
+        if (snap) { currentGain = targetGain; currentTrim = targetTrim; snap = false }
+
         if (!holdLimiter && targetGain == 1f && targetTrim >= 1f &&
             abs(currentGain - 1f) < SETTLED && currentTrim >= 1f - SETTLED && reduction >= PARK_REDUCTION
         ) {
-            currentGain = 1f
-            currentTrim = 1f
-            reduction = 1f
-            return
+            currentGain = 1f; currentTrim = 1f; reduction = 1f; return
         }
 
         val samples = block.samples
@@ -105,9 +79,7 @@ class LoudnessProcessor {
             val wanted = if (peak > LIMIT) LIMIT / peak else 1f
             gr = if (wanted < gr) wanted else gr + (wanted - gr) * releaseCoef
             val applied = scale * gr
-            for (channel in 0 until channels) {
-                samples[index + channel] *= applied
-            }
+            for (channel in 0 until channels) samples[index + channel] *= applied
             index += channels
         }
         currentGain = gain
@@ -115,7 +87,8 @@ class LoudnessProcessor {
         reduction = gr
     }
 
-    private fun targetGain(): Float = mediaId?.let { runCatching { gainFor(it) }.getOrNull() } ?: 1f
+    private fun targetGain(): Float =
+        mediaId?.let { runCatching { gainFor(it) }.getOrNull() } ?: 1f
 
     private fun coefficient(seconds: Double, rate: Int): Float =
         if (rate <= 0) 1f else (1.0 - exp(-1.0 / (seconds * rate))).toFloat()
