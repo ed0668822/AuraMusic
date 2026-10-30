@@ -30,11 +30,7 @@ class AurelisPlaybackService : MediaSessionService() {
         dspChain = chain
 
         val renderersFactory = AurelisRenderersFactory(this, chain)
-
-        val mediaSourceFactory = DefaultMediaSourceFactory(
-            DefaultDataSource.Factory(this),
-            DsdExtractorsFactory(),
-        )
+        val mediaSourceFactory = DefaultMediaSourceFactory(DefaultDataSource.Factory(this), DsdExtractorsFactory())
 
         val player = ExoPlayer.Builder(this, renderersFactory)
             .setAudioAttributes(
@@ -42,7 +38,7 @@ class AurelisPlaybackService : MediaSessionService() {
                     .setUsage(C.USAGE_MEDIA)
                     .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
                     .build(),
-                /* handleAudioFocus = */ true,
+                true,
             )
             .setHandleAudioBecomingNoisy(true)
             .setWakeMode(C.WAKE_MODE_LOCAL)
@@ -94,10 +90,7 @@ class AurelisPlaybackService : MediaSessionService() {
     }
 
     override fun onDestroy() {
-        mediaSession?.run {
-            player.release()
-            release()
-        }
+        mediaSession?.run { player.release(); release() }
         mediaSession = null
         dspChain = null
         super.onDestroy()
