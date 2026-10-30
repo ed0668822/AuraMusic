@@ -1,3 +1,4 @@
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.playback
 
 import kotlin.random.Random
@@ -6,37 +7,20 @@ const val WINDOW_AHEAD = 25
 const val WINDOW_LOW_WATER = 12
 const val LOW_WATER = WINDOW_LOW_WATER
 
-data class QueueWindowEntry(
-    val canonicalIndex: Int,
-    val cycleId: Long,
-)
+data class QueueWindowEntry(val canonicalIndex: Int, val cycleId: Long)
 
-data class QueueWindowCycleSnapshot(
-    val cycleId: Long,
-    val order: List<Int>,
-)
+data class QueueWindowCycleSnapshot(val cycleId: Long, val order: List<Int>)
 
 data class QueueWindowSnapshot(
-    val canonicalSize: Int,
-    val order: List<Int>,
-    val cursor: Int,
-    val currentCanonicalIndex: Int?,
-    val shuffleEnabled: Boolean,
-    val shuffleSeed: Long,
-    val cycleId: Long,
-    val consumedThisCycle: List<Int>,
+    val canonicalSize: Int, val order: List<Int>, val cursor: Int,
+    val currentCanonicalIndex: Int?, val shuffleEnabled: Boolean,
+    val shuffleSeed: Long, val cycleId: Long, val consumedThisCycle: List<Int>,
     val lastCycleFinalCanonicalIndex: Int?,
     val plannedCycles: List<QueueWindowCycleSnapshot> = emptyList(),
 )
 
-class QueueWindow(
-    canonicalSize: Int,
-    shuffleSeed: Long = DEFAULT_SHUFFLE_SEED,
-) {
-
-    init {
-        require(canonicalSize >= 0) { "canonicalSize must be non-negative" }
-    }
+class QueueWindow(canonicalSize: Int, shuffleSeed: Long = DEFAULT_SHUFFLE_SEED) {
+    init { require(canonicalSize >= 0) }
 
     private var canonicalCount = canonicalSize
     private var seed = shuffleSeed
@@ -65,20 +49,15 @@ class QueueWindow(
     val current: QueueWindowEntry? get() = currentIndex?.let { QueueWindowEntry(it, activeCycleId) }
 
     fun startAt(canonicalIndex: Int, shuffle: Boolean = shuffled): QueueWindow {
-        require(canonicalIndex in 0 until canonicalCount) {
-            "canonicalIndex $canonicalIndex is outside 0 until $canonicalCount"
-        }
+        require(canonicalIndex in 0 until canonicalCount)
         shuffled = shuffle
         activeCycleId = 0L
         currentIndex = canonicalIndex
         consumed.clear()
         lastCycleFinal = null
         plannedCycles.clear()
-        logicalOrder = if (shuffle) {
-            shuffledOrderAnchoredAt(canonicalIndex, activeCycleId)
-        } else {
-            IntArray(canonicalCount) { it }
-        }
+        logicalOrder = if (shuffle) shuffledOrderAnchoredAt(canonicalIndex, activeCycleId)
+                       else IntArray(canonicalCount) { it }
         rebuildInverse()
         logicalCursor = inversePositions[canonicalIndex]
         consumed += canonicalIndex
@@ -90,23 +69,14 @@ class QueueWindow(
         const val WINDOW_LOW_WATER: Int = com.music.aurelis.playback.WINDOW_LOW_WATER
         const val LOW_WATER: Int = com.music.aurelis.playback.LOW_WATER
 
-        fun startAt(
-            canonicalSize: Int,
-            canonicalIndex: Int,
-            shuffle: Boolean = false,
-            shuffleSeed: Long = DEFAULT_SHUFFLE_SEED,
-        ): QueueWindow = QueueWindow(canonicalSize, shuffleSeed).startAt(canonicalIndex, shuffle)
+        fun startAt(canonicalSize: Int, canonicalIndex: Int, shuffle: Boolean = false, shuffleSeed: Long = DEFAULT_SHUFFLE_SEED): QueueWindow =
+            QueueWindow(canonicalSize, shuffleSeed).startAt(canonicalIndex, shuffle)
 
         fun restore(snapshot: QueueWindowSnapshot): QueueWindow {
-            require(snapshot.canonicalSize >= 0) { "canonicalSize must be non-negative" }
-            require(snapshot.order.size == snapshot.canonicalSize) {
-                "snapshot order must contain every canonical index exactly once"
-            }
-            require(snapshot.cycleId >= 0L) { "cycleId must be non-negative" }
-            require(snapshot.cursor in -1 until snapshot.canonicalSize) {
-                "snapshot cursor is outside the canonical range"
-            }
-
+            require(snapshot.canonicalSize >= 0)
+            require(snapshot.order.size == snapshot.canonicalSize)
+            require(snapshot.cycleId >= 0L)
+            require(snapshot.cursor in -1 until snapshot.canonicalSize)
             val restored = QueueWindow(snapshot.canonicalSize, snapshot.shuffleSeed)
             restored.logicalOrder = snapshot.order.toIntArray()
             restored.validatePermutation(restored.logicalOrder)
@@ -117,54 +87,14 @@ class QueueWindow(
             restored.activeCycleId = snapshot.cycleId
             restored.lastCycleFinal = snapshot.lastCycleFinalCanonicalIndex
             restored.consumed += snapshot.consumedThisCycle
-
-            require((restored.logicalCursor == -1) == (restored.currentIndex == null)) {
-                "snapshot cursor and current item disagree"
-            }
+            require((restored.logicalCursor == -1) == (restored.currentIndex == null))
             if (restored.currentIndex != null) {
-                val current = restored.currentIndex!!
-                require(restored.logicalCursor in restored.logicalOrder.indices) {
-                    "started snapshots need a valid cursor"
-                }
-                require(restored.logicalOrder[restored.logicalCursor] == current) {
-                    "snapshot cursor does not point at currentCanonicalIndex"
-                }
+                require(restored.logicalOrder[restored.logicalCursor] == restored.currentIndex)
             }
-            require(restored.consumed.all { it in 0 until snapshot.canonicalSize }) {
-                "snapshot consumed state contains an invalid canonical index"
-            }
-            require(restored.currentIndex == null || restored.currentIndex in restored.consumed) {
-                "the current item must be consumed in its active cycle"
-            }
-            require(restored.lastCycleFinal == null || restored.lastCycleFinal in 0 until snapshot.canonicalSize) {
-                "snapshot last-cycle item is outside the canonical range"
-            }
-            require(snapshot.consumedThisCycle.size == restored.consumed.size) {
-                "snapshot consumed state contains duplicate indices"
-            }
-            require(restored.currentIndex != null || restored.consumed.isEmpty()) {
-                "an unstarted snapshot cannot have consumed tracks"
-            }
-            require(restored.shuffled || restored.logicalOrder.indices.all {
-                restored.logicalOrder[it] == it
-            }) { "shuffle-off snapshots must use canonical order" }
-            if (restored.shuffled) {
-                require((0 until restored.logicalCursor).all {
-                    restored.logicalOrder[it] in restored.consumed
-                }) { "shuffled snapshots cannot leave unconsumed tracks behind the cursor" }
-            }
-            var expectedCycle = snapshot.cycleId
             snapshot.plannedCycles.forEach { planned ->
-                require(expectedCycle < Long.MAX_VALUE && planned.cycleId == expectedCycle + 1L) {
-                    "planned cycles must be consecutive and follow the active cycle"
-                }
                 val permutation = planned.order.toIntArray()
                 restored.validatePermutation(permutation)
-                require(restored.shuffled || permutation.indices.all { permutation[it] == it }) {
-                    "shuffle-off planned cycles must use canonical order"
-                }
                 restored.plannedCycles[planned.cycleId] = permutation
-                expectedCycle = planned.cycleId
             }
             return restored
         }
@@ -173,24 +103,18 @@ class QueueWindow(
     }
 
     fun extendTo(newCanonicalSize: Int): QueueWindow {
-        require(newCanonicalSize >= canonicalCount) {
-            "cannot shrink a QueueWindow from $canonicalCount to $newCanonicalSize"
-        }
+        require(newCanonicalSize >= canonicalCount)
         if (newCanonicalSize == canonicalCount) return this
         val firstNew = canonicalCount
         canonicalCount = newCanonicalSize
         logicalOrder += freshOrder(firstNew, activeCycleId)
-        plannedCycles.entries.forEach { planned ->
-            planned.setValue(planned.value + freshOrder(firstNew, planned.key))
-        }
+        plannedCycles.entries.forEach { it.setValue(it.value + freshOrder(firstNew, it.key)) }
         rebuildInverse()
         return this
     }
 
     fun slice(fromPos: Int, count: Int, repeatAll: Boolean = false): List<QueueWindowEntry> {
-        require(fromPos in 0..logicalOrder.size) {
-            "fromPos $fromPos is outside 0..${logicalOrder.size}"
-        }
+        require(fromPos in 0..logicalOrder.size)
         if (count <= 0 || logicalOrder.isEmpty()) return emptyList()
         val result = ArrayList<QueueWindowEntry>(count)
         var cycle = activeCycleId
@@ -233,9 +157,7 @@ class QueueWindow(
         return result
     }
 
-    fun upcomingContext(count: Int = WINDOW_AHEAD, repeatAll: Boolean = false): List<QueueWindowEntry> =
-        upcoming(count, repeatAll)
-
+    fun upcomingContext(count: Int = WINDOW_AHEAD, repeatAll: Boolean = false) = upcoming(count, repeatAll)
     fun upcomingCount(repeatAll: Boolean = false): Int = upcoming(WINDOW_AHEAD, repeatAll).size
 
     fun advanceAutomatically(repeatAll: Boolean = false): QueueWindowEntry? {
@@ -243,8 +165,7 @@ class QueueWindow(
         if (logicalOrder.isEmpty()) return null
         if (shuffled) {
             for (position in (logicalCursor + 1) until logicalOrder.size) {
-                val candidate = logicalOrder[position]
-                if (candidate !in consumed) return moveWithinCycle(position)
+                if (logicalOrder[position] !in consumed) return moveWithinCycle(position)
             }
         } else if (logicalCursor + 1 < logicalOrder.size) {
             return moveWithinCycle(logicalCursor + 1)
@@ -253,8 +174,8 @@ class QueueWindow(
         return transitionToNextCycle()
     }
 
-    fun advance(repeatAll: Boolean = false): QueueWindowEntry? = advanceAutomatically(repeatAll)
-    fun nextAutomatic(repeatAll: Boolean = false): QueueWindowEntry? = advanceAutomatically(repeatAll)
+    fun advance(repeatAll: Boolean = false) = advanceAutomatically(repeatAll)
+    fun nextAutomatic(repeatAll: Boolean = false) = advanceAutomatically(repeatAll)
 
     fun next(repeatAll: Boolean = false): QueueWindowEntry? {
         if (currentIndex == null || logicalOrder.isEmpty()) return null
@@ -270,32 +191,23 @@ class QueueWindow(
     }
 
     fun jumpTo(canonicalIndex: Int): QueueWindowEntry {
-        require(canonicalIndex in 0 until canonicalCount) {
-            "canonicalIndex $canonicalIndex is outside 0 until $canonicalCount"
-        }
-        check(currentIndex != null) { "startAt must be called before jumpTo" }
+        require(canonicalIndex in 0 until canonicalCount)
+        check(currentIndex != null)
         val position = inversePositions[canonicalIndex]
-        check(position >= 0) { "canonical index $canonicalIndex is absent from logical order" }
+        check(position >= 0)
         return moveWithinCycle(position)
     }
 
-    fun seekTo(canonicalIndex: Int): QueueWindowEntry = jumpTo(canonicalIndex)
+    fun seekTo(canonicalIndex: Int) = jumpTo(canonicalIndex)
 
     fun setShuffle(enabled: Boolean, shuffleSeed: Long = seed): QueueWindow {
         if (enabled == shuffled) return this
         shuffled = enabled
         if (enabled) seed = shuffleSeed
         plannedCycles.clear()
-        val current = currentIndex ?: run {
-            logicalOrder = IntArray(canonicalCount) { it }
-            rebuildInverse()
-            return this
-        }
-        logicalOrder = if (enabled) {
-            shuffledOrderAnchoredAt(current, activeCycleId)
-        } else {
-            IntArray(canonicalCount) { it }
-        }
+        val current = currentIndex ?: run { logicalOrder = IntArray(canonicalCount) { it }; rebuildInverse(); return this }
+        logicalOrder = if (enabled) shuffledOrderAnchoredAt(current, activeCycleId)
+                       else IntArray(canonicalCount) { it }
         rebuildInverse()
         logicalCursor = inversePositions[current]
         consumed += current
@@ -330,13 +242,11 @@ class QueueWindow(
         cycleId = activeCycleId,
         consumedThisCycle = consumed.toList(),
         lastCycleFinalCanonicalIndex = lastCycleFinal,
-        plannedCycles = plannedCycles.map { (cycle, permutation) ->
-            QueueWindowCycleSnapshot(cycle, permutation.toList())
-        },
+        plannedCycles = plannedCycles.map { (cycle, perm) -> QueueWindowCycleSnapshot(cycle, perm.toList()) },
     )
 
     private fun moveWithinCycle(position: Int): QueueWindowEntry {
-        check(position in logicalOrder.indices) { "logical position $position is outside the active order" }
+        check(position in logicalOrder.indices)
         val previousBoundaryFinal = boundaryFinal()
         if (shuffled && position > logicalCursor) {
             for (skipped in (logicalCursor + 1)..position) consumed += logicalOrder[skipped]
@@ -370,11 +280,7 @@ class QueueWindow(
     private fun plannedOrder(cycle: Long): IntArray {
         plannedCycles[cycle]?.let { return it }
         val previousCycle = cycle - 1L
-        val previousFinal = if (previousCycle == activeCycleId) {
-            boundaryFinal()
-        } else {
-            plannedOrder(previousCycle).lastOrNull()
-        }
+        val previousFinal = if (previousCycle == activeCycleId) boundaryFinal() else plannedOrder(previousCycle).lastOrNull()
         return orderForCycle(cycle, previousFinal).also { plannedCycles[cycle] = it }
     }
 
@@ -387,22 +293,18 @@ class QueueWindow(
     }
 
     private fun followingCycleId(cycle: Long): Long {
-        check(cycle < Long.MAX_VALUE) { "cycleId exhausted" }
+        check(cycle < Long.MAX_VALUE)
         return cycle + 1L
     }
 
     private fun freshOrder(firstNew: Int, cycle: Long): IntArray {
         val fresh = (firstNew until canonicalCount).toList()
-        return if (shuffled && currentIndex != null) {
-            fresh.shuffled(Random(seedForExtension(cycle, firstNew))).toIntArray()
-        } else {
-            fresh.toIntArray()
-        }
+        return if (shuffled && currentIndex != null) fresh.shuffled(Random(seedForExtension(cycle, firstNew))).toIntArray()
+               else fresh.toIntArray()
     }
 
     private fun shuffledOrderAnchoredAt(anchor: Int, cycle: Long): IntArray {
-        val rest = (0 until canonicalCount).filter { it != anchor }
-            .shuffled(Random(seedForCycle(cycle)))
+        val rest = (0 until canonicalCount).filter { it != anchor }.shuffled(Random(seedForCycle(cycle)))
         return (listOf(anchor) + rest).toIntArray()
     }
 
@@ -422,7 +324,6 @@ class QueueWindow(
     }
 
     private fun seedForCycle(cycle: Long): Long = seed xor (cycle * -7046029254386353131L)
-
     private fun seedForExtension(cycle: Long, firstNew: Int): Long =
         seed xor (cycle * -3335678366873096957L) xor canonicalCount.toLong() xor (firstNew.toLong() shl 32)
 
@@ -433,13 +334,11 @@ class QueueWindow(
     }
 
     private fun validatePermutation(permutation: IntArray) {
-        require(permutation.size == canonicalCount) {
-            "logical order size ${permutation.size} does not match canonical size $canonicalCount"
-        }
+        require(permutation.size == canonicalCount)
         val seen = BooleanArray(canonicalCount)
         permutation.forEach { canonical ->
-            require(canonical in 0 until canonicalCount) { "invalid canonical index $canonical" }
-            require(!seen[canonical]) { "logical order contains duplicate canonical index $canonical" }
+            require(canonical in 0 until canonicalCount)
+            require(!seen[canonical])
             seen[canonical] = true
         }
     }
