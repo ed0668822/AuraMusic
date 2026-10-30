@@ -1,3 +1,4 @@
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.ui.components
 
 import androidx.compose.animation.core.LinearEasing
@@ -5,19 +6,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
@@ -36,19 +25,15 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 private const val SHIMMER_PERIOD_MS = 1400
-
 private val BlockShape = RoundedCornerShape(6.dp)
 private val LineShape = RoundedCornerShape(4.dp)
-
 private val TitleWidths = listOf(0.68f, 0.46f, 0.58f, 0.74f, 0.52f)
 private val SubtitleWidths = listOf(0.34f, 0.44f, 0.27f, 0.38f, 0.31f)
 
 @Composable
 fun ShimmerBox(modifier: Modifier = Modifier, shape: Shape = BlockShape) {
     val base = MaterialTheme.colorScheme.surfaceVariant
-    val highlight = MaterialTheme.colorScheme.onSurfaceVariant
-        .copy(alpha = 0.16f)
-        .compositeOver(base)
+    val highlight = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.16f).compositeOver(base)
     val sweep = rememberInfiniteTransition(label = "skeleton").animateFloat(
         initialValue = 0f,
         targetValue = 1f,
@@ -73,14 +58,11 @@ fun ShimmerBox(modifier: Modifier = Modifier, shape: Shape = BlockShape) {
 
 @Composable
 private fun SkeletonLine(fraction: Float, height: Dp, modifier: Modifier = Modifier) {
-    ShimmerBox(
-        modifier = modifier.fillMaxWidth(fraction).height(height),
-        shape = LineShape,
-    )
+    ShimmerBox(modifier = modifier.fillMaxWidth(fraction).height(height), shape = LineShape)
 }
 
 @Composable
-private fun SectionHeaderSkeleton(index: Int = 0) {
+fun SectionHeaderSkeleton(index: Int = 0) {
     Column(Modifier.padding(horizontal = PAGE_GUTTER, vertical = 10.dp)) {
         SkeletonLine(fraction = TitleWidths[index % TitleWidths.size] * 0.7f, height = 18.dp)
     }
@@ -89,9 +71,7 @@ private fun SectionHeaderSkeleton(index: Int = 0) {
 @Composable
 fun SongRowSkeleton(index: Int = 0, circular: Boolean = false, modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = PAGE_GUTTER, vertical = 8.dp),
+        modifier = modifier.fillMaxWidth().padding(horizontal = PAGE_GUTTER, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         ShimmerBox(Modifier.size(52.dp), if (circular) CircleShape else RoundedCornerShape(8.dp))
@@ -113,6 +93,50 @@ fun LazyListScope.songListSkeleton(
     items(count, key = { "$keyPrefix:$it" }) { index ->
         Box(Modifier.graphicsLayer { this.alpha = alpha }) {
             SongRowSkeleton(index = index, circular = circular)
+        }
+    }
+}
+
+@Composable
+private fun HeroShelfSkeleton() {
+    Column(Modifier.padding(bottom = 26.dp)) {
+        SectionHeaderSkeleton()
+        BoxWithConstraints {
+            val cardWidth = heroCardWidth(maxWidth)
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                userScrollEnabled = false,
+            ) {
+                items(2) {
+                    ShimmerBox(
+                        modifier = Modifier.width(cardWidth).aspectRatio(HERO_CARD_RATIO),
+                        shape = RoundedCornerShape(18.dp),
+                    )
+                }
+            }
+        }
+    }
+}
+
+fun LazyListScope.recentlyPlayedSkeleton() {
+    item(key = "skeleton:recently-played") {
+        Column(Modifier.padding(bottom = 26.dp)) {
+            SectionHeaderSkeleton()
+            BoxWithConstraints {
+                val columnWidth = trackColumnWidth(maxWidth)
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    userScrollEnabled = false,
+                ) {
+                    item {
+                        Column(Modifier.width(columnWidth)) {
+                            repeat(4) { CompactSongRowSkeleton(it) }
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -144,26 +168,7 @@ fun ShelfSkeleton(index: Int = 0, cardWidth: Dp = SHELF_CARD_WIDTH, cardCorner: 
 
 fun LazyListScope.feedSkeleton(shelves: Int = 3, firstIsHero: Boolean = true) {
     if (firstIsHero) {
-        item(key = "skeleton:hero") {
-            Column(Modifier.padding(bottom = 26.dp)) {
-                SectionHeaderSkeleton()
-                BoxWithConstraints {
-                    val cardWidth = heroCardWidth(maxWidth)
-                    LazyRow(
-                        contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
-                        horizontalArrangement = Arrangement.spacedBy(14.dp),
-                        userScrollEnabled = false,
-                    ) {
-                        items(2) {
-                            ShimmerBox(
-                                modifier = Modifier.width(cardWidth).aspectRatio(HERO_CARD_RATIO),
-                                shape = RoundedCornerShape(18.dp),
-                            )
-                        }
-                    }
-                }
-            }
-        }
+        item(key = "skeleton:hero") { HeroShelfSkeleton() }
         items(shelves - 1, key = { "skeleton:shelf:$it" }) { index ->
             ShelfSkeleton(index = index + 1)
         }
@@ -174,8 +179,40 @@ fun LazyListScope.feedSkeleton(shelves: Int = 3, firstIsHero: Boolean = true) {
     }
 }
 
+fun LazyListScope.feedMoreSkeleton() {
+    item(key = "skeleton:more") { ShelfSkeleton() }
+}
+
 fun LazyListScope.librarySkeleton() {
     item(key = "skeleton:library:shelf") { ShelfSkeleton() }
     item(key = "skeleton:library:header") { SectionHeaderSkeleton(index = 1) }
     songListSkeleton(count = 7, keyPrefix = "skeleton:library:song")
+}
+
+@Composable
+private fun CompactSongRowSkeleton(index: Int) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 7.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        ShimmerBox(Modifier.size(48.dp), RoundedCornerShape(7.dp))
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            SkeletonLine(fraction = TitleWidths[index % TitleWidths.size], height = 14.dp)
+            Spacer(Modifier.height(6.dp))
+            SkeletonLine(fraction = SubtitleWidths[index % SubtitleWidths.size], height = 11.dp)
+        }
+    }
+}
+
+fun LazyListScope.detailSkeleton(isArtist: Boolean) {
+    if (!isArtist) {
+        item(key = "skeleton:detail:songs") {
+            songListSkeleton(count = 8, keyPrefix = "skeleton:detail:song", alpha = 0.4f)
+        }
+    } else {
+        item(key = "skeleton:detail:top") {
+            SectionHeaderSkeleton()
+        }
+    }
 }
