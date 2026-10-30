@@ -1,4 +1,4 @@
-// Ported from BitChord. © 2026 Kushagra Singh (BitChord/Aurelis). GPL-3.0-or-later.
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.data.lyrics
 
 import com.music.aurelis.data.Http
@@ -6,13 +6,6 @@ import kotlinx.serialization.json.Json
 import okhttp3.Request
 import java.util.concurrent.TimeUnit
 
-/**
- * Shared plumbing for the lyric providers.
- *
- * They are all raced against each other by [LyricsRepository], so a provider
- * that hangs holds up the whole lookup. LYRICS_TIMEOUT_SECONDS is deliberately
- * short — a lyric that arrives after the second chorus is of no use to anyone.
- */
 private const val LYRICS_TIMEOUT_SECONDS = 6L
 
 internal const val LYRICS_AGENT = "Aurelis (https://github.com/ed0668822/AurelisMusic)"
