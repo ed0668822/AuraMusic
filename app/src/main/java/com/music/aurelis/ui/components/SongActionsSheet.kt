@@ -1,19 +1,10 @@
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.ui.components
 
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,24 +14,9 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
 import androidx.compose.material.icons.automirrored.rounded.PlaylistPlay
 import androidx.compose.material.icons.automirrored.rounded.QueueMusic
-import androidx.compose.material.icons.rounded.Album
-import androidx.compose.material.icons.rounded.Bedtime
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material.icons.rounded.PlaylistRemove
-import androidx.compose.material.icons.rounded.Tune
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.rounded.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -80,7 +56,6 @@ fun SongActionsSheet(
         SongInfoDialog(song) { showingSongInfo = false }
     }
 
-    // Convertimos el artwork de String? a Uri? para rememberArtworkPalette
     val songArtUri: Uri? = song.artworkUri?.let { runCatching { Uri.parse(it) }.getOrNull() }
 
     val palette = if (menu) {
@@ -172,9 +147,7 @@ fun SongActionsSheet(
 }
 
 enum class SongActionsPresentation { Sheet, Menu }
-
 internal enum class ActionRowStyle { Sheet, Menu }
-
 internal val LocalActionRowStyle = staticCompositionLocalOf { ActionRowStyle.Sheet }
 
 @Composable
@@ -196,12 +169,7 @@ private fun neutralMenuPalette(): ArtworkPalette {
 @Composable
 private fun GroupSeparator(palette: ArtworkPalette) {
     if (LocalActionRowStyle.current == ActionRowStyle.Menu) {
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .height(6.dp)
-                .background(palette.divider),
-        )
+        Box(Modifier.fillMaxWidth().height(6.dp).background(palette.divider))
     } else {
         HorizontalDivider(
             modifier = Modifier.padding(vertical = 6.dp),
@@ -219,11 +187,7 @@ private fun TintedSheet(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val maxHeight = LocalConfiguration.current.screenHeightDp.dp * 0.85f
-    Box(
-        modifier
-            .fillMaxWidth()
-            .clip(SHEET_SHAPE),
-    ) {
+    Box(modifier.fillMaxWidth().clip(SHEET_SHAPE)) {
         ArtworkBackdrop(
             palette = palette,
             artworkUri = artworkUri,
@@ -232,9 +196,7 @@ private fun TintedSheet(
         )
         Column(Modifier.fillMaxWidth().heightIn(max = maxHeight)) {
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp, bottom = 4.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 4.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Box(
@@ -244,12 +206,7 @@ private fun TintedSheet(
                         .background(palette.onBackground.copy(alpha = 0.35f)),
                 )
             }
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
-                content = content,
-            )
+            Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()), content = content)
         }
     }
 }
@@ -260,9 +217,7 @@ private val SHEET_SHAPE = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
 private fun SleepTimerPicker(palette: ArtworkPalette, onBack: () -> Unit) {
     Column(Modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 8.dp, end = 22.dp, bottom = 8.dp),
+            modifier = Modifier.fillMaxWidth().padding(start = 8.dp, end = 22.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(onClick = onBack) {
@@ -308,10 +263,7 @@ private fun SleepOption(
     onClick: () -> Unit,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 22.dp, vertical = 15.dp),
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 22.dp, vertical = 15.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -400,9 +352,7 @@ internal fun SheetTrackHeader(
     subtitleColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
 ) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 10.dp),
+        modifier = modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         AsyncImage(
