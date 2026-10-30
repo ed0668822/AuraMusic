@@ -1,16 +1,27 @@
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.ui.components
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -19,84 +30,128 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.music.aurelis.R
+import com.music.aurelis.data.SettingsRepository
+import com.music.aurelis.ui.theme.stableStatusBarInsets
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeChild
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 
-/**
- * Barra superior con efecto frosted-glass (blur translúcido).
- *
- * Portada de BitChord con dos mejoras premium:
- * - Haze "regular" (más denso que "ultraThin") que da el look iOS de verdad.
- * - Hairline glass edge de 0.5dp blanco translúcido, igual que la navbar.
- *
- * [scrolled] permite que el subtítulo se desvanezca sutilmente al hacer scroll,
- * dando paso al título solo. Opcional (default false), así las llamadas
- * existentes siguen compilando.
- */
+val TopBarContentHeight = 52.dp
+val TopBarContentGap = 12.dp
+
+@Composable
+fun topBarHeight(): Dp =
+    stableStatusBarInsets().asPaddingValues().calculateTopPadding() + TopBarContentHeight
+
+@Composable
+fun topBarContentPadding(): Dp = topBarHeight() + TopBarContentGap
+
 @OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable
 fun FrostedTopBar(
     title: String,
-    subtitle: String? = null,
-    hazeState: HazeState,
-    scrolled: Boolean = false,
-    onSettingsClick: () -> Unit = {},
     modifier: Modifier = Modifier,
+    scrolled: () -> Boolean = { false },
+    subtitle: String? = null,
+    transparentBackdrop: Boolean = false,
+    backButtonHazeState: HazeState? = null,
+    onBack: (() -> Unit)? = null,
+    onSettingsClick: (() -> Unit)? = null,
+    accessory: (@Composable () -> Unit)? = null,
+    actions: @Composable () -> Unit = {},
 ) {
-    val subtitleAlpha by animateFloatAsState(
-        targetValue = if (scrolled) 0f else 1f,
-        animationSpec = tween(durationMillis = 220),
-        label = "topBarSubtitleAlpha",
-    )
+    val reduceDynamicBlur by SettingsRepository.reduceDynamicBlur.collectAsStateWithLifecycle()
+    val useGlass = LocalLiquidGlassEnabled.current && isGlassSupported() && !reduceDynamicBlur
 
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .hazeChild(
-                state = hazeState,
-                style = HazeMaterials.regular(MaterialTheme.colorScheme.surface),
-            )
-            .border(
-                width = 0.5.dp,
-                color = Color.White.copy(alpha = 0.10f),
-            )
-            .statusBarsPadding()
-            .padding(horizontal = 20.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            if (subtitle != null) {
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+    Column(modifier = modifier.fillMaxWidth()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .windowInsetsPadding(stableStatusBarInsets())
+                .height(TopBarContentHeight),
+        ) {
+            // Botón de retroceso (solo en páginas que lo necesitan)
+            if (onBack != null) {
+                val shape = CircleShape
+                IconButton(
+                    onClick = onBack,
                     modifier = Modifier
-                        .padding(top = 2.dp)
-                        .alpha(subtitleAlpha),
-                )
+                        .align(Alignment.CenterStart)
+                        .padding(start = 12.dp)
+                        .size(44.dp)
+                        .clip(shape)
+                        .then(
+                            if (useGlass) {
+                                Modifier.lightweightLiquidGlass(shape, MaterialTheme.colorScheme.surface)
+                            } else Modifier
+                        ),
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(R.string.back),
+                        tint = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
             }
-        }
 
-        IconButton(onClick = onSettingsClick) {
-            Icon(
-                imageVector = Icons.Filled.Settings,
-                contentDescription = "Configuración",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(22.dp),
-            )
+            // Título centrado
+            Column(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(horizontal = if (onBack != null) 72.dp else 88.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (subtitle != null && scrolled()) {
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+
+            // Acciones (settings + accessory)
+            Row(
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(end = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (accessory != null) {
+                    Box(Modifier.weight(1f, fill = false)) { accessory() }
+                    Spacer(Modifier.width(8.dp))
+                }
+                actions()
+                if (onSettingsClick != null) {
+                    IconButton(onClick = onSettingsClick) {
+                        Icon(
+                            imageVector = Icons.Rounded.Settings,
+                            contentDescription = "Configuración",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(22.dp),
+                        )
+                    }
+                }
+            }
         }
     }
 }
