@@ -1,3 +1,4 @@
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.playback
 
 import android.os.Bundle
@@ -15,9 +16,7 @@ object QueueShuffle {
     private val _enabled = MutableStateFlow(false)
     val enabled: StateFlow<Boolean> = _enabled.asStateFlow()
 
-    fun setEnabled(enabled: Boolean) {
-        _enabled.value = enabled
-    }
+    fun setEnabled(enabled: Boolean) { _enabled.value = enabled }
 
     @Volatile private var original: List<String> = emptyList()
 
@@ -31,9 +30,7 @@ object QueueShuffle {
 
     internal var canonicalContext: List<MediaItem>
         get() = ctx?.items ?: emptyList()
-        set(value) {
-            if (value.isEmpty()) clearCanonicalContext() else setCanonicalContext(value)
-        }
+        set(value) { if (value.isEmpty()) clearCanonicalContext() else setCanonicalContext(value) }
 
     internal var isCrossfadeTransitioning: (() -> Boolean)? = null
 
@@ -50,9 +47,7 @@ object QueueShuffle {
         ctx = CanonicalCtx(stamped, byEntry, byMediaId)
     }
 
-    fun clearCanonicalContext() {
-        ctx = null
-    }
+    fun clearCanonicalContext() { ctx = null }
 
     internal fun isCanonicalContextValid(player: Player, c: CanonicalCtx? = ctx): Boolean {
         val currentCtx = c ?: return false
@@ -60,16 +55,11 @@ object QueueShuffle {
         val count = player.mediaItemCount
         val cur = player.currentMediaItemIndex
         if (cur !in 0 until count) return true
-
         val currentItem = player.getMediaItemAt(cur)
         if (currentItem.queueTier != QueueTier.CONTEXT) return true
-
         val entryId = currentItem.queueEntryId
-        return if (entryId != null) {
-            currentCtx.byEntry.containsKey(entryId)
-        } else {
-            currentCtx.byMediaId.containsKey(currentItem.mediaId)
-        }
+        return if (entryId != null) currentCtx.byEntry.containsKey(entryId)
+               else currentCtx.byMediaId.containsKey(currentItem.mediaId)
     }
 
     fun getCanonicalIndex(item: MediaItem): Int? = getCanonicalIndex(item, ctx)
@@ -113,8 +103,7 @@ object QueueShuffle {
         val duration = runCatching { player.duration }.getOrDefault(0L)
         val position = runCatching { player.currentPosition }.getOrDefault(0L)
         if (duration > 0 && duration != androidx.media3.common.C.TIME_UNSET && position >= 0) {
-            val remaining = duration - position
-            if (remaining <= 5000L) return true
+            if (duration - position <= 5000L) return true
         }
         return false
     }
@@ -154,34 +143,22 @@ object QueueShuffle {
     private fun shuffle(player: Player) {
         val c = ctx
         if (c != null && !isCanonicalContextValid(player, c)) clearCanonicalContext()
-
         val items = player.queueItems()
         val currentIndex = player.currentMediaItemIndex
         val imminent = isNextItemImminent(player)
         val from = if (imminent) currentIndex + 2 else currentIndex + 1
         original = items.map { it.key() }
-
-        if (currentIndex !in items.indices || from >= items.size) {
-            _enabled.value = true
-            return
-        }
-
+        if (currentIndex !in items.indices || from >= items.size) { _enabled.value = true; return }
         if (ctx == null) {
             val contextItems = items.filter { it.queueTier == QueueTier.CONTEXT }
             if (contextItems.isNotEmpty()) setCanonicalContext(contextItems)
         }
-
         val upcoming = items.drop(from)
         val userQueueIndices = upcoming.indices.filter { upcoming[it].queueTier == QueueTier.USER_QUEUE }
         val contextIndices = upcoming.indices.filter { upcoming[it].queueTier == QueueTier.CONTEXT }
         val autoplayIndices = upcoming.indices.filter { upcoming[it].queueTier == QueueTier.AUTOPLAY }
-
-        val shuffledContext = if (contextIndices.size > 1) {
-            avoidIdentityShuffle(contextIndices, contextIndices.shuffled())
-        } else {
-            contextIndices
-        }
-
+        val shuffledContext = if (contextIndices.size > 1) avoidIdentityShuffle(contextIndices, contextIndices.shuffled())
+                              else contextIndices
         val order = userQueueIndices + shuffledContext + autoplayIndices
         val ok = reorder(player, from, order.toIntArray())
         if (ok) _enabled.value = true
@@ -194,35 +171,24 @@ object QueueShuffle {
 
     private fun restore(player: Player) {
         var c = ctx
-        if (c != null && !isCanonicalContextValid(player, c)) {
-            clearCanonicalContext()
-            c = null
-        }
+        if (c != null && !isCanonicalContextValid(player, c)) { clearCanonicalContext(); c = null }
         val items = player.queueItems()
         val currentIndex = player.currentMediaItemIndex
         val imminent = isNextItemImminent(player)
         val from = if (imminent) currentIndex + 2 else currentIndex + 1
         if (currentIndex !in items.indices || currentIndex + 1 >= items.size) {
-            original = emptyList()
-            _enabled.value = false
-            return
+            original = emptyList(); _enabled.value = false; return
         }
-
         val currentItem = items[currentIndex]
         val isCurrentContext = currentItem.queueTier == QueueTier.CONTEXT
         var currentCanonicalIndex: Int? = null
-
-        if (isCurrentContext) {
-            currentCanonicalIndex = getCanonicalIndex(currentItem, c)
-        } else {
+        if (isCurrentContext) currentCanonicalIndex = getCanonicalIndex(currentItem, c)
+        else {
             for (i in (currentIndex - 1) downTo 0) {
                 val itm = items[i]
                 if (itm.queueTier == QueueTier.CONTEXT) {
                     val cIdx = getCanonicalIndex(itm, c)
-                    if (cIdx != null) {
-                        currentCanonicalIndex = cIdx
-                        break
-                    }
+                    if (cIdx != null) { currentCanonicalIndex = cIdx; break }
                 }
             }
             if (currentCanonicalIndex == null) {
@@ -230,18 +196,13 @@ object QueueShuffle {
                     val itm = items[i]
                     if (itm.queueTier == QueueTier.CONTEXT) {
                         val cIdx = getCanonicalIndex(itm, c)
-                        if (cIdx != null) {
-                            currentCanonicalIndex = cIdx - 1
-                            break
-                        }
+                        if (cIdx != null) { currentCanonicalIndex = cIdx - 1; break }
                     }
                 }
             }
         }
-
         val resolvedCurrentIndex = if (isCurrentContext) currentCanonicalIndex ?: getCanonicalIndex(currentItem, c) else currentCanonicalIndex
         val canonicalList = c?.items ?: emptyList()
-
         if (resolvedCurrentIndex == null || canonicalList.isEmpty()) {
             if (from < items.size) {
                 val upcoming = items.drop(from)
@@ -250,11 +211,8 @@ object QueueShuffle {
                 val order = sections(restored, upcoming)
                 reorder(player, from, order.toIntArray())
             }
-            original = emptyList()
-            _enabled.value = false
-            return
+            original = emptyList(); _enabled.value = false; return
         }
-
         val existingByCanonical = HashMap<Int, MediaItem>()
         val unplacedHistory = ArrayList<MediaItem>()
         val unplacedUpcoming = ArrayList<MediaItem>()
@@ -263,34 +221,25 @@ object QueueShuffle {
             val item = items[i]
             if (item.queueTier == QueueTier.CONTEXT) {
                 val idx = getCanonicalIndex(item, c)
-                if (idx != null && idx in canonicalList.indices && !existingByCanonical.containsKey(idx)) {
-                    existingByCanonical[idx] = item
-                } else if (i < currentIndex) {
-                    unplacedHistory += item
-                } else {
-                    unplacedUpcoming += item
-                }
+                if (idx != null && idx in canonicalList.indices && !existingByCanonical.containsKey(idx)) existingByCanonical[idx] = item
+                else if (i < currentIndex) unplacedHistory += item
+                else unplacedUpcoming += item
             }
         }
-
         val precedingRange = if (isCurrentContext) 0 until resolvedCurrentIndex else 0 until (resolvedCurrentIndex + 1).coerceAtLeast(0)
-        val followingRange = ((resolvedCurrentIndex + 1).coerceAtLeast(0)) until canonicalList.size
-
+        val followingRange = (resolvedCurrentIndex + 1).coerceAtLeast(0) until canonicalList.size
         val precedingContext = unplacedHistory + precedingRange.mapNotNull { existingByCanonical[it] }
         val followingContext = followingRange.mapNotNull { existingByCanonical[it] } + unplacedUpcoming
-
         val historyUserQueue = items.filterIndexed { idx, it -> idx < currentIndex && it.queueTier == QueueTier.USER_QUEUE }
         val userQueue = items.drop(currentIndex + 1).filter { it.queueTier == QueueTier.USER_QUEUE }
         val autoplay = items.drop(currentIndex + 1).filter { it.queueTier == QueueTier.AUTOPLAY }
         val cur = player.currentMediaItemIndex
-
         if (imminent && currentIndex + 1 < items.size) {
             val nextItem = items[currentIndex + 1]
             val nextKey = nextItem.key()
             val cleanPreceding = precedingContext.filter { it.key() != nextKey }
             val cleanHistory = historyUserQueue + cleanPreceding
             val rawUpcoming = userQueue.filter { it.key() != nextKey } + followingContext.filter { it.key() != nextKey } + autoplay.filter { it.key() != nextKey }
-
             replaceChanged(player, cur + 2, player.mediaItemCount, rawUpcoming)
             if (cur > 0 || cleanHistory.isNotEmpty()) replaceChanged(player, 0, cur, cleanHistory)
         } else {
@@ -299,24 +248,17 @@ object QueueShuffle {
             replaceChanged(player, cur + 1, player.mediaItemCount, upcoming)
             if (cur > 0 || history.isNotEmpty()) replaceChanged(player, 0, cur, history)
         }
-
         original = emptyList()
         _enabled.value = false
     }
 
-    internal fun restoreOrder(
-        upcoming: List<String>,
-        original: List<String>,
-        currentId: String? = null,
-    ): List<Int> {
+    internal fun restoreOrder(upcoming: List<String>, original: List<String>, currentId: String? = null): List<Int> {
         val positions = HashMap<String, ArrayDeque<Int>>(upcoming.size)
         upcoming.forEachIndexed { index, id -> positions.getOrPut(id) { ArrayDeque() }.addLast(index) }
         val placed = BooleanArray(upcoming.size)
         val out = ArrayList<Int>(upcoming.size)
-
         val currentIndex = if (currentId != null) original.indexOf(currentId) else -1
         val searchOrder: Iterable<String> = if (currentIndex in 0 until original.size) original.subList(currentIndex + 1, original.size) else original
-
         for (id in searchOrder) {
             val index = positions[id]?.removeFirstOrNull() ?: continue
             placed[index] = true
@@ -328,8 +270,8 @@ object QueueShuffle {
 
     private fun sections(order: List<Int>, upcoming: List<MediaItem>): List<Int> =
         order.filter { upcoming[it].queueTier == QueueTier.USER_QUEUE } +
-                order.filter { upcoming[it].queueTier == QueueTier.CONTEXT } +
-                order.filter { upcoming[it].queueTier == QueueTier.AUTOPLAY }
+            order.filter { upcoming[it].queueTier == QueueTier.CONTEXT } +
+            order.filter { upcoming[it].queueTier == QueueTier.AUTOPLAY }
 
     internal fun replaceChanged(player: Player, from: Int, to: Int, new: List<MediaItem>): Boolean {
         if (from < 0 || to < from || to > player.mediaItemCount) return false
@@ -358,7 +300,7 @@ object QueueShuffle {
     private fun Player.queueItems(): List<MediaItem> = List(mediaItemCount) { getMediaItemAt(it) }
 }
 
-const val EXTRA_CONTEXT_CYCLE_ID = "bitchord.contextCycleId"
+const val EXTRA_CONTEXT_CYCLE_ID = "aurelis.contextCycleId"
 
 val MediaItem.contextCycleId: Long?
     get() = mediaMetadata.extras?.takeIf { it.containsKey(EXTRA_CONTEXT_CYCLE_ID) }?.getLong(EXTRA_CONTEXT_CYCLE_ID)
