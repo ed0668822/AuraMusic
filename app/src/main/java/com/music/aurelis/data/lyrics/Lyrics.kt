@@ -1,13 +1,10 @@
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.data.lyrics
 
-/**
- * Letras de una canción, sincronizadas o planas.
- */
 data class Lyrics(
     val lines: List<LyricLine>,
     val isSynced: Boolean,
 ) {
-    /** Devuelve el índice de la línea activa en [positionMs], o -1. */
     fun activeIndexAt(positionMs: Long): Int {
         if (!isSynced || lines.isEmpty()) return -1
         var idx = -1
@@ -18,21 +15,15 @@ data class Lyrics(
     }
 
     companion object {
-        // Coincide con [00:31.495] o [00:31.49]
         private val LINE_TIMESTAMP_REGEX =
             Regex("""\[(\d+):(\d{2})(?:[.:](\d{1,3}))?]""")
 
-        // Coincide con <00:31.495> (Enhanced LRC)
         private val WORD_TIMESTAMP_REGEX =
             Regex("""<\d+:\d{2}(?:\.\d{1,3})?>""")
 
-        // Coincide con "v1:", "v2:", etc.
         private val VERSE_PREFIX_REGEX =
             Regex("""^v\d+:""", RegexOption.IGNORE_CASE)
 
-        /**
-         * Parsea texto LRC (estándar o Enhanced) o letra plana.
-         */
         fun parse(raw: String): Lyrics? {
             if (raw.isBlank()) return null
 
