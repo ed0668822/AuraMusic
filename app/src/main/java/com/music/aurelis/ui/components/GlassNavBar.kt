@@ -1,3 +1,4 @@
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.ui.components
 
 import androidx.compose.foundation.background
@@ -35,12 +36,10 @@ fun GlassNavBar(
     modifier: Modifier = Modifier,
 ) {
     val shape = RoundedCornerShape(percent = 50)
-    // CORREGIDO: rememberCoroutineScope viene de androidx.compose.runtime.*
     val scope = rememberCoroutineScope()
     val motion = remember { GlassPillMotion(scope, selectedIndex) }
     val density = LocalDensity.current
 
-    // Update motion when selectedIndex changes externally
     LaunchedEffect(selectedIndex) {
         motion.animateTo(selectedIndex)
     }
@@ -61,29 +60,15 @@ fun GlassNavBar(
         
         motion.stepDp = maxWidth.value / tabs.size
 
-        // Animated Pill
-        if (motion.isFlat) {
-            Box(
-                modifier = Modifier
-                    .pillPlacement(
-                        center = { Offset(tabWidthPx * motion.position + tabWidthPx / 2, heightPx / 2f) },
-                        size = { Size(tabWidthPx, heightPx) }
-                    )
-                    .background(glassIndicatorColor(), shape)
-            )
-        } else {
-            // Glass Pill with real refraction
-            Box(
-                modifier = Modifier
-                    .pillPlacement(
-                        center = { Offset(tabWidthPx * motion.position + tabWidthPx / 2, heightPx / 2f) },
-                        size = { Size(tabWidthPx, heightPx) }
-                    )
-                    .background(glassIndicatorColor(), shape)
-            )
-        }
+        Box(
+            modifier = Modifier
+                .pillPlacement(
+                    center = { Offset(tabWidthPx * motion.position + tabWidthPx / 2, heightPx / 2f) },
+                    size = { Size(tabWidthPx, heightPx) }
+                )
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f), shape)
+        )
 
-        // Tabs
         Row(modifier = Modifier.fillMaxSize()) {
             tabs.forEachIndexed { index, tab ->
                 val isSelected = index == selectedIndex
