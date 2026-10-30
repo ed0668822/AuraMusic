@@ -1,3 +1,4 @@
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.playback
 
 import kotlin.math.exp
@@ -5,22 +6,14 @@ import kotlin.math.ln
 import kotlin.math.tan
 
 class TransitionFilter {
-
-    @Volatile
-    private var targetLowPassHz: Float = OPEN_HZ
-
-    @Volatile
-    private var targetHighPassHz: Float = OFF_HZ
-
+    @Volatile private var targetLowPassHz: Float = OPEN_HZ
+    @Volatile private var targetHighPassHz: Float = OFF_HZ
     private var channelCount = 0
     private var sampleRate = 0
-
     private var currentLowPassHz = OPEN_HZ
     private var currentHighPassHz = OFF_HZ
-
     private var lowState = FloatArray(0)
     private var highState = FloatArray(0)
-
     private val lowA1 = FloatArray(STAGES)
     private val lowA2 = FloatArray(STAGES)
     private val lowA3 = FloatArray(STAGES)
@@ -28,7 +21,6 @@ class TransitionFilter {
     private val highA2 = FloatArray(STAGES)
     private val highA3 = FloatArray(STAGES)
     private val highK = FloatArray(STAGES)
-
     private var lowOn = false
     private var highOn = false
 
@@ -92,8 +84,7 @@ class TransitionFilter {
         return exp(from + (to - from) * GLIDE_RATE)
     }
 
-    private fun usableCutoff(hz: Float): Float =
-        hz.coerceIn(MIN_HZ, sampleRate * MAX_CUTOFF_FRACTION)
+    private fun usableCutoff(hz: Float): Float = hz.coerceIn(MIN_HZ, sampleRate * MAX_CUTOFF_FRACTION)
 
     private fun updateLowCoefficients() {
         val g = tan(Math.PI * usableCutoff(currentLowPassHz) / sampleRate).toFloat()
@@ -155,7 +146,6 @@ class TransitionFilter {
         const val OFF_HZ = 20f
         const val MAX_HIGH_PASS_HZ = 2_000f
         const val GLIDE_FRAMES = 64
-
         private const val MIN_HZ = 10f
         private const val STAGES = 2
         private val BUTTERWORTH_Q = floatArrayOf(0.54120f, 1.30656f)
