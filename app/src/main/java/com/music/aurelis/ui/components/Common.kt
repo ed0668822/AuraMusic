@@ -1,19 +1,16 @@
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.ui.components
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.keyframes
-import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -35,6 +32,7 @@ import androidx.compose.material.icons.rounded.PlaylistAdd
 import androidx.compose.material.icons.rounded.PlaylistPlay
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwipeToDismissBox
@@ -48,16 +46,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.clipRect
@@ -76,7 +79,12 @@ import com.music.aurelis.R
 import com.music.aurelis.data.model.LocalSong
 import com.music.aurelis.ui.haptics.Haptic
 import com.music.aurelis.ui.haptics.rememberHaptics
+import kotlinx.coroutines.delay
 import kotlin.math.abs
+
+/* ------------------------------------------------------------------ */
+/*  Constantes de layout — un solo punto de verdad                     */
+/* ------------------------------------------------------------------ */
 
 val PAGE_GUTTER = 16.dp
 val BAR_GUTTER = PAGE_GUTTER
@@ -111,6 +119,18 @@ fun libraryGrid(available: Dp): LibraryGridSpec {
     return LibraryGridSpec(columns, cardWidth)
 }
 
+val PlayingAccent = Color(0xFFFB4A62)
+
+/** Espacio entre frames de las barras animadas: 25ms = 40fps, sin quemar batería. */
+const val MOTION_FRAME_GAP_MS = 25L
+
+/** Si las barras animadas deben moverse — el host puede pausarlas. */
+val LocalPlayingBarsMotion = compositionLocalOf { true }
+
+/* ------------------------------------------------------------------ */
+/*  SongRow — fila de canción unificada                                */
+/* ------------------------------------------------------------------ */
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun SongRow(
@@ -128,6 +148,7 @@ fun SongRow(
     activeTint: Color = MaterialTheme.colorScheme.primary,
     searchPlayingStyle: Boolean = false,
     selected: Boolean = false,
+    trailing: (@Composable () -> Unit)? = null,
 ) {
     SwipeToQueueBox(
         onSwipeToQueue = onSwipeToQueue,
@@ -146,6 +167,7 @@ fun SongRow(
             activeTint = activeTint,
             searchPlayingStyle = searchPlayingStyle,
             selected = selected,
+            trailing = trailing,
         )
     }
 }
@@ -165,16 +187,15 @@ fun SwipeToQueueBox(
     val haptics = rememberHaptics()
     val swipeStateHolder = remember { mutableStateOf<SwipeToDismissBoxState?>(null) }
     var boxWidth by remember { mutableFloatStateOf(0f) }
-
     val currentOnSwipeToQueue by rememberUpdatedState(onSwipeToQueue)
 
     val swipeState = rememberSwipeToDismissBoxState(
         confirmValueChange = { value ->
             if (value != SwipeToDismissBoxValue.Settled && currentOnSwipeToQueue != null) {
-                val offset = try { swipeStateHolder.value?.requireOffset() ?: 0f } catch (e: Exception) { 0f }
+                val offset = try { swipeStateHolder.value?.requireOffset() ?: 0f } catch (_: Exception) { 0f }
                 if (abs(offset) >= boxWidth * 0.45f) {
                     haptics.play(Haptic.Select)
-                    currentOnSwipeToQueue?.invoke()
+                    currentOnSwipeToQueue.invoke()
                 }
             }
             false
@@ -187,14 +208,11 @@ fun SwipeToQueueBox(
         if (boxWidth <= 0f) return@LaunchedEffect
         val armAt = boxWidth * 0.45f
         var armed = false
-        snapshotFlow { try { swipeState.requireOffset() } catch (e: Exception) { 0f } }
+        snapshotFlow { try { swipeState.requireOffset() } catch (_: Exception) { 0f } }
             .collect { offset ->
                 val travelled = abs(offset)
                 when {
-                    !armed && travelled >= armAt -> {
-                        armed = true
-                        haptics.play(Haptic.Tick)
-                    }
+                    !armed && travelled >= armAt -> { armed = true; haptics.play(Haptic.Tick) }
                     armed && travelled < armAt * 0.8f -> armed = false
                 }
             }
@@ -216,7 +234,7 @@ private fun QueueSwipeBackground(swipeState: SwipeToDismissBoxState) {
         modifier = Modifier
             .fillMaxSize()
             .drawWithContent {
-                val offset = try { swipeState.requireOffset() } catch (e: Exception) { 0f }
+                val offset = try { swipeState.requireOffset() } catch (_: Exception) { 0f }
                 if (offset > 0f) {
                     clipRect(left = 0f, top = 0f, right = offset, bottom = size.height) {
                         this@drawWithContent.drawContent()
@@ -232,23 +250,23 @@ private fun QueueSwipeBackground(swipeState: SwipeToDismissBoxState) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        QueueSwipeLabel(playNext = false)
-        QueueSwipeLabel(playNext = false)
+        QueueSwipeLabel()
+        QueueSwipeLabel()
     }
 }
 
 @Composable
-private fun QueueSwipeLabel(playNext: Boolean) {
+private fun QueueSwipeLabel() {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(
-            if (playNext) Icons.Rounded.PlaylistPlay else Icons.Rounded.PlaylistAdd,
+            imageVector = Icons.Rounded.PlaylistAdd,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(20.dp),
         )
         Spacer(Modifier.width(6.dp))
         Text(
-            text = stringResource(if (playNext) R.string.play_next else R.string.queue),
+            text = stringResource(R.string.queue),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.primary,
         )
@@ -270,6 +288,7 @@ private fun SongRowContent(
     activeTint: Color = MaterialTheme.colorScheme.primary,
     searchPlayingStyle: Boolean = false,
     selected: Boolean = false,
+    trailing: (@Composable () -> Unit)? = null,
 ) {
     val titleColor by animateColorAsState(
         targetValue = if (isCurrent) activeTint else MaterialTheme.colorScheme.onBackground,
@@ -279,6 +298,7 @@ private fun SongRowContent(
         targetValue = if (isCurrent || selected) activeTint.copy(alpha = 0.14f) else Color.Transparent,
         label = "song row background",
     )
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -288,10 +308,7 @@ private fun SongRowContent(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (trackNumber != null) {
-            Box(
-                Modifier.width(TRACK_NUMBER_WIDTH).height(52.dp),
-                contentAlignment = Alignment.Center,
-            ) {
+            Box(Modifier.width(TRACK_NUMBER_WIDTH).height(52.dp), contentAlignment = Alignment.Center) {
                 if (searchPlayingStyle && isCurrent && isPlaying) {
                     SearchPlayingBars()
                 } else if (isCurrent) {
@@ -328,12 +345,10 @@ private fun SongRowContent(
         }
         Spacer(Modifier.width(if (trackNumber == null) 14.dp else PAGE_GUTTER))
         Column(Modifier.weight(1f)) {
-            Text(
-                text = song.title,
+            ExplicitSongTitle(
+                song = song,
                 style = MaterialTheme.typography.titleMedium,
                 color = titleColor,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
             )
             Spacer(Modifier.height(2.dp))
             Text(
@@ -362,11 +377,21 @@ private fun SongRowContent(
             style = MaterialTheme.typography.labelMedium,
             color = subtitleColor,
         )
+        if (trailing != null) {
+            Spacer(Modifier.width(4.dp))
+            trailing()
+        }
         if (onMore != null) {
             RowMoreButton(onClick = onMore, tint = subtitleColor)
         }
     }
 }
+
+/* ------------------------------------------------------------------ */
+/*  Botón ⋮                                                             */
+/* ------------------------------------------------------------------ */
+
+val ROW_MORE_OUTSET = 14.dp
 
 @Composable
 fun RowMoreButton(
@@ -392,36 +417,47 @@ fun RowMoreButton(
     }
 }
 
-val ROW_MORE_OUTSET = 14.dp
-
 fun Modifier.hangIntoGutter(outset: Dp): Modifier = layout { measurable, constraints ->
     val placeable = measurable.measure(constraints)
     val width = (placeable.width - outset.roundToPx()).coerceAtLeast(0)
     layout(width, placeable.height) { placeable.place(0, 0) }
 }
 
-val PlayingAccent = Color(0xFFFB4A62)
+/* ------------------------------------------------------------------ */
+/*  Barras animadas eficientes                                         */
+/* ------------------------------------------------------------------ */
+
+private val PLAYING_BAR_MINIMUMS = floatArrayOf(0.38f, 0.78f, 0.52f)
+
+private fun playingBarHeight(index: Int, minimum: Float, ms: Long): Float {
+    val duration = 520 + index * 130
+    val peak = 260 + index * 50
+    var t = (ms % (2L * duration)).toInt()
+    if (t > duration) t = 2 * duration - t
+    return if (t <= peak) {
+        minimum + (1f - minimum) * t / peak
+    } else {
+        1f - (1f - minimum) * (t - peak) / (duration - peak)
+    }
+}
 
 @Composable
 fun SearchPlayingBars(modifier: Modifier = Modifier) {
-    val heights = listOf(0.38f, 0.78f, 0.52f).mapIndexed { index, minimum ->
-        val transition = rememberInfiniteTransition(label = "search playing bar $index")
-        val height by transition.animateFloat(
-            initialValue = minimum,
-            targetValue = 1f - (index * 0.12f),
-            animationSpec = infiniteRepeatable(
-                animation = keyframes {
-                    durationMillis = 520 + index * 130
-                    minimum at 0
-                    1f at (260 + index * 50)
-                    minimum at durationMillis
-                },
-                repeatMode = RepeatMode.Reverse,
-            ),
-            label = "search bar height $index",
-        )
-        height
+    val elapsedNanos = remember { mutableLongStateOf(0L) }
+    val running = LocalPlayingBarsMotion.current
+
+    LaunchedEffect(running) {
+        if (!running) return@LaunchedEffect
+        var last = Long.MIN_VALUE
+        while (true) {
+            withFrameNanos { now ->
+                if (last != Long.MIN_VALUE) elapsedNanos.longValue += now - last
+                last = now
+            }
+            delay(MOTION_FRAME_GAP_MS)
+        }
     }
+
     Box(
         modifier = modifier
             .size(24.dp)
@@ -429,23 +465,27 @@ fun SearchPlayingBars(modifier: Modifier = Modifier) {
             .background(Color.Black.copy(alpha = 0.52f)),
         contentAlignment = Alignment.Center,
     ) {
-        Row(
-            modifier = Modifier.height(14.dp),
-            horizontalArrangement = Arrangement.spacedBy(2.dp),
-            verticalAlignment = Alignment.Bottom,
-        ) {
-            heights.forEach { height ->
-                Box(
-                    Modifier
-                        .width(3.dp)
-                        .height(14.dp * height)
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(Color.White),
+        Canvas(Modifier.size(width = 13.dp, height = 14.dp)) {
+            val barWidth = 3.dp.toPx()
+            val step = barWidth + 2.dp.toPx()
+            val corner = CornerRadius(minOf(2.dp.toPx(), barWidth / 2f))
+            val ms = elapsedNanos.longValue / 1_000_000L
+            PLAYING_BAR_MINIMUMS.forEachIndexed { index, minimum ->
+                val height = size.height * playingBarHeight(index, minimum, ms)
+                drawRoundRect(
+                    color = Color.White,
+                    topLeft = Offset(index * step, size.height - height),
+                    size = Size(barWidth, height),
+                    cornerRadius = corner,
                 )
             }
         }
     }
 }
+
+/* ------------------------------------------------------------------ */
+/*  Pull-to-refresh + estados vacíos                                   */
+/* ------------------------------------------------------------------ */
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
