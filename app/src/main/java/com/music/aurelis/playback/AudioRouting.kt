@@ -1,3 +1,4 @@
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.playback
 
 import android.bluetooth.BluetoothAdapter
@@ -10,52 +11,36 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 object AudioRouting {
-
     enum class Kind { PHONE, WIRED, USB, BLUETOOTH, HDMI, OTHER }
+    enum class Form { UNKNOWN, BUDS, HEADPHONES, SPEAKER, CAR }
 
     data class Device(
-        val id: Int,
-        val type: Int,
-        val name: String,
-        val kind: Kind,
-        val isActive: Boolean = false,
-        val form: Form = Form.UNKNOWN,
+        val id: Int, val type: Int, val name: String, val kind: Kind,
+        val isActive: Boolean = false, val form: Form = Form.UNKNOWN,
     )
-
-    enum class Form { UNKNOWN, BUDS, HEADPHONES, SPEAKER, CAR }
 
     private val _selectedId = MutableStateFlow<Int?>(null)
     val selectedId: StateFlow<Int?> = _selectedId.asStateFlow()
 
-    fun select(id: Int?) {
-        _selectedId.value = id
-    }
-
-    fun forget() {
-        _selectedId.value = null
-    }
+    fun select(id: Int?) { _selectedId.value = id }
+    fun forget() { _selectedId.value = null }
 
     fun infoFor(manager: AudioManager, id: Int?): AudioDeviceInfo? {
         if (id == null) return null
         return runCatching { manager.getDevices(AudioManager.GET_DEVICES_OUTPUTS) }
-            .getOrNull()
-            ?.firstOrNull { it.id == id }
+            .getOrNull()?.firstOrNull { it.id == id }
     }
 
     fun outputs(manager: AudioManager): List<Device> {
         val infos = runCatching { manager.getDevices(AudioManager.GET_DEVICES_OUTPUTS) }
-            .getOrNull()
-            ?: return emptyList()
+            .getOrNull() ?: return emptyList()
         val active = activeOf(infos, _selectedId.value)
         return infos
             .mapNotNull { info -> kindOf(info.type)?.let { info to it } }
             .map { (info, kind) ->
                 val name = nameOf(info, kind)
                 Device(
-                    id = info.id,
-                    type = info.type,
-                    name = name,
-                    kind = kind,
+                    id = info.id, type = info.type, name = name, kind = kind,
                     isActive = info.id == active?.id,
                     form = if (kind == Kind.BLUETOOTH) formOf(info, name) else Form.UNKNOWN,
                 )
@@ -85,24 +70,14 @@ object AudioRouting {
 
     internal fun kindOf(type: Int): Kind? = when (type) {
         AudioDeviceInfo.TYPE_BUILTIN_SPEAKER -> Kind.PHONE
-        AudioDeviceInfo.TYPE_WIRED_HEADPHONES,
-        AudioDeviceInfo.TYPE_WIRED_HEADSET,
-        AudioDeviceInfo.TYPE_LINE_ANALOG,
-        AudioDeviceInfo.TYPE_AUX_LINE,
-        -> Kind.WIRED
-        AudioDeviceInfo.TYPE_USB_DEVICE,
-        AudioDeviceInfo.TYPE_USB_HEADSET,
-        AudioDeviceInfo.TYPE_USB_ACCESSORY,
-        -> Kind.USB
-        AudioDeviceInfo.TYPE_BLUETOOTH_A2DP,
-        AudioDeviceInfo.TYPE_BLE_HEADSET,
-        AudioDeviceInfo.TYPE_BLE_SPEAKER,
-        AudioDeviceInfo.TYPE_BLE_BROADCAST,
-        AudioDeviceInfo.TYPE_HEARING_AID,
-        -> Kind.BLUETOOTH
-        AudioDeviceInfo.TYPE_HDMI,
-        AudioDeviceInfo.TYPE_HDMI_ARC,
-        -> Kind.HDMI
+        AudioDeviceInfo.TYPE_WIRED_HEADPHONES, AudioDeviceInfo.TYPE_WIRED_HEADSET,
+        AudioDeviceInfo.TYPE_LINE_ANALOG, AudioDeviceInfo.TYPE_AUX_LINE -> Kind.WIRED
+        AudioDeviceInfo.TYPE_USB_DEVICE, AudioDeviceInfo.TYPE_USB_HEADSET,
+        AudioDeviceInfo.TYPE_USB_ACCESSORY -> Kind.USB
+        AudioDeviceInfo.TYPE_BLUETOOTH_A2DP, AudioDeviceInfo.TYPE_BLE_HEADSET,
+        AudioDeviceInfo.TYPE_BLE_SPEAKER, AudioDeviceInfo.TYPE_BLE_BROADCAST,
+        AudioDeviceInfo.TYPE_HEARING_AID -> Kind.BLUETOOTH
+        AudioDeviceInfo.TYPE_HDMI, AudioDeviceInfo.TYPE_HDMI_ARC -> Kind.HDMI
         else -> null
     }
 
@@ -122,15 +97,10 @@ object AudioRouting {
             BluetoothAdapter.getDefaultAdapter()?.getRemoteDevice(address)?.bluetoothClass?.deviceClass
         }.getOrNull() ?: return null
         return when (deviceClass) {
-            BluetoothClass.Device.AUDIO_VIDEO_WEARABLE_HEADSET,
-            BluetoothClass.Device.AUDIO_VIDEO_HANDSFREE,
-            -> Form.BUDS
+            BluetoothClass.Device.AUDIO_VIDEO_WEARABLE_HEADSET, BluetoothClass.Device.AUDIO_VIDEO_HANDSFREE -> Form.BUDS
             BluetoothClass.Device.AUDIO_VIDEO_HEADPHONES -> Form.HEADPHONES
-            BluetoothClass.Device.AUDIO_VIDEO_LOUDSPEAKER,
-            BluetoothClass.Device.AUDIO_VIDEO_PORTABLE_AUDIO,
-            BluetoothClass.Device.AUDIO_VIDEO_HIFI_AUDIO,
-            BluetoothClass.Device.AUDIO_VIDEO_VIDEO_DISPLAY_AND_LOUDSPEAKER,
-            -> Form.SPEAKER
+            BluetoothClass.Device.AUDIO_VIDEO_LOUDSPEAKER, BluetoothClass.Device.AUDIO_VIDEO_PORTABLE_AUDIO,
+            BluetoothClass.Device.AUDIO_VIDEO_HIFI_AUDIO, BluetoothClass.Device.AUDIO_VIDEO_VIDEO_DISPLAY_AND_LOUDSPEAKER -> Form.SPEAKER
             BluetoothClass.Device.AUDIO_VIDEO_CAR_AUDIO -> Form.CAR
             else -> null
         }
@@ -153,12 +123,10 @@ object AudioRouting {
         "quietcomfort ultra headphones", "momentum 4", "studio pro", "solo", "major iv",
         "major v", "monitor ii",
     )
-
     private val BUDS_NAMES = listOf(
         "buds", "airpods", "pods", "earbud", "earphone", "wf-", "tws", "liberty",
         "freebuds", "nothing ear", "jabra elite", "motif", "minor iv", "earfun",
     )
-
     private val SPEAKER_NAMES = listOf(
         "speaker", "soundbar", "sound bar", "emberton", "kilburn", "stanmore", "acton",
         "woburn", "middleton", "willen", "tufton", "stockwell", "uxbridge",
