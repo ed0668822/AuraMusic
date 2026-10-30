@@ -89,7 +89,7 @@ fun SettingsScreen(
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(top = 40.dp, start = 8.dp, end = 8.dp, bottom = 16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(onClick = onDismiss) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
@@ -99,29 +99,46 @@ fun SettingsScreen(
                 fontSize = 34.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.padding(start = 8.dp)
+                modifier = Modifier.padding(start = 8.dp),
             )
         }
 
         SettingsGroup(topSpacing = 0.dp) {
             Row(
-                modifier = Modifier.fillMaxWidth().clickable { photoPicker.launch(arrayOf("image/*")) }.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.fillMaxWidth()
+                    .clickable { photoPicker.launch(arrayOf("image/*")) }
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(
-                    modifier = Modifier.size(60.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant),
-                    contentAlignment = Alignment.Center
+                    modifier = Modifier.size(60.dp).clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                    contentAlignment = Alignment.Center,
                 ) {
                     if (userPhoto != null) {
-                        AsyncImage(model = userPhoto, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                        AsyncImage(
+                            model = userPhoto,
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop,
+                        )
                     } else {
-                        Icon(Icons.Rounded.Person, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(30.dp))
+                        Icon(
+                            Icons.Rounded.Person,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(30.dp),
+                        )
                     }
                 }
                 Spacer(Modifier.width(16.dp))
                 Column {
                     Text(text = userName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                    Text(text = "Toca para cambiar foto", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        text = "Toca para cambiar foto",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
             RowDivider()
@@ -129,7 +146,7 @@ fun SettingsScreen(
                 icon = Icons.Rounded.Edit,
                 title = "Nombre",
                 value = userName,
-                onClick = { showNameDialog = true }
+                onClick = { showNameDialog = true },
             )
         }
 
@@ -142,24 +159,30 @@ fun SettingsScreen(
                     Switch(
                         checked = dolbyAtmos,
                         onCheckedChange = { SettingsRepository.setDolbyAtmos(it) },
-                        colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary)
+                        colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary),
                     )
                 },
-                onClick = { SettingsRepository.setDolbyAtmos(!dolbyAtmos) }
+                onClick = { SettingsRepository.setDolbyAtmos(!dolbyAtmos) },
             )
             RowDivider()
             SettingsRow(
                 icon = Icons.Rounded.GraphicEq,
                 title = "Lossless",
                 subtitle = "Reproduce la máxima calidad local.",
-                trailing = { Text("Lossless", color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold) }
+                trailing = {
+                    Text(
+                        "Lossless",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.Bold,
+                    )
+                },
             )
             RowDivider()
             SettingsRow(
                 icon = Icons.Rounded.Tune,
                 title = "Equalizer",
                 subtitle = "Tone, seven bands and balance",
-                onClick = onOpenEqualizer
+                onClick = onOpenEqualizer,
             )
         }
 
@@ -172,10 +195,10 @@ fun SettingsScreen(
                     Switch(
                         checked = autoplay,
                         onCheckedChange = { SettingsRepository.setAutoplay(it) },
-                        colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary)
+                        colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary),
                     )
                 },
-                onClick = { SettingsRepository.setAutoplay(!autoplay) }
+                onClick = { SettingsRepository.setAutoplay(!autoplay) },
             )
             RowDivider()
             SettingsRow(
@@ -183,7 +206,7 @@ fun SettingsScreen(
                 title = "AutoMix",
                 subtitle = "Transiciones perfectas entre canciones.",
                 value = "$crossfade s",
-                onClick = { }
+                onClick = {},
             )
         }
 
@@ -194,7 +217,7 @@ fun SettingsScreen(
                 SegmentedControl(
                     options = listOf("System", "Light", "Dark"),
                     selectedIndex = themeMode,
-                    onSelect = { SettingsRepository.setThemeMode(it) }
+                    onSelect = { SettingsRepository.setThemeMode(it) },
                 )
             }
             RowDivider()
@@ -206,10 +229,10 @@ fun SettingsScreen(
                     Switch(
                         checked = reduceAnimation,
                         onCheckedChange = { SettingsRepository.setReduceAnimation(it) },
-                        colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary)
+                        colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary),
                     )
                 },
-                onClick = { SettingsRepository.setReduceAnimation(!reduceAnimation) }
+                onClick = { SettingsRepository.setReduceAnimation(!reduceAnimation) },
             )
             RowDivider()
             SettingsRow(
@@ -220,10 +243,10 @@ fun SettingsScreen(
                     Switch(
                         checked = reduceDynamicBlur,
                         onCheckedChange = { SettingsRepository.setReduceDynamicBlur(it) },
-                        colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary)
+                        colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary),
                     )
                 },
-                onClick = { SettingsRepository.setReduceDynamicBlur(!reduceDynamicBlur) }
+                onClick = { SettingsRepository.setReduceDynamicBlur(!reduceDynamicBlur) },
             )
             RowDivider()
             SettingsRow(
@@ -234,10 +257,10 @@ fun SettingsScreen(
                     Switch(
                         checked = liquidGlass,
                         onCheckedChange = { SettingsRepository.setLiquidGlass(it) },
-                        colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary)
+                        colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary),
                     )
                 },
-                onClick = { SettingsRepository.setLiquidGlass(!liquidGlass) }
+                onClick = { SettingsRepository.setLiquidGlass(!liquidGlass) },
             )
         }
 
@@ -250,10 +273,10 @@ fun SettingsScreen(
                     Switch(
                         checked = syncedLyrics,
                         onCheckedChange = { SettingsRepository.setSyncedLyrics(it) },
-                        colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary)
+                        colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary),
                     )
                 },
-                onClick = { SettingsRepository.setSyncedLyrics(!syncedLyrics) }
+                onClick = { SettingsRepository.setSyncedLyrics(!syncedLyrics) },
             )
             RowDivider()
             SettingsRow(
@@ -264,10 +287,10 @@ fun SettingsScreen(
                     Switch(
                         checked = blurLyrics,
                         onCheckedChange = { SettingsRepository.setBlurUnfocusedLyrics(it) },
-                        colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary)
+                        colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary),
                     )
                 },
-                onClick = { SettingsRepository.setBlurUnfocusedLyrics(!blurLyrics) }
+                onClick = { SettingsRepository.setBlurUnfocusedLyrics(!blurLyrics) },
             )
         }
 
@@ -280,17 +303,17 @@ fun SettingsScreen(
                     Switch(
                         checked = filterNonMusic,
                         onCheckedChange = { SettingsRepository.setFilterNonMusicAudio(it) },
-                        colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary)
+                        colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary),
                     )
                 },
-                onClick = { SettingsRepository.setFilterNonMusicAudio(!filterNonMusic) }
+                onClick = { SettingsRepository.setFilterNonMusicAudio(!filterNonMusic) },
             )
         }
 
         SettingsGroup(header = "About") {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text("Aurelis Music", fontWeight = FontWeight.Bold)
                 Text("v1.9.0", color = MaterialTheme.colorScheme.onSurfaceVariant)
