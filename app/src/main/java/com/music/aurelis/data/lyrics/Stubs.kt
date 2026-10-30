@@ -1,4 +1,4 @@
-// Aurelis stubs. GPL-3.0-or-later.
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.data.lyrics
 
 object SimpMusicLyrics {
