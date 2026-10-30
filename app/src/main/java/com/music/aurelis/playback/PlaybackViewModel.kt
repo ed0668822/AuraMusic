@@ -8,12 +8,12 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.Timeline
 import androidx.media3.session.MediaController
+import com.music.aurelis.data.SettingsRepository
 import com.music.aurelis.data.lyrics.LyricLine
 import com.music.aurelis.data.lyrics.LyricsRepository
 import com.music.aurelis.data.lyrics.LyricsSource
 import com.music.aurelis.data.lyrics.LyricsTranslation
 import com.music.aurelis.data.model.LocalSong
-import com.music.aurelis.data.SettingsRepository // 👈 IMPORT CORREGIDO
 import com.music.aurelis.data.stats.ListeningStats
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -150,9 +150,7 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
         val loaded = _state.value.lyrics as? LyricsState.Loaded ?: return
         val song = _state.value.currentSong ?: return
         translationJob?.cancel()
-        _state.update {
-            it.copy(lyrics = loaded.copy(translation = TranslationState.Loading))
-        }
+        _state.update { it.copy(lyrics = loaded.copy(translation = TranslationState.Loading)) }
         translationJob = viewModelScope.launch {
             when (val res = LyricsTranslation.translate(song.id, loaded.lines, targetLanguageTag)) {
                 is LyricsTranslation.Result.Translated -> {
@@ -190,7 +188,6 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
         val currentIndex = ctrl.currentMediaItemIndex
         val mediaItem = ctrl.currentMediaItem
         val song = mediaItem?.let { mediaItemToLocalSong(it) }
-
         val queueSongs = (0 until ctrl.mediaItemCount).map { mediaItemToLocalSong(ctrl.getMediaItemAt(it)) }
 
         _state.update {
@@ -295,7 +292,7 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
         ListeningStats.flush()
         controller?.let { ctrl ->
             ctrl.removeListener(playerListener)
-            MediaController.releaseFuture(com.google.common.util.concurrent.Futures.immediateFuture(ctrl))
+            ctrl.release()
         }
         controller = null
         super.onCleared()
