@@ -1,9 +1,6 @@
-// Ported from BitChord. © 2026 Kushagra Singh (BitChord/Aurelis). GPL-3.0-or-later.
+// Aurelis © 2026. GPL-3.0-or-later.
 package com.music.aurelis.data.lyrics
 
-/**
- * A title, as a lyrics database would have indexed it.
- */
 fun String.forLyricsSearch(): String {
     var name = this
     CREDITS.forEach { pattern -> name = pattern.replace(name, " ") }
