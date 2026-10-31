@@ -1,13 +1,25 @@
+// Aurelis © 2026. GPL-3.0-or-later
 package com.music.aurelis.ui.navigation
 
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableStateListOf
+import com.music.aurelis.data.model.LocalShelf
+import com.music.aurelis.ui.screens.SettingsCategory
+import com.music.aurelis.ui.screens.SettingsChoiceKind
 
 sealed interface AppRoute {
     data object Settings : AppRoute
+    data object Profile : AppRoute
     data object Equalizer : AppRoute
     data object Replay : AppRoute
     data object History : AppRoute
+    data object LocalMusic : AppRoute
+
+    data class LibraryShowAll(val shelf: LocalShelf) : AppRoute
+    data class ArtistShelf(val artistId: String, val shelf: LocalShelf) : AppRoute
+    data class SettingsSection(val category: SettingsCategory) : AppRoute
+    data class SettingsChoice(val choice: SettingsChoiceKind) : AppRoute
+    data object EqualizerPresets : AppRoute
 }
 
 data class RouteEntry(val id: Long, val route: AppRoute, val detailDepth: Int)
@@ -19,7 +31,6 @@ class AppNavigator(
     private val clearDetails: () -> Unit,
 ) {
     private val stack = mutableStateListOf<RouteEntry>()
-
     private var nextId = System.currentTimeMillis()
 
     val entries: List<RouteEntry> get() = stack
@@ -79,7 +90,7 @@ sealed interface AppDestination {
         override val key: String get() = "route:${entry.id}"
     }
 
-    data class Release(val browseId: String) : AppDestination {
-        override val key: String get() = browseId
+    data class Release(val id: String) : AppDestination {
+        override val key: String get() = id
     }
 }
