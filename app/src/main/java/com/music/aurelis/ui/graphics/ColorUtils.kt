@@ -1,3 +1,4 @@
+// Aurelis © 2026. GPL-3.0-or-later
 package com.music.aurelis.ui.graphics
 
 import kotlin.math.abs
@@ -6,11 +7,6 @@ import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
-/**
- * The parts of `androidx.core.graphics.ColorUtils` the artwork code uses,
- * ported as written so the phone's numbers do not move: HSL both ways and
- * relative luminance. Colours are packed ARGB ints, as there.
- */
 object ColorUtils {
 
     fun colorToHSL(color: Int, outHsl: FloatArray) {
@@ -107,7 +103,6 @@ object ColorUtils {
         return (0xFF shl 24) or (r shl 16) or (g shl 8) or b
     }
 
-    /** Relative luminance, 0 for black and 1 for white. */
     fun calculateLuminance(color: Int): Double {
         val sr = linear(((color shr 16) and 0xFF) / 255.0)
         val sg = linear(((color shr 8) and 0xFF) / 255.0)
