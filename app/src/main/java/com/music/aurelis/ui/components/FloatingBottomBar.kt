@@ -1,4 +1,4 @@
-// Aurelis © 2026. GPL-3.0-or-later.
+// Aurelis © 2026. GPL-3.0-or-later
 package com.music.aurelis.ui.components
 
 import androidx.compose.animation.animateColorAsState
@@ -12,25 +12,49 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.music.aurelis.data.SettingsRepository
+import com.music.aurelis.data.AppSettings
 import com.music.aurelis.ui.haptics.Haptic
 import com.music.aurelis.ui.haptics.rememberHaptics
 import dev.chrisbanes.haze.HazeState
@@ -39,12 +63,27 @@ import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-internal val PILL_INSET = 6.dp
+data class BottomTab(
+    val label: String,
+    val icon: ImageVector,
+)
+
+internal val PILL_INSET = 4.dp
+internal val NAV_BAR_GUTTER = 19.dp
+internal val NAV_BAR_LIFT = 6.dp
+
 internal val floatingBarInsets: WindowInsets
-    @Composable get() = WindowInsets.navigationBars.union(WindowInsets(bottom = 15.dp))
+    @Composable get() = WindowInsets.navigationBars.union(WindowInsets(bottom = GESTURE_BAR_FLOOR))
+
 private val GESTURE_BAR_FLOOR = 15.dp
-internal val TAB_VERTICAL_PADDING = 9.dp
-internal val TAB_ICON_LABEL_GAP = 2.dp
+internal val TAB_VERTICAL_PADDING = 6.5.dp
+internal val TAB_ICON_LABEL_GAP = 1.dp
+internal val TAB_ICON_SIZE = 28.dp
+
+@Composable
+internal fun tabLabelStyle(): TextStyle =
+    MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, letterSpacing = 0.5.sp)
+
 internal val GlassSpring = spring<Float>(dampingRatio = 0.72f, stiffness = 320f)
 internal const val STRETCH = 0.16f
 internal const val SQUASH = 0.5f
@@ -60,8 +99,9 @@ fun FloatingBottomBar(
 ) {
     val pillShape = RoundedCornerShape(percent = 50)
     val container = MaterialTheme.colorScheme.surface
-    val reduceDynamicBlur by SettingsRepository.reduceDynamicBlur.collectAsStateWithLifecycle()
-    val reduceAnimation by SettingsRepository.reduceAnimation.collectAsStateWithLifecycle()
+    val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
+    val useGlass = LocalLiquidGlassEnabled.current && isGlassSupported()
+    val reduceAnimation by AppSettings.reduceAnimation.collectAsStateWithLifecycle()
     val glassSpec: AnimationSpec<Float> = if (reduceAnimation) snap() else GlassSpring
 
     var dragOffset by remember { mutableFloatStateOf(0f) }
@@ -80,6 +120,10 @@ fun FloatingBottomBar(
         (rowSize.width + gapPx) / n
     } else 0f
 
+    val currentTabStepPx by rememberUpdatedState(tabStepPx)
+    val currentLastIndex by rememberUpdatedState(tabs.lastIndex)
+    val currentOnTabSelected by rememberUpdatedState(onTabSelected)
+
     val pillTargetPx = if (tabStepPx > 0f) {
         selectedIndex * tabStepPx + dragOffset
     } else 0f
@@ -92,27 +136,37 @@ fun FloatingBottomBar(
 
     val lag = if (tabStepPx > 0f) {
         (abs(pillTargetPx - animatedPillOffset) / tabStepPx).coerceIn(0f, 1f)
-    } else 0f
+    } else {
+        0f
+    }
 
     var lastHapticTab by remember { mutableIntStateOf(selectedIndex) }
 
-    LaunchedEffect(selectedIndex) { dragOffset = 0f }
+    LaunchedEffect(selectedIndex) {
+        dragOffset = 0f
+        lastHapticTab = selectedIndex
+    }
 
     Box(
         modifier = modifier
             .windowInsetsPadding(floatingBarInsets)
-            .padding(horizontal = 16.dp)
-            .padding(bottom = 2.dp)
+            .padding(horizontal = NAV_BAR_GUTTER)
+            .padding(bottom = NAV_BAR_LIFT)
             .fillMaxWidth()
             .clip(pillShape)
             .then(
                 if (reduceDynamicBlur) {
                     Modifier.background(container)
+                } else if (useGlass) {
+                    Modifier.liquidGlass(shape = pillShape)
                 } else {
-                    Modifier.background(container.copy(alpha = 0.85f))
+                    Modifier.optimizedHazeEffect(
+                        state = hazeState,
+                        style = HazeMaterials.regular(container),
+                    )
                 },
             )
-            .border(0.5.dp, Color.White.copy(alpha = 0.10f), pillShape)
+            .border(GLASS_EDGE_WIDTH, GLASS_EDGE_COLOR, pillShape)
             .padding(horizontal = PILL_INSET, vertical = PILL_INSET),
     ) {
         if (tabWidthPx > 0f) {
@@ -136,29 +190,32 @@ fun FloatingBottomBar(
                 .onSizeChanged { rowSize = it }
                 .pointerInput(Unit) {
                     var totalDrag = 0f
-                    var dragStartIndex = selectedIndex
+                    var dragStartIndex = currentSelectedIndex
                     detectHorizontalDragGestures(
                         onDragStart = {
                             totalDrag = 0f
-                            dragStartIndex = selectedIndex
+                            dragStartIndex = currentSelectedIndex
                         },
                         onDragCancel = { dragOffset = 0f },
                         onDragEnd = {
-                            if (tabStepPx > 0f) {
-                                val absoluteIndexFloat = (dragStartIndex + totalDrag / tabStepPx)
-                                    .coerceIn(0f, tabs.lastIndex.toFloat())
+                            val step = currentTabStepPx
+                            if (step > 0f) {
+                                val absoluteIndexFloat = (dragStartIndex + totalDrag / step)
+                                    .coerceIn(0f, currentLastIndex.toFloat())
                                 val newIndex = absoluteIndexFloat.roundToInt()
-                                if (newIndex != selectedIndex) {
-                                    onTabSelected(newIndex)
+                                if (newIndex != currentSelectedIndex) {
+                                    currentOnTabSelected(newIndex)
                                 }
                             }
                             dragOffset = 0f
                         },
                         onHorizontalDrag = { _, delta ->
+                            val step = currentTabStepPx
+                            if (step <= 0f) return@detectHorizontalDragGestures
                             totalDrag += delta
-                            val absoluteIndexFloat = (dragStartIndex + totalDrag / tabStepPx)
-                                .coerceIn(0f, tabs.lastIndex.toFloat())
-                            dragOffset = absoluteIndexFloat * tabStepPx - selectedIndex * tabStepPx
+                            val absoluteIndexFloat = (dragStartIndex + totalDrag / step)
+                                .coerceIn(0f, currentLastIndex.toFloat())
+                            dragOffset = absoluteIndexFloat * step - currentSelectedIndex * step
 
                             val approxTab = absoluteIndexFloat.roundToInt()
                             if (approxTab != lastHapticTab) {
@@ -171,11 +228,15 @@ fun FloatingBottomBar(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            val glassTint = glassContentColor()
+            val adaptiveTint = if (useGlass) glassTint else null
             tabs.forEachIndexed { index, tab ->
                 BottomBarItem(
                     tab = tab,
                     selected = index == selectedIndex,
                     glassSpec = glassSpec,
+                    selectedTint = adaptiveTint,
+                    unselectedTint = adaptiveTint?.copy(alpha = 0.65f),
                     onClick = { onTabSelected(index) },
                     modifier = Modifier.weight(1f),
                 )
@@ -191,6 +252,8 @@ private fun BottomBarItem(
     glassSpec: AnimationSpec<Float>,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    selectedTint: Color? = null,
+    unselectedTint: Color? = null,
 ) {
     val scale by animateFloatAsState(
         targetValue = if (selected) 1.08f else 1f,
@@ -199,7 +262,11 @@ private fun BottomBarItem(
     )
     val haptics = rememberHaptics()
     val tint by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+        targetValue = if (selected) {
+            selectedTint ?: MaterialTheme.colorScheme.primary
+        } else {
+            unselectedTint ?: MaterialTheme.colorScheme.onSurfaceVariant
+        },
         animationSpec = tween(200),
         label = "tabTint",
     )
@@ -222,7 +289,7 @@ private fun BottomBarItem(
             contentDescription = tab.label,
             tint = tint,
             modifier = Modifier
-                .size(25.dp)
+                .size(TAB_ICON_SIZE)
                 .graphicsLayer {
                     scaleX = scale
                     scaleY = scale
@@ -231,7 +298,7 @@ private fun BottomBarItem(
         Spacer(Modifier.height(TAB_ICON_LABEL_GAP))
         Text(
             text = tab.label,
-            style = MaterialTheme.typography.labelSmall,
+            style = tabLabelStyle(),
             color = tint,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
