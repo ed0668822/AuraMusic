@@ -1,3 +1,4 @@
+// Aurelis © 2026. GPL-3.0-or-later
 package com.music.aurelis.ui.components
 
 import androidx.compose.foundation.background
@@ -36,6 +37,8 @@ private val POPUP_CARD_SHAPE = RoundedCornerShape(20.dp)
 private val POPUP_SCRIM_COLOR = Color.Black.copy(alpha = 0.4f)
 private val POPUP_WIDTH = 320.dp
 private val POPUP_CONTENT_MAX_HEIGHT = 420.dp
+
+internal val ACTION_HEIGHT = 48.dp
 
 @OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable
