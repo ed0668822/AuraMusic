@@ -1,0 +1,69 @@
+
+name: Aurelis Music - AI Build Inspector
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build APK
+        id: build
+        shell: bash
+        run: |
+          chmod +x gradlew
+          set +e
+          ./gradlew assembleDebug --stacktrace \
+            > build.log 2>&1
+          RESULT=$?
+          echo "build_exit=$RESULT" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Gemini AI analysis
+        if: always()
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+          BUILD_STATUS: ${{ steps.build.outputs.build_exit }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          python3 scripts/gemini_report.py
+
+      - name: Upload build report and APK
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aurelis-build-report
+          path: |
+            build.log
+            aurelis-report.md
+            app/build/outputs/apk/debug/*.apk
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Fail workflow if build failed
+        if: always() && steps.build.outputs.build_exit != '0'
+        run: exit 1
