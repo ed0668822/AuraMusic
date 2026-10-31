@@ -1,0 +1,108 @@
+
+import os
+import requests
+from pathlib import Path
+
+API_KEY = os.getenv("GEMINI_API_KEY")
+MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+STATUS = os.getenv("BUILD_STATUS", "unknown")
+WEBHOOK = os.getenv("DISCORD_WEBHOOK_URL")
+
+REPO = os.getenv("GITHUB_REPOSITORY", "Aurelis Music")
+RUN_URL = os.getenv("GITHUB_RUN_URL", "")
+
+log = Path("build.log").read_text(
+    encoding="utf-8", errors="replace"
+) if Path("build.log").exists() else "No build log found."
+
+# Limitar el tamaño del registro enviado a Gemini.
+log = log[-30000:]
+
+result = (
+    "SUCCESS" if STATUS == "0"
+    else "FAILED" if STATUS != "unknown"
+    else "UNKNOWN"
+)
+
+prompt = f"""
+Eres un ingeniero Android especializado en Gradle,
+Kotlin, Java y aplicaciones Android.
+
+Analiza el siguiente resultado de compilación
+de Aurelis Music.
+
+Repositorio: {REPO}
+Estado de Gradle: {result}
+
+Necesito un informe en español con:
+
+1. Estado general de compilación.
+2. Tareas que terminaron correctamente,
+   cuando el log permita identificarlas.
+3. Archivos que presentan errores.
+4. Número de línea, si está disponible.
+5. Mensaje de error original.
+6. Explicación de la causa probable.
+7. Solución recomendada.
+8. Dependencias o configuraciones problemáticas.
+9. Si se generó la APK o no.
+
+No inventes archivos ni errores.
+Distingue los errores confirmados de las
+posibles causas.
+
+REGISTRO DE GRADLE:
+{log}
+"""
+
+report = "No se pudo generar el análisis de Gemini."
+
+if API_KEY:
+    try:
+        response = requests.post(
+            f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent",
+            headers={
+                "x-goog-api-key": API_KEY,
+                "Content-Type": "application/json"
+            },
+            json={
+                "contents": [{
+                    "parts": [{"text": prompt}]
+                }]
+            },
+            timeout=120
+        )
+        response.raise_for_status()
+        data = response.json()
+
+        report = data["candidates"][0]["content"]["parts"][0]["text"]
+
+    except Exception as error:
+        report = f"Error al consultar Gemini: {error}"
+
+Path("aurelis-report.md").write_text(
+    f"# Aurelis Music Build Report\n\n"
+    f"Estado: {result}\n\n{report}",
+    encoding="utf-8"
+)
+
+# Enviar resumen a Discord
+if WEBHOOK:
+    try:
+        message = (
+            f"**AURELIS MUSIC - BUILD {result}**\n"
+            f"Repositorio: {REPO}\n"
+            f"Informe:\n{report[:1400]}\n"
+            f"**Registro completo:** {RUN_URL}"
+        )
+
+        requests.post(
+            WEBHOOK,
+            json={"content": message},
+            timeout=20
+        ).raise_for_status()
+
+    except Exception as error:
+        print(f"Discord notification error: {error}")
+
+print("Gemini analysis completed.")
