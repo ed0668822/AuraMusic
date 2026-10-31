@@ -1,13 +1,17 @@
+// Aurelis © 2026. GPL-3.0-or-later.
+
 package com.music.aurelis.ui.components.backdrop.shadow
 
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.BlurEffect
+import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.clipPath
-import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.layer.CompositingStrategy
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
@@ -17,10 +21,9 @@ import androidx.compose.ui.node.invalidateDraw
 import androidx.compose.ui.node.requireGraphicsContext
 import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.IntSize
 import com.music.aurelis.ui.components.backdrop.internal.ShapeProvider
-import com.music.aurelis.ui.components.backdrop.internal.blur
-import kotlin.math.ceil
+import com.music.aurelis.ui.components.backdrop.internal.clipOutline
+import com.music.aurelis.ui.components.backdrop.isRenderEffectSupported
 
 internal class InnerShadowElement(
     val shapeProvider: ShapeProvider,
@@ -67,14 +70,22 @@ internal class InnerShadowNode(
 
     override val shouldAutoInvalidate: Boolean = false
 
-    private var innerShadowLayer: GraphicsLayer? = null
+    private var shadowLayer: GraphicsLayer? = null
+
     private val paint = Paint()
+    private var clipPath: Path? = null
+
+    private var prevRadius = Float.NaN
 
     override fun ContentDrawScope.draw() {
-        val shadow = shadow() ?: return drawContent()
+        drawContent()
 
-        val innerShadowLayer = innerShadowLayer
-        if (innerShadowLayer != null) {
+        if (!isRenderEffectSupported()) return
+
+        val shadow = shadow() ?: return
+
+        val shadowLayer = shadowLayer
+        if (shadowLayer != null) {
             val size = size
             val density: Density = this
             val layoutDirection = layoutDirection
@@ -82,38 +93,50 @@ internal class InnerShadowNode(
             val radius = shadow.radius.toPx()
             val offsetX = shadow.offset.x.toPx()
             val offsetY = shadow.offset.y.toPx()
-            val shadowSize = IntSize(
-                ceil(size.width + radius * 4f + offsetX).toInt(),
-                ceil(size.height + radius * 4f + offsetY).toInt()
-            )
+
             val outline = shapeProvider.shape.createOutline(size, layoutDirection, density)
+            val clipPath =
+                if (outline is Outline.Rounded) {
+                    clipPath ?: Path().also { clipPath = it }
+                } else {
+                    null
+                }
 
             configurePaint(shadow)
 
-            innerShadowLayer.alpha = shadow.alpha
-            innerShadowLayer.blendMode = shadow.blendMode
-            innerShadowLayer.record(shadowSize) {
-                translate(radius * 2f + offsetX, radius * 2f + offsetY) {
-                    val canvas = drawContext.canvas
-                    // To simulate an inner shadow, we draw the inverted shadow and clip to the shape
-                    canvas.drawOutline(outline, paint)
-                    canvas.translate(-offsetX, -offsetY)
-                    canvas.drawOutline(outline, InnerShadowMaskPaint)
-                    canvas.translate(offsetX, offsetY)
-                }
+            shadowLayer.alpha = shadow.alpha
+            shadowLayer.blendMode = shadow.blendMode
+            if (prevRadius != radius) {
+                shadowLayer.renderEffect =
+                    if (radius > 0f) {
+                        BlurEffect(radius, radius, TileMode.Decal)
+                    } else {
+                        null
+                    }
+                prevRadius = radius
+            }
+            shadowLayer.record {
+                val canvas = drawContext.canvas
+                canvas.save()
+                canvas.clipOutline(outline, clipPath)
+                canvas.drawOutline(outline, paint)
+                canvas.translate(offsetX, offsetY)
+                canvas.drawOutline(outline, ShadowMaskPaint)
+                canvas.translate(-offsetX, -offsetY)
+                canvas.restore()
             }
 
-            translate(-radius * 2f, -radius * 2f) {
-                drawLayer(innerShadowLayer)
-            }
+            val canvas = drawContext.canvas
+            canvas.save()
+            canvas.clipOutline(outline, clipPath)
+            drawLayer(shadowLayer)
+            canvas.restore()
         }
-
-        drawContent()
     }
 
     override fun onAttach() {
         val graphicsContext = requireGraphicsContext()
-        innerShadowLayer =
+        shadowLayer =
             graphicsContext.createGraphicsLayer().apply {
                 compositingStrategy = CompositingStrategy.Offscreen
             }
@@ -121,18 +144,17 @@ internal class InnerShadowNode(
 
     override fun onDetach() {
         val graphicsContext = requireGraphicsContext()
-        innerShadowLayer?.let { layer ->
+        shadowLayer?.let { layer ->
             graphicsContext.releaseGraphicsLayer(layer)
-            innerShadowLayer = null
+            shadowLayer = null
         }
     }
 
     private fun DrawScope.configurePaint(shadow: InnerShadow) {
         paint.color = shadow.color
-        paint.blur(shadow.radius.toPx())
     }
 }
 
-private val InnerShadowMaskPaint = Paint().apply {
+private val ShadowMaskPaint = Paint().apply {
     blendMode = BlendMode.Clear
 }
