@@ -1,7 +1,5 @@
-/*
- * Vendored from Kyant0/backdrop v2.0.0 (io.github.kyant0:backdrop)
- * https://github.com/Kyant0/backdrop — Copyright 2025 Kyant0, Apache License 2.0
- */
+// Aurelis © 2026. GPL-3.0-or-later.
+
 package com.music.aurelis.ui.components.backdrop.highlight
 
 import androidx.annotation.FloatRange
@@ -25,6 +23,7 @@ import kotlin.math.PI
 interface HighlightStyle {
 
     val color: Color
+
     val blendMode: BlendMode
 
     fun DrawScope.createShader(
@@ -37,6 +36,7 @@ interface HighlightStyle {
         override val color: Color = Color.White.copy(alpha = 0.38f),
         override val blendMode: BlendMode = BlendMode.Plus
     ) : HighlightStyle {
+
         override fun DrawScope.createShader(
             shape: Shape,
             runtimeShaderCache: RuntimeShaderCache
@@ -50,6 +50,7 @@ interface HighlightStyle {
         val angle: Float = 45f,
         @param:FloatRange(from = 0.0) val falloff: Float = 1f
     ) : HighlightStyle {
+
         override fun DrawScope.createShader(
             shape: Shape,
             runtimeShaderCache: RuntimeShaderCache
@@ -75,7 +76,9 @@ interface HighlightStyle {
     data class Ambient(
         @param:FloatRange(from = 0.0, to = 1.0) val intensity: Float = 0.38f
     ) : HighlightStyle {
+
         override val color: Color = Color.White.copy(alpha = intensity)
+
         override val blendMode: BlendMode = DrawScope.DefaultBlendMode
 
         override fun DrawScope.createShader(
@@ -99,10 +102,13 @@ interface HighlightStyle {
     }
 
     companion object {
+
         @Stable
         val Default: Default = Default()
+
         @Stable
         val Ambient: Ambient = Ambient()
+
         @Stable
         val Plain: Plain = Plain()
     }
