@@ -1,4 +1,4 @@
-// Aurelis © 2026. GPL-3.0-or-later.
+// Aurelis © 2026. GPL-3.0-or-later
 package com.music.aurelis.ui.components
 
 import androidx.compose.foundation.Canvas
@@ -57,7 +57,7 @@ fun ExplicitSongTitle(
     fadeOverflow: Boolean = false,
 ) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
-        if (song.isExplicit == true) {
+        if (song.isExplicit) {
             ExplicitBadge(badgeColor)
             Spacer(Modifier.width(6.dp))
         }
@@ -87,7 +87,7 @@ fun FadingLine(text: String, style: TextStyle, color: Color, modifier: Modifier 
         softWrap = false,
         overflow = TextOverflow.Clip,
         onTextLayout = { overflowing = it.didOverflowWidth },
-        modifier = modifier.then(if (overflowing) Modifier.fadingEdges(LINE_FADE, end = { 1f }) else Modifier),
+        modifier = modifier.then(if (overflowing) Modifier.fadingEdges(LINE_FADE, end = FullFade) else Modifier),
     )
 }
 
@@ -112,6 +112,7 @@ fun FadingText(text: String, style: TextStyle, color: Color, maxLines: Int, modi
 }
 
 val LINE_FADE = 36.dp
+private val FullFade = { 1f }
 
 @Composable
 fun ExplicitBadge(color: Color, modifier: Modifier = Modifier) {
