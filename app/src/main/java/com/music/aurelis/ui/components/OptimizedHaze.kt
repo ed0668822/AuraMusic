@@ -1,4 +1,4 @@
-// Aurelis © 2026. GPL-3.0-or-later.
+// Aurelis © 2026. GPL-3.0-or-later
 package com.music.aurelis.ui.components
 
 import androidx.compose.ui.Modifier
@@ -30,5 +30,11 @@ fun menuFrost(fill: Color, alpha: Float = MENU_FROST_ALPHA): HazeStyle = HazeSty
     fallbackTint = HazeTint(fill),
 )
 
+fun Modifier.liveMenuFrost(state: HazeState, fill: Color): Modifier =
+    optimizedHazeEffect(state = state, style = menuFrost(fill)) {
+        inputScale = HazeInputScale.Fixed(LIVE_FROST_INPUT_SCALE)
+    }
+
+private const val LIVE_FROST_INPUT_SCALE = 0.10f
 const val MENU_FROST_ALPHA = 0.80f
 val MenuFrostDark = Color(0xFF1C1C1E)
