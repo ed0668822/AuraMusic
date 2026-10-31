@@ -1,3 +1,4 @@
+// Aurelis © 2026. GPL-3.0-or-later
 package com.music.aurelis.ui.components.backdrop.backdrops
 
 import androidx.compose.ui.Modifier
@@ -54,6 +55,9 @@ private class LayerBackdropNode(
 ) : DrawModifierNode, GlobalPositionAwareModifierNode, Modifier.Node() {
 
     override fun ContentDrawScope.draw() {
+        // Record once and composite, rather than draw-then-record.
+        // Recording first and then blitting the finished layer to the screen
+        // produces the same pixels off one pass.
         if (size.width < 1f || size.height < 1f) {
             drawContent()
             return
