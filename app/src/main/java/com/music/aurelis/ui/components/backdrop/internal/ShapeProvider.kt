@@ -1,7 +1,4 @@
-/*
- * Vendored from Kyant0/backdrop v2.0.0 (io.github.kyant0:backdrop)
- * https://github.com/Kyant0/backdrop — Copyright 2025 Kyant0, Apache License 2.0
- */
+// Aurelis © 2026. GPL-3.0-or-later
 package com.music.aurelis.ui.components.backdrop.internal
 
 import androidx.compose.runtime.Immutable
@@ -24,6 +21,7 @@ internal class ShapeProvider(val shapeBlock: () -> Shape) {
         get() = shapeBlock()
 
     val shape = object : Shape {
+
         override fun createOutline(
             size: Size,
             layoutDirection: LayoutDirection,
@@ -40,6 +38,7 @@ internal class ShapeProvider(val shapeBlock: () -> Shape) {
                 _density = density.density
                 _outline = shape.createOutline(size, layoutDirection, density)
             }
+
             return _outline!!
         }
     }
