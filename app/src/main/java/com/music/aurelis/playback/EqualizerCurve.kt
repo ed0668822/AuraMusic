@@ -1,3 +1,4 @@
+// Aurelis © 2026. GPL-3.0-or-later
 package com.music.aurelis.playback
 
 import kotlin.math.abs
@@ -10,13 +11,18 @@ enum class FilterKind { BELL, LOW_SHELF, HIGH_SHELF }
 class FilterSlot(val kind: FilterKind, val frequencyHz: Float)
 
 object EqLayout {
+
     val MANUAL_BANDS_HZ = floatArrayOf(60f, 150f, 400f, 1_000f, 2_500f, 6_000f, 14_000f)
+
     const val MANUAL_Q = 1.0f
+
     const val MANUAL_FIRST = 0
     const val MANUAL_COUNT = 7
+
     const val TONE_LOW = 7
     const val TONE_MID = 8
     const val TONE_HIGH = 9
+
     const val SLOTS = 10
 
     val slots: List<FilterSlot> = buildList {
@@ -46,6 +52,7 @@ class EqCurve(
 ) {
     companion object {
         val FLAT = of(FloatArray(EqLayout.SLOTS), FloatArray(EqLayout.SLOTS) { 0.707f })
+
         fun of(gainsDb: FloatArray, qs: FloatArray): EqCurve =
             EqCurve(gainsDb, qs, preampFor(gainsDb, qs))
     }
