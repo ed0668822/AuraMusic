@@ -1,3 +1,4 @@
+// Aurelis © 2026. GPL-3.0-or-later
 package com.music.aurelis.ui.components
 
 import androidx.compose.foundation.background
@@ -5,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -23,17 +25,22 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
+import com.music.aurelis.R
+
+val LocalSearchFieldOnSurface = staticCompositionLocalOf { false }
 
 @Composable
 fun SearchField(
@@ -41,31 +48,38 @@ fun SearchField(
     onQueryChange: (String) -> Unit,
     onSubmit: () -> Unit,
     focusRequester: FocusRequester = remember { FocusRequester() },
-    placeholder: String = "Buscar canciones, artistas, álbumes…",
+    placeholder: String = stringResource(R.string.search_hint),
     modifier: Modifier = Modifier,
 ) {
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
-
+    val submit = {
+        onSubmit()
+        focusManager.clearFocus()
+    }
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(46.dp)
-            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(11.dp))
+            .then(
+                if (LocalSearchFieldOnSurface.current) {
+                    Modifier.fillMaxHeight()
+                } else {
+                    Modifier
+                        .height(46.dp)
+                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(11.dp))
+                },
+            )
             .padding(start = 8.dp, end = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             Icons.Rounded.Search,
-            contentDescription = "Buscar",
+            contentDescription = stringResource(R.string.search),
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
                 .size(32.dp)
                 .clip(CircleShape)
-                .clickable(enabled = query.isNotBlank()) {
-                    onSubmit()
-                    focusManager.clearFocus()
-                }
+                .clickable(enabled = query.isNotBlank(), onClick = submit)
                 .padding(6.dp),
         )
         Spacer(Modifier.width(4.dp))
@@ -88,10 +102,7 @@ fun SearchField(
                 ),
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = {
-                    onSubmit()
-                    focusManager.clearFocus()
-                }),
+                keyboardActions = KeyboardActions(onSearch = { submit() }),
                 modifier = Modifier
                     .fillMaxWidth()
                     .focusRequester(focusRequester),
@@ -111,7 +122,7 @@ fun SearchField(
             ) {
                 Icon(
                     Icons.Rounded.Close,
-                    contentDescription = "Borrar búsqueda",
+                    contentDescription = stringResource(R.string.clear_search),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(18.dp),
                 )
