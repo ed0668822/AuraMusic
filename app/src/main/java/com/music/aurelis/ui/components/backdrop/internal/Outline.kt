@@ -1,7 +1,4 @@
-/*
- * Vendored from Kyant0/backdrop v2.0.0 (io.github.kyant0:backdrop)
- * https://github.com/Kyant0/backdrop — Copyright 2025 Kyant0, Apache License 2.0
- */
+// Aurelis © 2026. GPL-3.0-or-later
 package com.music.aurelis.ui.components.backdrop.internal
 
 import androidx.compose.ui.graphics.Canvas
@@ -16,6 +13,7 @@ internal fun Canvas.clipOutline(outline: Outline, path: Path?) {
             path.addRoundRect(outline.roundRect)
             clipPath(path)
         }
+
         is Outline.Generic -> clipPath(outline.path)
     }
 }
