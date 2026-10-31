@@ -1,4 +1,4 @@
-// Aurelis © 2026. GPL-3.0-or-later.
+// Aurelis © 2026. GPL-3.0-or-later
 package com.music.aurelis.ui.components
 
 import android.os.Build
@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
@@ -15,23 +16,27 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.music.aurelis.data.AppSettings
 import com.music.aurelis.ui.components.backdrop.Backdrop
 import com.music.aurelis.ui.components.backdrop.backdrops.LayerBackdrop
 import com.music.aurelis.ui.components.backdrop.drawBackdrop
 import com.music.aurelis.ui.components.backdrop.effects.blur
+import com.music.aurelis.ui.components.backdrop.effects.colorControls
 import com.music.aurelis.ui.components.backdrop.effects.lens
 import com.music.aurelis.ui.components.backdrop.highlight.Highlight
 import com.music.aurelis.ui.components.backdrop.highlight.HighlightElement
 import com.music.aurelis.ui.components.backdrop.internal.ShapeProvider
 import com.music.aurelis.ui.components.backdrop.shadow.Shadow
+import androidx.compose.ui.unit.dp
 
-val LocalLiquidGlassEnabled = staticCompositionLocalOf { true }
+val LocalLiquidGlassEnabled = staticCompositionLocalOf { false }
+
 val LocalAppBackdrop = staticCompositionLocalOf<Backdrop> { error("No AppBackdrop provided") }
+
 internal val LocalGlassExport = compositionLocalOf<LayerBackdrop?> { null }
 
-fun isGlassSupported(sdkInt: Int = Build.VERSION.SDK_INT): Boolean =
-    sdkInt >= Build.VERSION_CODES.S
+fun isGlassSupported(sdkInt: Int = Build.VERSION.SDK_INT): Boolean = sdkInt >= Build.VERSION_CODES.S
 
 private const val VIBRANCY = 1f
 private const val BLUR_RADIUS_DP = 8f
@@ -53,12 +58,10 @@ fun glassIndicatorColor(): Color =
     if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) {
         Color.White.copy(alpha = 0.5f)
     } else {
-        Color.White.copy(alpha = 0.14f)
+        Color.White.copy(alpha = DARK_INDICATOR_OPACITY)
     }
 
-@Composable
-fun glassBarTint(): Color? =
-    if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) null else Color.White.copy(alpha = 0.09f)
+private const val DARK_INDICATOR_OPACITY = 0.14f
 
 @Composable
 fun Modifier.lightweightLiquidGlass(
@@ -84,7 +87,9 @@ fun Modifier.lightweightLiquidGlass(
                     shapeProvider = shapeProvider,
                     highlight = { Highlight.Default },
                 )
-            } else Modifier,
+            } else {
+                Modifier
+            },
         )
         .border(GLASS_EDGE_WIDTH, GLASS_EDGE_COLOR, shape)
 }
@@ -107,6 +112,11 @@ fun Modifier.liquidGlass(
     surfaceTint: Color? = null,
 ): Modifier {
     if (!isGlassSupported()) return this
+    val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
+    if (reduceDynamicBlur) {
+        return background(MaterialTheme.colorScheme.surface, shape)
+            .border(GLASS_EDGE_WIDTH, GLASS_EDGE_COLOR, shape)
+    }
     val backdrop = LocalAppBackdrop.current
     val exportedBackdrop = LocalGlassExport.current
     val density = LocalDensity.current
@@ -124,6 +134,7 @@ fun Modifier.liquidGlass(
         backdrop = backdrop,
         shape = { shape },
         effects = {
+            colorControls(saturation = 1f + 0.5f * VIBRANCY)
             blur(blurPx)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 lens(
@@ -136,7 +147,9 @@ fun Modifier.liquidGlass(
         },
         highlight = { Highlight.Default },
         shadow = { Shadow.Default },
-        onDrawSurface = { drawRect(color = surfaceTintColor, size = size) },
+        onDrawSurface = {
+            drawRect(color = surfaceTintColor, size = size)
+        },
         exportedBackdrop = exportedBackdrop,
         backdropScale = GLASS_RESOLUTION_SCALE,
     )
