@@ -1,3 +1,4 @@
+// Aurelis © 2026. GPL-3.0-or-later
 package com.music.aurelis.ui.components.backdrop.effects
 
 import androidx.annotation.FloatRange
