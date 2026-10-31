@@ -1,4 +1,4 @@
-// Aurelis © 2026. GPL-3.0-or-later.
+// Aurelis © 2026. GPL-3.0-or-later
 package com.music.aurelis.ui.player
 
 import androidx.compose.runtime.Stable
@@ -22,6 +22,7 @@ class PlayerDock {
 
     var sheetOffset: (() -> Float)? by mutableStateOf(null)
     var sheetTravel by mutableFloatStateOf(0f)
+
     var attached by mutableStateOf(false)
         internal set
 
@@ -46,6 +47,7 @@ class PlayerDock {
     }
 
     internal fun miniArtCorner(): Dp = miniArtCorner
+
     internal fun offset(): Float? = sheetOffset?.invoke()?.takeUnless { it.isNaN() }
 
     fun openFraction(): Float {
