@@ -1,7 +1,5 @@
-/*
- * Vendored from Kyant0/backdrop v2.0.0 (io.github.kyant0:backdrop)
- * https://github.com/Kyant0/backdrop — Copyright 2025 Kyant0, Apache License 2.0
- */
+// Aurelis © 2026. GPL-3.0-or-later.
+
 package com.music.aurelis.ui.components.backdrop.highlight
 
 import androidx.annotation.FloatRange
@@ -19,10 +17,13 @@ data class Highlight(
 ) {
 
     companion object {
+
         @Stable
         val Default: Highlight = Highlight()
+
         @Stable
         val Ambient: Highlight = Highlight(style = HighlightStyle.Ambient)
+
         @Stable
         val Plain: Highlight = Highlight(style = HighlightStyle.Plain)
     }
