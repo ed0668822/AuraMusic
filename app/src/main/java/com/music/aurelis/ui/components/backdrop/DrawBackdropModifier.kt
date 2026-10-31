@@ -1,7 +1,5 @@
-/*
- * Vendored from Kyant0/backdrop v2.0.0 (io.github.kyant0:backdrop)
- * https://github.com/Kyant0/backdrop — Copyright 2025 Kyant0, Apache License 2.0
- */
+// Aurelis © 2026. GPL-3.0-or-later.
+
 package com.music.aurelis.ui.components.backdrop
 
 import androidx.compose.runtime.getValue
@@ -97,6 +95,7 @@ fun Modifier.drawBackdrop(
     onDrawBackdrop: DrawScope.(drawBackdrop: DrawScope.() -> Unit) -> Unit = DefaultOnDrawBackdrop,
     onDrawSurface: (DrawScope.() -> Unit)? = null,
     onDrawFront: (DrawScope.() -> Unit)? = null,
+    
     backdropScale: Float = 1f
 ): Modifier {
     val shapeProvider = ShapeProvider(shape)
@@ -284,6 +283,7 @@ private class DrawBackdropNode(
         if (padding != 0f) {
             canvas.translate(padding, padding)
         }
+        
         if (scale != 1f) {
             canvas.scale(scale, scale)
         }
