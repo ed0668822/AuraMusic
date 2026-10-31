@@ -1,305 +1,425 @@
-// Aurelis © 2026. GPL-3.0-or-later.
+// Aurelis © 2026. GPL-3.0-or-later
 package com.music.aurelis.ui.icons
 
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathFillType
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.VectorGroup
-import androidx.compose.ui.graphics.vector.VectorPath
+import androidx.compose.ui.graphics.vector.addPathNodes
+import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
-import com.composables.sfsymbols.SfSymbols
-import com.composables.sfsymbols.monochrome.SFApplewatch
-import com.composables.sfsymbols.monochrome.SFArchivebox
-import com.composables.sfsymbols.monochrome.SFArrowDownCircle
-import com.composables.sfsymbols.monochrome.SFArrowDownDocument
-import com.composables.sfsymbols.monochrome.SFArrowRightCircle
-import com.composables.sfsymbols.monochrome.SFArrowTrianglehead2Clockwise
-import com.composables.sfsymbols.monochrome.SFArrowUpArrowDown
-import com.composables.sfsymbols.monochrome.SFArrowUpCircle
-import com.composables.sfsymbols.monochrome.SFArrowUpDocument
-import com.composables.sfsymbols.monochrome.SFArrowUpLeftAndArrowDownRight
-import com.composables.sfsymbols.monochrome.SFArrowUturnBackward
-import com.composables.sfsymbols.monochrome.SFCableConnector
-import com.composables.sfsymbols.monochrome.SFCellularbars
-import com.composables.sfsymbols.monochrome.SFCharacterBubble
-import com.composables.sfsymbols.monochrome.SFChartBar
-import com.composables.sfsymbols.monochrome.SFChartLineUptrendXyaxis
-import com.composables.sfsymbols.monochrome.SFCheckmark
-import com.composables.sfsymbols.monochrome.SFCheckmarkCircle
-import com.composables.sfsymbols.monochrome.SFCheckmarkIcloud
-import com.composables.sfsymbols.monochrome.SFChevronBackward
-import com.composables.sfsymbols.monochrome.SFChevronRight
-import com.composables.sfsymbols.monochrome.SFCircleLefthalfFilled
-import com.composables.sfsymbols.monochrome.SFClock
-import com.composables.sfsymbols.monochrome.SFClockArrowTriangleheadCounterclockwiseRotate90
-import com.composables.sfsymbols.monochrome.SFDocumentOnDocument
-import com.composables.sfsymbols.monochrome.SFDotRadiowavesLeftAndRight
-import com.composables.sfsymbols.monochrome.SFDrop
-import com.composables.sfsymbols.monochrome.SFDropHalffull
-import com.composables.sfsymbols.monochrome.SFEllipsisCircle
-import com.composables.sfsymbols.monochrome.SFExclamationmarkCircle
-import com.composables.sfsymbols.monochrome.SFExclamationmarkTriangle
-import com.composables.sfsymbols.monochrome.SFEyeSlash
-import com.composables.sfsymbols.monochrome.SFFigureWalkMotion
-import com.composables.sfsymbols.monochrome.SFFolder
-import com.composables.sfsymbols.monochrome.SFGaugeWithDotsNeedle67percent
-import com.composables.sfsymbols.monochrome.SFGearshape
-import com.composables.sfsymbols.monochrome.SFGlobe
-import com.composables.sfsymbols.monochrome.SFHandTap
-import com.composables.sfsymbols.monochrome.SFHeadphones
-import com.composables.sfsymbols.monochrome.SFHeart
-import com.composables.sfsymbols.monochrome.SFHeartFill
-import com.composables.sfsymbols.monochrome.SFHifispeaker
-import com.composables.sfsymbols.monochrome.SFIcloud
-import com.composables.sfsymbols.monochrome.SFIcloudSlash
-import com.composables.sfsymbols.monochrome.SFInfoCircle
-import com.composables.sfsymbols.monochrome.SFInternaldrive
-import com.composables.sfsymbols.monochrome.SFKey
-import com.composables.sfsymbols.monochrome.SFLadybug
-import com.composables.sfsymbols.monochrome.SFLine3Horizontal
-import com.composables.sfsymbols.monochrome.SFLine3HorizontalDecreaseCircle
-import com.composables.sfsymbols.monochrome.SFLivephotoSlash
-import com.composables.sfsymbols.monochrome.SFLock
-import com.composables.sfsymbols.monochrome.SFMoonZzz
-import com.composables.sfsymbols.monochrome.SFMusicMicrophone
-import com.composables.sfsymbols.monochrome.SFMusicNote
-import com.composables.sfsymbols.monochrome.SFMusicNoteHouse
-import com.composables.sfsymbols.monochrome.SFMusicNoteList
-import com.composables.sfsymbols.monochrome.SFMusicNoteSlash
-import com.composables.sfsymbols.monochrome.SFPaintbrushPointed
-import com.composables.sfsymbols.monochrome.SFPencil
-import com.composables.sfsymbols.monochrome.SFPencilTip
-import com.composables.sfsymbols.monochrome.SFPerson
-import com.composables.sfsymbols.monochrome.SFPerson2
-import com.composables.sfsymbols.monochrome.SFPerson2BadgeGearshape
-import com.composables.sfsymbols.monochrome.SFPersonCropCircle
-import com.composables.sfsymbols.monochrome.SFPersonCropCircleBadgePlus
-import com.composables.sfsymbols.monochrome.SFPersonCropCircleFill
-import com.composables.sfsymbols.monochrome.SFPin
-import com.composables.sfsymbols.monochrome.SFPlay
-import com.composables.sfsymbols.monochrome.SFPlayCircle
-import com.composables.sfsymbols.monochrome.SFPlus
-import com.composables.sfsymbols.monochrome.SFPuzzlepieceExtension
-import com.composables.sfsymbols.monochrome.SFRecordCircle
-import com.composables.sfsymbols.monochrome.SFRectanglePortraitAndArrowRight
-import com.composables.sfsymbols.monochrome.SFRectangleSlash
-import com.composables.sfsymbols.monochrome.SFServerRack
-import com.composables.sfsymbols.monochrome.SFShuffle
-import com.composables.sfsymbols.monochrome.SFSliderHorizontal3
-import com.composables.sfsymbols.monochrome.SFSparkles
-import com.composables.sfsymbols.monochrome.SFSpeakerSlash
-import com.composables.sfsymbols.monochrome.SFSpeakerWave2
-import com.composables.sfsymbols.monochrome.SFSquareAndArrowUp
-import com.composables.sfsymbols.monochrome.SFSquareGrid2x2
-import com.composables.sfsymbols.monochrome.SFSquareStack
-import com.composables.sfsymbols.monochrome.SFStar
-import com.composables.sfsymbols.monochrome.SFStarFill
-import com.composables.sfsymbols.monochrome.SFStopwatch
-import com.composables.sfsymbols.monochrome.SFSunMax
-import com.composables.sfsymbols.monochrome.SFTag
-import com.composables.sfsymbols.monochrome.SFTextAlignleft
-import com.composables.sfsymbols.monochrome.SFTextBadgeMinus
-import com.composables.sfsymbols.monochrome.SFTextBadgePlus
-import com.composables.sfsymbols.monochrome.SFTextformat
-import com.composables.sfsymbols.monochrome.SFTextLineFirstAndArrowtriangleForward
-import com.composables.sfsymbols.monochrome.SFTextLineLastAndArrowtriangleForward
-import com.composables.sfsymbols.monochrome.SFTrash
-import com.composables.sfsymbols.monochrome.SFVideo
-import com.composables.sfsymbols.monochrome.SFWaterWaves
-import com.composables.sfsymbols.monochrome.SFWaveform
-import com.composables.sfsymbols.monochrome.SFWifi
-import com.composables.sfsymbols.monochrome.SFWrenchAndScrewdriver
-import com.composables.sfsymbols.monochrome.SFXmark
 
-object AurelisIcons {
-    // ---- Settings ----
-    val AccountPlaceholder: ImageVector by lazy { bold(SfSymbols.Monochrome.SFPersonCropCircleFill) }
-    val Add: ImageVector by lazy { bold(SfSymbols.Monochrome.SFPlus) }
-    val AddAccount: ImageVector by lazy { bold(SfSymbols.Monochrome.SFPersonCropCircleBadgePlus) }
-    val Advanced: ImageVector by lazy { bold(SfSymbols.Monochrome.SFWrenchAndScrewdriver) }
-    val Animation: ImageVector by lazy { bold(SfSymbols.Monochrome.SFFigureWalkMotion) }
-    val Appearance: ImageVector by lazy { bold(SfSymbols.Monochrome.SFPaintbrushPointed) }
-    val Apps: ImageVector by lazy { bold(SfSymbols.Monochrome.SFSquareGrid2x2) }
-    val ArrowBack: ImageVector by lazy { bold(SfSymbols.Monochrome.SFChevronBackward) }
-    val AutoAwesome: ImageVector by lazy { bold(SfSymbols.Monochrome.SFSparkles) }
-    val BarChart: ImageVector by lazy { bold(SfSymbols.Monochrome.SFChartBar) }
-    val Bluetooth: ImageVector by lazy { bold(SfSymbols.Monochrome.SFHeadphones) }
-    val BlurOff: ImageVector by lazy { bold(SfSymbols.Monochrome.SFDrop) }
-    val BlurOn: ImageVector by lazy { bold(SfSymbols.Monochrome.SFDropHalffull) }
-    val Brightness: ImageVector by lazy { bold(SfSymbols.Monochrome.SFSunMax) }
-    val Cached: ImageVector by lazy { bold(SfSymbols.Monochrome.SFArrowTrianglehead2Clockwise) }
-    val Check: ImageVector by lazy { bold(SfSymbols.Monochrome.SFCheckmark) }
-    val ChevronRight: ImageVector by lazy { bold(SfSymbols.Monochrome.SFChevronRight) }
-    val Clock: ImageVector by lazy { bold(SfSymbols.Monochrome.SFClock) }
-    val Cloud: ImageVector by lazy { bold(SfSymbols.Monochrome.SFIcloud) }
-    val CloudDone: ImageVector by lazy { bold(SfSymbols.Monochrome.SFCheckmarkIcloud) }
-    val CloudOff: ImageVector by lazy { bold(SfSymbols.Monochrome.SFIcloudSlash) }
-    val ContentCopy: ImageVector by lazy { bold(SfSymbols.Monochrome.SFDocumentOnDocument) }
-    val DeleteSweep: ImageVector by lazy { bold(SfSymbols.Monochrome.SFTrash) }
-    val Dns: ImageVector by lazy { bold(SfSymbols.Monochrome.SFServerRack) }
-    val Download: ImageVector by lazy { bold(SfSymbols.Monochrome.SFArrowDownCircle) }
-    val DragHandle: ImageVector by lazy { bold(SfSymbols.Monochrome.SFLine3Horizontal) }
-    val Draw: ImageVector by lazy { bold(SfSymbols.Monochrome.SFPencilTip) }
-    val ErrorOutline: ImageVector by lazy { bold(SfSymbols.Monochrome.SFExclamationmarkCircle) }
-    val Extension: ImageVector by lazy { bold(SfSymbols.Monochrome.SFPuzzlepieceExtension) }
-    val FileDownload: ImageVector by lazy { bold(SfSymbols.Monochrome.SFArrowDownDocument) }
-    val FileDownloadOff: ImageVector by lazy { bold(SfSymbols.Monochrome.SFIcloudSlash) }
-    val FileUpload: ImageVector by lazy { bold(SfSymbols.Monochrome.SFArrowUpDocument) }
-    val FilterAlt: ImageVector by lazy { bold(SfSymbols.Monochrome.SFLine3HorizontalDecreaseCircle) }
-    val Folder: ImageVector by lazy { bold(SfSymbols.Monochrome.SFFolder) }
-    val Font: ImageVector by lazy { bold(SfSymbols.Monochrome.SFTextformat) }
-    val FrameRate: ImageVector by lazy { bold(SfSymbols.Monochrome.SFStopwatch) }
-    val Fullscreen: ImageVector by lazy { bold(SfSymbols.Monochrome.SFArrowUpLeftAndArrowDownRight) }
-    val Gradient: ImageVector by lazy { bold(SfSymbols.Monochrome.SFCircleLefthalfFilled) }
-    val GraphicEq: ImageVector by lazy { bold(SfSymbols.Monochrome.SFWaveform) }
-    val Groups: ImageVector by lazy { bold(SfSymbols.Monochrome.SFPerson2) }
-    val History: ImageVector by lazy { bold(SfSymbols.Monochrome.SFClockArrowTriangleheadCounterclockwiseRotate90) }
-    val Key: ImageVector by lazy { bold(SfSymbols.Monochrome.SFKey) }
-    val Label: ImageVector by lazy { bold(SfSymbols.Monochrome.SFTag) }
-    val Language: ImageVector by lazy { bold(SfSymbols.Monochrome.SFGlobe) }
-    val LibraryMusic: ImageVector by lazy { bold(SfSymbols.Monochrome.SFMusicNoteHouse) }
-    val LocalOffer: ImageVector by lazy { bold(SfSymbols.Monochrome.SFTag) }
-    val Lock: ImageVector by lazy { bold(SfSymbols.Monochrome.SFLock) }
-    val Login: ImageVector by lazy { bold(SfSymbols.Monochrome.SFArrowRightCircle) }
-    val Logout: ImageVector by lazy { bold(SfSymbols.Monochrome.SFRectanglePortraitAndArrowRight) }
-    val ManageAccounts: ImageVector by lazy { bold(SfSymbols.Monochrome.SFPerson2BadgeGearshape) }
-    val Miscellaneous: ImageVector by lazy { bold(SfSymbols.Monochrome.SFEllipsisCircle) }
-    val MotionPhotosOff: ImageVector by lazy { bold(SfSymbols.Monochrome.SFLivephotoSlash) }
-    val MusicNote: ImageVector by lazy { bold(SfSymbols.Monochrome.SFMusicNote) }
-    val MusicOff: ImageVector by lazy { bold(SfSymbols.Monochrome.SFMusicNoteSlash) }
-    val Notes: ImageVector by lazy { bold(SfSymbols.Monochrome.SFTextAlignleft) }
-    val Performance: ImageVector by lazy { bold(SfSymbols.Monochrome.SFGaugeWithDotsNeedle67percent) }
-    val Person: ImageVector by lazy { bold(SfSymbols.Monochrome.SFPerson) }
-    val PlayCircle: ImageVector by lazy { bold(SfSymbols.Monochrome.SFPlayCircle) }
-    val PlaylistPlay: ImageVector by lazy { bold(SfSymbols.Monochrome.SFMusicNoteList) }
-    val RadioButtonChecked: ImageVector by lazy { bold(SfSymbols.Monochrome.SFRecordCircle) }
-    val Settings: ImageVector by lazy { bold(SfSymbols.Monochrome.SFGearshape) }
-    val Share: ImageVector by lazy { bold(SfSymbols.Monochrome.SFSquareAndArrowUp) }
-    val ShowChart: ImageVector by lazy { bold(SfSymbols.Monochrome.SFChartLineUptrendXyaxis) }
-    val SignalCellularAlt: ImageVector by lazy { bold(SfSymbols.Monochrome.SFCellularbars) }
-    val SmartButton: ImageVector by lazy { bold(SfSymbols.Monochrome.SFHandTap) }
-    val Storage: ImageVector by lazy { bold(SfSymbols.Monochrome.SFInternaldrive) }
-    val SurroundSound: ImageVector by lazy { bold(SfSymbols.Monochrome.SFHifispeaker) }
-    val SwitchAccount: ImageVector by lazy { bold(SfSymbols.Monochrome.SFPersonCropCircle) }
-    val Translate: ImageVector by lazy { bold(SfSymbols.Monochrome.SFCharacterBubble) }
-    val Tune: ImageVector by lazy { bold(SfSymbols.Monochrome.SFSliderHorizontal3) }
-    val Usb: ImageVector by lazy { bold(SfSymbols.Monochrome.SFCableConnector) }
-    val VisibilityOff: ImageVector by lazy { bold(SfSymbols.Monochrome.SFEyeSlash) }
-    val VolumeOff: ImageVector by lazy { bold(SfSymbols.Monochrome.SFSpeakerSlash) }
-    val VolumeUp: ImageVector by lazy { bold(SfSymbols.Monochrome.SFSpeakerWave2) }
-    val Warning: ImageVector by lazy { bold(SfSymbols.Monochrome.SFExclamationmarkTriangle) }
-    val Watch: ImageVector by lazy { bold(SfSymbols.Monochrome.SFApplewatch) }
-    val Waves: ImageVector by lazy { bold(SfSymbols.Monochrome.SFWaterWaves) }
-    val WebAssetOff: ImageVector by lazy { bold(SfSymbols.Monochrome.SFRectangleSlash) }
-    val Wifi: ImageVector by lazy { bold(SfSymbols.Monochrome.SFWifi) }
-    val YourData: ImageVector by lazy { bold(SfSymbols.Monochrome.SFArchivebox) }
 
-    // ---- Menus ----
-    val AddToPlaylist: ImageVector by lazy { bold(SfSymbols.Monochrome.SFTextBadgePlus) }
-    val Album: ImageVector by lazy { bold(SfSymbols.Monochrome.SFSquareStack) }
-    val Artist: ImageVector by lazy { bold(SfSymbols.Monochrome.SFMusicMicrophone) }
-    val Bug: ImageVector by lazy { bold(SfSymbols.Monochrome.SFLadybug) }
-    val Close: ImageVector by lazy { bold(SfSymbols.Monochrome.SFXmark) }
-    val Downloaded: ImageVector by lazy { bold(SfSymbols.Monochrome.SFCheckmarkCircle) }
-    val Heart: ImageVector by lazy { bold(SfSymbols.Monochrome.SFHeart) }
-    val HeartFill: ImageVector by lazy { bold(SfSymbols.Monochrome.SFHeartFill) }
-    val Info: ImageVector by lazy { bold(SfSymbols.Monochrome.SFInfoCircle) }
-    val Open: ImageVector by lazy { bold(SfSymbols.Monochrome.SFChevronRight) }
-    val Pencil: ImageVector by lazy { bold(SfSymbols.Monochrome.SFPencil) }
-    val Pin: ImageVector by lazy { bold(SfSymbols.Monochrome.SFPin) }
-    val Play: ImageVector by lazy { bold(SfSymbols.Monochrome.SFPlay) }
-    val PlayLast: ImageVector by lazy { bold(SfSymbols.Monochrome.SFTextLineLastAndArrowtriangleForward) }
-    val PlayNext: ImageVector by lazy { bold(SfSymbols.Monochrome.SFTextLineFirstAndArrowtriangleForward) }
-    val Radio: ImageVector by lazy { bold(SfSymbols.Monochrome.SFDotRadiowavesLeftAndRight) }
-    val RemoveFromPlaylist: ImageVector by lazy { bold(SfSymbols.Monochrome.SFTextBadgeMinus) }
-    val Reorder: ImageVector by lazy { bold(SfSymbols.Monochrome.SFArrowUpArrowDown) }
-    val Revert: ImageVector by lazy { bold(SfSymbols.Monochrome.SFArrowUturnBackward) }
-    val Shuffle: ImageVector by lazy { bold(SfSymbols.Monochrome.SFShuffle) }
-    val SleepTimer: ImageVector by lazy { bold(SfSymbols.Monochrome.SFMoonZzz) }
-    val Sliders: ImageVector by lazy { bold(SfSymbols.Monochrome.SFSliderHorizontal3) }
-    val Star: ImageVector by lazy { bold(SfSymbols.Monochrome.SFStar) }
-    val StarFill: ImageVector by lazy { bold(SfSymbols.Monochrome.SFStarFill) }
-    val Trash: ImageVector by lazy { bold(SfSymbols.Monochrome.SFTrash) }
-    val Upgrade: ImageVector by lazy { bold(SfSymbols.Monochrome.SFSparkles) }
-    val Upload: ImageVector by lazy { bold(SfSymbols.Monochrome.SFArrowUpCircle) }
-    val Video: ImageVector by lazy { bold(SfSymbols.Monochrome.SFVideo) }
+object AurelisCustomIcons {
 
-    internal const val BOLD_STROKE = 0.9f
-    
-    internal const val CANVAS = 31f
+    private const val STROKE = 2.2f
+    private val stroke = SolidColor(Color.Black)
 
-    internal inline fun canvas(
-        name: String,
-        width: Float,
-        height: Float,
-        autoMirror: Boolean = false,
-        content: ImageVector.Builder.() -> Unit,
-    ): ImageVector {
-        val fit = minOf(1f, CANVAS / width, CANVAS / height)
-        return ImageVector.Builder(
-            name = name,
-            defaultWidth = 24.dp,
-            defaultHeight = 24.dp,
-            viewportWidth = CANVAS,
-            viewportHeight = CANVAS,
-            autoMirror = autoMirror,
+    val Queue: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "aurelis_queue", defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 24f, viewportHeight = 24f,
         ).apply {
-            addGroup(
-                translationX = (CANVAS - width * fit) / 2f,
-                translationY = (CANVAS - height * fit) / 2f,
-                scaleX = fit,
-                scaleY = fit,
-            )
-            content()
-            clearGroup()
+            path(stroke = stroke, strokeLineWidth = 2f, strokeLineCap = StrokeCap.Round) {
+                for (y in listOf(6f, 12f, 18f)) {
+                    moveTo(8f, y)
+                    lineTo(21f, y)
+                }
+            }
+            path(fill = stroke) {
+                for (y in listOf(6f, 12f, 18f)) {
+                    moveTo(4.35f, y)
+                    arcToRelative(1.25f, 1.25f, 0f, true, true, -2.5f, 0f)
+                    arcToRelative(1.25f, 1.25f, 0f, true, true, 2.5f, 0f)
+                    close()
+                }
+            }
         }.build()
     }
 
-    private fun bold(regular: ImageVector): ImageVector {
-        val pad = BOLD_STROKE / 2f
-        return canvas(
-            name = regular.name + ".bold",
-            width = regular.viewportWidth + pad * 2f,
-            height = regular.viewportHeight + pad * 2f,
-            autoMirror = regular.autoMirror,
-        ) {
-            addGroup(translationX = pad, translationY = pad)
-            copyInto(this, regular.root)
-            clearGroup()
-        }
+    val LyricsQuote: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "aurelis_lyrics_quote", defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 24f, viewportHeight = 24f,
+        ).apply {
+            path(
+                stroke = stroke, strokeLineWidth = 2f,
+                strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round,
+            ) {
+                moveTo(6f, 3.5f)
+                lineTo(18f, 3.5f)
+                quadTo(21f, 3.5f, 21f, 6.5f)
+                lineTo(21f, 15f)
+                quadTo(21f, 18f, 18f, 18f)
+                lineTo(10f, 18f)
+                lineTo(6f, 21f)
+                lineTo(6f, 18f)
+                quadTo(3f, 18f, 3f, 15f)
+                lineTo(3f, 6.5f)
+                quadTo(3f, 3.5f, 6f, 3.5f)
+                close()
+            }
+            path(fill = stroke) {
+                for (x in listOf(7.6f, 12.8f)) {
+                    moveTo(x, 8f)
+                    lineTo(x + 3f, 8f)
+                    lineTo(x + 3f, 11.1f)
+                    quadTo(x + 3f, 13.2f, x + 0.5f, 13.7f)
+                    lineTo(x + 0.5f, 12.3f)
+                    quadTo(x + 1.7f, 12f, x + 1.7f, 11f)
+                    lineTo(x, 11f)
+                    close()
+                }
+            }
+        }.build()
     }
 
-    internal fun copyInto(builder: ImageVector.Builder, group: VectorGroup, extraStroke: Float = BOLD_STROKE) {
-        for (node in group) {
-            when (node) {
-                is VectorGroup -> {
-                    builder.addGroup(
-                        name = node.name,
-                        rotate = node.rotation,
-                        pivotX = node.pivotX,
-                        pivotY = node.pivotY,
-                        scaleX = node.scaleX,
-                        scaleY = node.scaleY,
-                        translationX = node.translationX,
-                        translationY = node.translationY,
-                        clipPathData = node.clipPathData,
-                    )
-                    copyInto(builder, node, extraStroke)
-                    builder.clearGroup()
-                }
-                is VectorPath -> builder.addPath(
-                    pathData = node.pathData,
-                    pathFillType = node.pathFillType,
-                    name = node.name,
-                    fill = node.fill,
-                    fillAlpha = 1f,
-                    stroke = node.stroke ?: node.fill,
-                    strokeAlpha = 1f,
-                    strokeLineWidth = node.strokeLineWidth + extraStroke,
-                    strokeLineCap = node.strokeLineCap,
-                    strokeLineJoin = StrokeJoin.Round,
-                    strokeLineMiter = node.strokeLineMiter,
-                )
+    val Play: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "aurelis_play",
+            defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 24f, viewportHeight = 24f,
+        ).apply {
+            path(
+                stroke = stroke,
+                strokeLineWidth = STROKE,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round,
+                fill = stroke,
+            ) {
+                moveTo(6.8f, 4.8f)
+                lineTo(19.2f, 12f)
+                lineTo(6.8f, 19.2f)
+                close()
             }
-        }
+        }.build()
+    }
+
+    val Home: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "aurelis_home",
+            defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 24f, viewportHeight = 24f,
+        ).apply {
+            path(
+                fill = stroke,
+                stroke = stroke,
+                strokeLineWidth = 1.7f,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round,
+            ) {
+                moveTo(12f, 4.05f)
+                lineTo(19.75f, 11.35f)
+                lineTo(19.75f, 19.65f)
+                lineTo(14.95f, 19.65f)
+                lineTo(14.95f, 15.6f)
+                lineTo(9.05f, 15.6f)
+                lineTo(9.05f, 19.65f)
+                lineTo(4.25f, 19.65f)
+                lineTo(4.25f, 11.35f)
+                close()
+            }
+        }.build()
+    }
+
+    val TabExplore: ImageVector by lazy {
+        fontGlyph(
+            "aurelis_tab_explore",
+            "M99.5 230.24Q58.5 230.24 58.5 188.24V93.24Q58.5 51.24 99.5 51.24H197.5Q238.5 51.24 238.5 93.24V188.24Q238.5 230.24 197.5 230.24Z" +
+                "M314.5 230.24Q273.5 230.24 273.5 188.24V93.24Q273.5 51.24 314.5 51.24H412.5Q453.5 51.24 453.5 93.24V188.24Q453.5 230.24 412.5 230.24Z" +
+                "M99.5 445.24Q58.5 445.24 58.5 403.24V307.24Q58.5 266.24 99.5 266.24H197.5Q238.5 266.24 238.5 307.24V403.24Q453.5 445.24 197.5 445.24Z" +
+                "M314.5 445.24Q273.5 445.24 273.5 403.24V307.24Q273.5 266.24 314.5 266.24H412.5Q453.5 266.24 453.5 307.24V403.24Q453.5 445.24 412.5 445.24Z",
+        )
+    }
+
+    val TabLibrary: ImageVector by lazy {
+        fontGlyph(
+            "aurelis_tab_library",
+            "M154 27.24Q156 0.24 185 0.24H322Q352 0.24 353 27.24Z" +
+                "M116 87.24Q121 56.24 150 56.24H356Q385 56.24 390 87.24Z" +
+                "M133 500.24Q66 500.24 66 434.24V187.24Q66 121.24 133 121.24H378Q446 121.24 446 187.24V434.24Q446 500.24 385 500.24Z",
+        )
+    }
+
+    val TabSearch: ImageVector by lazy {
+        fontGlyph(
+            "aurelis_tab_search",
+            "M219 374.24Q151 374.24 102.5 325.74Q54 277.24 54 209.24Q54 141.24 102.5 92.74Q151 44.24 219 44.24Q287 44.24 335.5 92.74Q384 141.24 384 209.24Q384 264.24 350 309.24L451 410.24Q458 417.24 458 427.24Q458 438.24 451 445.24Q444 452.24 434 452.24Q423 452.24 416 445.24L315 343.24Q271 374.24 219 374.24Z" +
+                "M128 300.24Q166 338.24 219 338.24Q272 338.24 310 300.24Q348 262.24 348 209.24Q348 156.24 310 118.24Q272 80.24 219 80.24Q166 80.24 128 118.24Q90 156.24 90 209.24Q90 262.24 128 300.24Z",
+        )
+    }
+
+    private fun fontGlyph(name: String, pathData: String): ImageVector =
+        ImageVector.Builder(
+            name = name,
+            defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 512f, viewportHeight = 512f,
+        ).addPath(pathData = addPathNodes(pathData), fill = stroke).build()
+
+    val Search: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "aurelis_search",
+            defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 24f, viewportHeight = 24f,
+        ).apply {
+            path(
+                stroke = stroke,
+                strokeLineWidth = STROKE,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round,
+            ) {
+                moveTo(4.6f, 11f)
+                arcToRelative(6.4f, 6.4f, 0f, isMoreThanHalf = true, isPositiveArc = true, 12.8f, 0f)
+                arcToRelative(6.4f, 6.4f, 0f, isMoreThanHalf = true, isPositiveArc = true, -12.8f, 0f)
+                moveTo(15.9f, 15.9f)
+                lineTo(20.4f, 20.4f)
+            }
+        }.build()
+    }
+
+    val Explore: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "aurelis_explore",
+            defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 24f, viewportHeight = 24f,
+        ).apply {
+            path(
+                stroke = stroke,
+                strokeLineWidth = STROKE,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round,
+            ) {
+                moveTo(3.4f, 12f)
+                arcToRelative(8.6f, 8.6f, 0f, isMoreThanHalf = true, isPositiveArc = true, 17.2f, 0f)
+                arcToRelative(8.6f, 8.6f, 0f, isMoreThanHalf = true, isPositiveArc = true, -17.2f, 0f)
+                moveTo(15.4f, 8.6f)
+                lineTo(13.6f, 13.6f)
+                lineTo(8.6f, 15.4f)
+                lineTo(10.4f, 10.4f)
+                close()
+            }
+        }.build()
+    }
+
+    val Shuffle: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "aurelis_shuffle",
+            defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 24f, viewportHeight = 24f,
+        ).apply {
+            path(
+                stroke = stroke,
+                strokeLineWidth = STROKE,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round,
+            ) {
+                moveTo(3.4f, 7.4f); lineTo(7f, 7.4f); lineTo(16.6f, 16.6f); lineTo(20.6f, 16.6f)
+                moveTo(18.1f, 14.1f); lineTo(20.6f, 16.6f); lineTo(18.1f, 19.1f)
+                moveTo(3.4f, 16.6f); lineTo(7f, 16.6f); lineTo(9.8f, 13.9f)
+                moveTo(13.9f, 10.1f); lineTo(16.6f, 7.4f); lineTo(20.6f, 7.4f)
+                moveTo(18.1f, 4.9f); lineTo(20.6f, 7.4f); lineTo(18.1f, 9.9f)
+            }
+        }.build()
+    }
+
+    val Repeat: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "aurelis_repeat",
+            defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 24f, viewportHeight = 24f,
+        ).apply {
+            path(
+                stroke = stroke,
+                strokeLineWidth = STROKE,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round,
+            ) {
+                moveTo(8.6f, 7.6f)
+                lineTo(15.4f, 7.6f)
+                arcToRelative(4.4f, 4.4f, 0f, isMoreThanHalf = false, isPositiveArc = true, 0f, 8.8f)
+                lineTo(8.6f, 16.4f)
+                arcToRelative(4.4f, 4.4f, 0f, isMoreThanHalf = false, isPositiveArc = true, 0f, -8.8f)
+                close()
+                moveTo(13.5f, 5.7f); lineTo(15.4f, 7.6f); lineTo(13.5f, 9.5f)
+                moveTo(10.5f, 14.5f); lineTo(8.6f, 16.4f); lineTo(10.5f, 18.3f)
+            }
+        }.build()
+    }
+
+    val Infinity: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "aurelis_infinity",
+            defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 24f, viewportHeight = 24f,
+        ).apply {
+            path(
+                stroke = stroke,
+                strokeLineWidth = STROKE,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round,
+            ) {
+                moveTo(12f, 12f)
+                curveTo(10.1f, 9.1f, 8.7f, 8f, 7.1f, 8f)
+                arcToRelative(4f, 4f, 0f, isMoreThanHalf = false, isPositiveArc = false, 0f, 8f)
+                curveTo(8.7f, 16f, 10.1f, 14.9f, 12f, 12f)
+                curveTo(13.9f, 9.1f, 15.3f, 8f, 16.9f, 8f)
+                arcToRelative(4f, 4f, 0f, isMoreThanHalf = false, isPositiveArc = true, 0f, 8f)
+                curveTo(15.3f, 16f, 13.9f, 14.9f, 12f, 12f)
+            }
+        }.build()
+    }
+
+    val Heart: ImageVector by lazy { heart("aurelis_heart", filled = false) }
+    val HeartFilled: ImageVector by lazy { heart("aurelis_heart_filled", filled = true) }
+
+    private fun heart(name: String, filled: Boolean): ImageVector =
+        ImageVector.Builder(
+            name = name,
+            defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 24f, viewportHeight = 24f,
+        ).apply {
+            path(
+                stroke = stroke,
+                strokeLineWidth = STROKE,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round,
+                fill = if (filled) stroke else null,
+            ) {
+                moveTo(12f, 20f)
+                curveTo(12f, 20f, 3.2f, 14.6f, 3.2f, 8.9f)
+                arcToRelative(4.5f, 4.5f, 0f, isMoreThanHalf = false, isPositiveArc = true, 8.8f, -1.5f)
+                arcToRelative(4.5f, 4.5f, 0f, isMoreThanHalf = false, isPositiveArc = true, 8.8f, 1.5f)
+                curveTo(20.8f, 14.6f, 12f, 20f, 12f, 20f)
+                close()
+            }
+        }.build()
+
+    val Star: ImageVector by lazy { star("aurelis_star", filled = false) }
+    val StarFilled: ImageVector by lazy { star("aurelis_star_filled", filled = true) }
+
+    private fun star(name: String, filled: Boolean): ImageVector =
+        ImageVector.Builder(
+            name = name,
+            defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 24f, viewportHeight = 24f,
+        ).apply {
+            path(
+                stroke = stroke,
+                strokeLineWidth = STROKE,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round,
+                fill = if (filled) stroke else null,
+            ) {
+                moveTo(12f, 3.86f)
+                lineTo(14.33f, 9.66f)
+                lineTo(20.56f, 10.08f)
+                lineTo(15.77f, 14.08f)
+                lineTo(17.29f, 20.14f)
+                lineTo(12f, 16.82f)
+                lineTo(6.71f, 20.14f)
+                lineTo(8.23f, 14.08f)
+                lineTo(3.44f, 10.08f)
+                lineTo(9.67f, 9.66f)
+                close()
+            }
+        }.build()
+
+    val Plus: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "aurelis_plus",
+            defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 24f, viewportHeight = 24f,
+        ).apply {
+            path(
+                stroke = stroke,
+                strokeLineWidth = STROKE,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round,
+            ) {
+                moveTo(12f, 5f); lineTo(12f, 19f)
+                moveTo(5f, 12f); lineTo(19f, 12f)
+            }
+        }.build()
+    }
+
+    val Check: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "aurelis_check",
+            defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 24f, viewportHeight = 24f,
+        ).apply {
+            path(
+                stroke = stroke,
+                strokeLineWidth = STROKE,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round,
+            ) {
+                moveTo(5f, 12.8f); lineTo(9.6f, 17.4f); lineTo(19f, 6.9f)
+            }
+        }.build()
+    }
+
+    val Download: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "aurelis_download",
+            defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 24f, viewportHeight = 24f,
+        ).apply {
+            path(
+                stroke = stroke,
+                strokeLineWidth = STROKE,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round,
+            ) {
+                moveTo(12f, 4.5f); lineTo(12f, 15.5f)
+                moveTo(7.5f, 11f); lineTo(12f, 15.5f); lineTo(16.5f, 11f)
+                moveTo(4.5f, 18f); lineTo(19.5f, 18f)
+            }
+        }.build()
+    }
+
+    val SkipNext: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "aurelis_skip_next",
+            defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 24f, viewportHeight = 24f,
+        ).apply {
+            path(
+                stroke = stroke,
+                strokeLineWidth = STROKE,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round,
+                fill = stroke,
+            ) {
+                moveTo(6f, 5f)
+                lineTo(15f, 12f)
+                lineTo(6f, 19f)
+                close()
+                moveTo(17f, 5f)
+                lineTo(17f, 19f)
+            }
+        }.build()
+    }
+
+    val Library: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "aurelis_library",
+            defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 24f, viewportHeight = 24f,
+        ).apply {
+            path(
+                stroke = stroke,
+                strokeLineWidth = STROKE,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round,
+            ) {
+                moveTo(4.6f, 4.8f); lineTo(4.6f, 19.2f)
+                moveTo(9.2f, 4.8f); lineTo(9.2f, 19.2f)
+                moveTo(13.8f, 4.8f); lineTo(13.8f, 19.2f)
+                moveTo(17.2f, 5.6f); lineTo(20.6f, 18.9f)
+            }
+        }.build()
     }
 }
