@@ -1,7 +1,4 @@
-/*
- * Vendored from Kyant0/backdrop v2.0.0 (io.github.kyant0:backdrop)
- * https://github.com/Kyant0/backdrop — Copyright 2025 Kyant0, Apache License 2.0
- */
+// Aurelis © 2026. GPL-3.0-or-later
 package com.music.aurelis.ui.components.backdrop.effects
 
 import androidx.annotation.FloatRange
@@ -59,8 +56,7 @@ fun BackdropEffectScope.lens(
         } else {
             throwUnsupportedSDFException()
         }
-    // AQUÍ ESTABA EL ERROR: Asignamos la variable en lugar de llamarla como función
-    renderEffect = effect
+    effect(effect)
 }
 
 private val BackdropEffectScope.cornerRadii: FloatArray?
@@ -79,6 +75,7 @@ private val BackdropEffectScope.cornerRadii: FloatArray?
                 bottomLeft.fastCoerceAtMost(maxRadius)
             )
         }
+
         is CornerBasedShape -> {
             val size = size
             val maxRadius = size.minDimension / 2f
@@ -102,6 +99,7 @@ private val BackdropEffectScope.cornerRadii: FloatArray?
                 bottomLeft.fastCoerceAtMost(maxRadius)
             )
         }
+
         else -> null
     }
 
